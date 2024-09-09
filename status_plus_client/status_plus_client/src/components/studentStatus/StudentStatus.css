@@ -1,0 +1,20 @@
+@media print {
+    #content-to-print {
+        text-align: center;
+    }
+}
+
+@font-face {
+    font-family: 'hobo';
+    src: url(data:font/truetype;base64,<base64-string-here>) format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+/* 
+@font-face {
+    font-family: 'Heebo';
+    src: url(data:font/truetype;base64,<base64-string-here>) format('truetype');
+    font-weight: normal;
+    font-style: normal;
+} */
+
