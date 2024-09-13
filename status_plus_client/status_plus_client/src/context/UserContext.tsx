@@ -1,5 +1,6 @@
 import React, { createContext, useState, ReactNode, useEffect } from 'react';
 import { User } from '../models/User';
+import Cookies from 'js-cookie';
 
 interface UserContextValue {
   user: User;
@@ -9,16 +10,17 @@ interface UserContextValue {
 export const UserContext = createContext<UserContextValue | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
+  
   const [user, setUser] = useState<User>(() => {
-    const savedUser = localStorage.getItem('user');
+    const savedUser = Cookies.get('user');
     return savedUser ? JSON.parse(savedUser) : { identityNumber: '', userName: '' };
   });
 
   useEffect(() => {
     if (user.identityNumber && user.userName) {
-      localStorage.setItem('user', JSON.stringify(user));
+      Cookies.set('user', JSON.stringify(user), { expires: 7 }); // Cookie expires in 7 days
     } else {
-      localStorage.removeItem('user');
+      Cookies.remove('user');
     }
   }, [user]);
 

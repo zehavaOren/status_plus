@@ -110,22 +110,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
             setLoading(false);
         }
     };
-    // get student details by id that enter to the form
-    // const getStudentDetails = async () => {
-    //     setLoading(true);
-    //     try {
-    //         if (studentId) {
-    //             const responseFromDB = await studentService.getStudentDeatils(studentId);
-    //             const studentDetails = await responseFromDB.studentDetails[0][0];
-    //             await populateEducatorAndTherapistLists(responseFromDB.studentDetails[0]);
-    //             return studentDetails;
-    //         }
-    //     } catch (error) {
-    //         setMessageInfo({ message: 'אופס, שגיאה בקבלת הנתונים', type: 'error' });
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // }
+
     // get the list of the cities
     const getCitiesList = async () => {
         try {
@@ -252,7 +237,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         const occupationalTherapists = occupationalTherapist.find((edu) => employeesForStudent.includes(edu.employee_id) && edu.job_id === 19);
         const communicationTherapists = communicationTherapist.find((edu) => employeesForStudent.includes(edu.employee_id) && edu.job_id === 18);
 
-
         form.setFieldsValue({
             ...studentDetails,
             morningTeacher: morningTeacher ? morningTeacher.employee_id : undefined,
@@ -271,6 +255,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     }
     // when saving the form
     const onSave = async (values: StudentForm) => {
+        debugger
         const studentDeail = {
             'studentId': values.studentId,
             'lastName': values.lastName,
@@ -342,7 +327,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     }
     // save the employees for studnet list
     const saveEmployeesForStudent = async (employeesForStudent: any[]) => {
-        debugger
         const employeesStudentRes = await studentService.upsertEmployeesForStudent(employeesForStudent);
         employeesStudentRes.map(empUpsert => {
             if (empUpsert.status !== "success") {

@@ -1,14 +1,14 @@
 export interface StudentForm {
-    studentId: string | '';
-    lastName: string;
-    firstName: string;
-    phone1: string;
-    phone2: string;
-    birthDate: string;
-    address: string;
-    cityId: number;
-    gradeId: number;
-    classId: number;
+    studentId: string | '' | undefined;
+    lastName: string |undefined;
+    firstName: string |undefined;
+    phone1: string |undefined;
+    phone2: string |undefined;
+    birthDate: string ;
+    address?: string;
+    cityId?: number;
+    gradeId?: number;
+    classId?: number | undefined;
     morningTeacher: number;
     communicationTherapist: number;
     afternoonTeacher: number;
