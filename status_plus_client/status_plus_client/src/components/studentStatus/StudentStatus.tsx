@@ -229,9 +229,9 @@ const StudentStatus = () => {
             )}
             <div className='container'>
                 <Title level={2}>סטטוס {studentDet?.studentName} {studentDet?.year}</Title>
-                <Button onClick={navigateBack} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
+                {/* <Button onClick={navigateBack} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
                     חזרה
-                </Button>
+                </Button> */}
                 <Button onClick={generatePDF} type="primary" style={{ marginTop: '10px', marginRight: '80px' }}>הורד PDF</Button>
                 <Button onClick={changeVision} style={{ marginRight: '60px' }}>שנה תצוגה</Button>
             </div>

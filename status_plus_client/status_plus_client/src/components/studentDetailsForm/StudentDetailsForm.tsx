@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, Card, Row, Col, Select, DatePicker, Modal } from 'antd';
+import { Form, Input, Button, Card, Row, Col, Select, DatePicker, Modal, Spin } from 'antd';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import moment from 'moment';
 
@@ -99,7 +99,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                     ...studentDetails,
                     birthDate: studentDetails.birthDate ? moment(studentDetails.birthDate) : null,
                 });
-    
+
                 // Handle the list of all employees
                 const employees = responseFromDB.studentDetails[1].map((e: { employeeId: any; }) => e.employeeId);
                 setEmployeesForStudent(employees);
@@ -382,209 +382,217 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     };
     return (
         <>
-            <div className='container'>
-                <h1 style={{ textAlign: 'center' }}>הוספת/ עריכת תלמיד</h1>
-                <Button onClick={showModal} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
-                    חזרה
-                </Button>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '1px' }}>
+            <div style={{ direction: 'ltr' }}>
                 <Message messages={messages} duration={5000} />
-                <Card style={{ borderRadius: '10px', width: '90%', maxWidth: '1200px', direction: 'rtl', backgroundColor: '#b4d3ef' }}>
-                    <Form
-                        form={form}
-                        layout="vertical"
-                        initialValues={studentDetails || {}}
-                        onFinish={handleFinish}
-                        onFieldsChange={onFieldsChange}>
-                        <Row gutter={16}>
-                            <Col span={6}>
-                                <Form.Item label="תעודת זהות" className='disabledInput' name="studentId" rules={[{ required: true, message: 'חובה למלא תעודת זהות' }]}>
-                                    <Input value={studentId} disabled={isItemDisabled} style={{ backgroundColor: 'white' }} onChange={handleStudentIdChange} />
-                                </Form.Item>
-                            </Col>
-                            <Col span={6}>
-                                <Form.Item label="שם משפחה" name="lastName" rules={[{ required: true, message: 'חובה למלא שם משפחה' }]}>
-                                    <Input />
-                                </Form.Item>
-                            </Col>
-                            <Col span={6}>
-                                <Form.Item label="שם פרטי" name="firstName" rules={[{ required: true, message: 'חובה למלא שם פרטי' }]}>
-                                    <Input />
-                                </Form.Item>
-                            </Col>
-                            <Col span={6}>
-                                <Form.Item label="תאריך לידה" name="birthDate" rules={[{ required: true, message: 'חובה למלא תאריך לידה' }]}>
-                                    <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                        <Row gutter={16}>
-                            <Col span={6}>
-                                <Form.Item label="טלפון 1" name="phone1" rules={[{ required: true, message: 'חובה למלא טלפון' }]}>
-                                    <Input />
-                                </Form.Item>
-                            </Col>
-                            <Col span={6}>
-                                <Form.Item label="טלפון 2" name="phone2">
-                                    <Input />
-                                </Form.Item>
-                            </Col>
-                            <Col span={6}>
-                                <Form.Item label="כתובת" name="address" rules={[{ required: true, message: 'חובה למלא כתובת' }]}>
-                                    <Input />
-                                </Form.Item>
-                            </Col>
-                            <Col span={6}>
-                                <Form.Item label="עיר" name="cityId" rules={[{ required: true, message: 'חובה לבחור עיר' }]}>
-                                    <Select>
-                                        {citiesList.map(city => (
-                                            <Option key={city.city_id} value={city.city_id}>
-                                                {city.city_description}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                        <Row gutter={16}>
-                            <Col span={6}>
-                                <Form.Item label="שכבה" name="gradeId" rules={[{ required: true, message: 'חובה לבחור שכבה' }]}>
-                                    <Select placeholder="בחר שכבה" onChange={handleGradeChange}>
-                                        {uniqueGrades.map(grade => (
-                                            <Option key={grade.id} value={grade.gradeId}>
-                                                {grade.gradeDesc}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                            {selectedGradeClasses.length > 0 && (
+                {loading && (
+                    <div className="loading-overlay">
+                        <Spin size="large" />
+                    </div>
+                )}
+                <div className='container'>
+                    <h1 style={{ textAlign: 'center' }}>הוספת/ עריכת תלמיד</h1>
+                    <Button onClick={showModal} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
+                        חזרה
+                    </Button>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '1px' }}>
+                    <Message messages={messages} duration={5000} />
+                    <Card style={{ borderRadius: '10px', width: '90%', maxWidth: '1200px', direction: 'rtl', backgroundColor: '#b4d3ef' }}>
+                        <Form
+                            form={form}
+                            layout="vertical"
+                            initialValues={studentDetails || {}}
+                            onFinish={handleFinish}
+                            onFieldsChange={onFieldsChange}>
+                            <Row gutter={16}>
                                 <Col span={6}>
-                                    <Form.Item label="רשימת כיתות" name="classId" rules={[{ required: true, message: 'חובה לבחור כיתה' }]}>
-                                        <Select placeholder="בחר כיתה" onChange={handleClassChange}>
-                                            {selectedGradeClasses.map(classId => (
-                                                <Option key={classId} value={classId}>
-                                                    {classId}
+                                    <Form.Item label="תעודת זהות" className='disabledInput' name="studentId" rules={[{ required: true, message: 'חובה למלא תעודת זהות' }]}>
+                                        <Input value={studentId} disabled={isItemDisabled} style={{ backgroundColor: 'white' }} onChange={handleStudentIdChange} />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item label="שם משפחה" name="lastName" rules={[{ required: true, message: 'חובה למלא שם משפחה' }]}>
+                                        <Input />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item label="שם פרטי" name="firstName" rules={[{ required: true, message: 'חובה למלא שם פרטי' }]}>
+                                        <Input />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item label="תאריך לידה" name="birthDate" rules={[{ required: true, message: 'חובה למלא תאריך לידה' }]}>
+                                        <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+                            <Row gutter={16}>
+                                <Col span={6}>
+                                    <Form.Item label="טלפון 1" name="phone1" rules={[{ required: true, message: 'חובה למלא טלפון' }]}>
+                                        <Input />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item label="טלפון 2" name="phone2">
+                                        <Input />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item label="כתובת" name="address" rules={[{ required: true, message: 'חובה למלא כתובת' }]}>
+                                        <Input />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item label="עיר" name="cityId" rules={[{ required: true, message: 'חובה לבחור עיר' }]}>
+                                        <Select>
+                                            {citiesList.map(city => (
+                                                <Option key={city.city_id} value={city.city_id}>
+                                                    {city.city_description}
                                                 </Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
                                 </Col>
-                            )}
-                        </Row>
-                        <Row gutter={16}>
-                            <Col span={6}>
-                                <Form.Item label="מורה בוקר" name="morningTeacher" rules={[{ required: true, message: 'חובה לבחור מורת בוקר' }]}>
-                                    <Select>
-                                        {educators.map(educator => (
-                                            <Option key={educator.employee_id} value={educator.employee_id}>
-                                                {educator.name}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                            <Col span={6}>
-                                <Form.Item label="קלינאית תקשורת" name="communicationTherapist" rules={[{ required: true, message: 'חובה לבחור קלינאית תקשורת' }]}>
-                                    <Select>
-                                        {languageTeachers.map(languageTeacher => (
-                                            <Option key={languageTeacher.employee_id} value={languageTeacher.employee_id}>
-                                                {languageTeacher.name}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                            <Col span={6}>
-                                <Form.Item label="מורה צהריים" name="afternoonTeacher" rules={[{ required: true, message: 'חובה לבחור מורת צהרים' }]}>
-                                    <Select>
-                                        {educators.map(educator => (
-                                            <Option key={educator.employee_id} value={educator.employee_id}>
-                                                {educator.name}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                            <Col span={6}>
-                                <Form.Item label="מרפאה בעיסוק" name="occupationalTherapist" rules={[{ required: true, message: 'חובה לבחור מרפאה בעיסוק' }]}>
-                                    <Select>
-                                        {occupationalClinics.map(occupationalClinic => (
-                                            <Option key={occupationalClinic.employee_id} value={occupationalClinic.employee_id}>
-                                                {occupationalClinic.name}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                        <div className="inner-frame">
-                            <Row gutter={16}>
-                                <Col span={24}>
-                                    <Button onClick={addJobAndEmployee} type="dashed" block>
-                                        הוסף תפקיד ועובד
-                                    </Button>
-                                </Col>
                             </Row>
-                            {jobsAndEmployees.map((roleAndEmployee, index) => (
-                                <Row gutter={16} key={index}>
-                                    <Col span={12}>
-                                        <Form.Item label={`תפקיד ${index + 1}`}>
-                                            <Select
-                                                onChange={(value) => handleJobChange(index, value)}
-                                                value={roleAndEmployee.job}
-                                            >
-                                                {jobsList.map(job => (
-                                                    <Option key={job.job_id} value={job.job_id}>
-                                                        {job.job_description}
+                            <Row gutter={16}>
+                                <Col span={6}>
+                                    <Form.Item label="שכבה" name="gradeId" rules={[{ required: true, message: 'חובה לבחור שכבה' }]}>
+                                        <Select placeholder="בחר שכבה" onChange={handleGradeChange}>
+                                            {uniqueGrades.map(grade => (
+                                                <Option key={grade.id} value={grade.gradeId}>
+                                                    {grade.gradeDesc}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                </Col>
+                                {selectedGradeClasses.length > 0 && (
+                                    <Col span={6}>
+                                        <Form.Item label="רשימת כיתות" name="classId" rules={[{ required: true, message: 'חובה לבחור כיתה' }]}>
+                                            <Select placeholder="בחר כיתה" onChange={handleClassChange}>
+                                                {selectedGradeClasses.map(classId => (
+                                                    <Option key={classId} value={classId}>
+                                                        {classId}
                                                     </Option>
                                                 ))}
                                             </Select>
                                         </Form.Item>
                                     </Col>
-                                    <Col span={12}>
-                                        <Form.Item label={`עובד ${index + 1}`} rules={[{ required: true, message: 'חובה לבחור עובד' }]}>
-                                            <Select
-                                                onChange={(value) => handleEmployeeChange(index, value)}
-                                                value={roleAndEmployee.employee}
-                                            >
-                                                {jobForEmployee
-                                                    .filter(job => job.job_id === roleAndEmployee.job)
-                                                    .map(filteredEmployee => (
-                                                        <Option key={filteredEmployee.employee_id} value={filteredEmployee.employee_id}>
-                                                            {filteredEmployee.name}
-                                                        </Option>
-                                                    ))}
-                                            </Select>
-                                        </Form.Item>
+                                )}
+                            </Row>
+                            <Row gutter={16}>
+                                <Col span={6}>
+                                    <Form.Item label="מורה בוקר" name="morningTeacher" rules={[{ required: true, message: 'חובה לבחור מורת בוקר' }]}>
+                                        <Select>
+                                            {educators.map(educator => (
+                                                <Option key={educator.employee_id} value={educator.employee_id}>
+                                                    {educator.name}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item label="קלינאית תקשורת" name="communicationTherapist" rules={[{ required: true, message: 'חובה לבחור קלינאית תקשורת' }]}>
+                                        <Select>
+                                            {languageTeachers.map(languageTeacher => (
+                                                <Option key={languageTeacher.employee_id} value={languageTeacher.employee_id}>
+                                                    {languageTeacher.name}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item label="מורה צהריים" name="afternoonTeacher" rules={[{ required: true, message: 'חובה לבחור מורת צהרים' }]}>
+                                        <Select>
+                                            {educators.map(educator => (
+                                                <Option key={educator.employee_id} value={educator.employee_id}>
+                                                    {educator.name}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item label="מרפאה בעיסוק" name="occupationalTherapist" rules={[{ required: true, message: 'חובה לבחור מרפאה בעיסוק' }]}>
+                                        <Select>
+                                            {occupationalClinics.map(occupationalClinic => (
+                                                <Option key={occupationalClinic.employee_id} value={occupationalClinic.employee_id}>
+                                                    {occupationalClinic.name}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+                            <div className="inner-frame">
+                                <Row gutter={16}>
+                                    <Col span={24}>
+                                        <Button onClick={addJobAndEmployee} type="dashed" block>
+                                            הוסף תפקיד ועובד
+                                        </Button>
                                     </Col>
                                 </Row>
-                            ))}
-                        </div>
-                        <Form.Item>
-                            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-                                <Button type="primary" htmlType="submit">
-                                    שמירה
-                                </Button>
-                                <Button onClick={onCancel} style={{ marginLeft: '10px' }}>
-                                    ביטול
-                                </Button>
+                                {jobsAndEmployees.map((roleAndEmployee, index) => (
+                                    <Row gutter={16} key={index}>
+                                        <Col span={12}>
+                                            <Form.Item label={`תפקיד ${index + 1}`}>
+                                                <Select
+                                                    onChange={(value) => handleJobChange(index, value)}
+                                                    value={roleAndEmployee.job}
+                                                >
+                                                    {jobsList.map(job => (
+                                                        <Option key={job.job_id} value={job.job_id}>
+                                                            {job.job_description}
+                                                        </Option>
+                                                    ))}
+                                                </Select>
+                                            </Form.Item>
+                                        </Col>
+                                        <Col span={12}>
+                                            <Form.Item label={`עובד ${index + 1}`} rules={[{ required: true, message: 'חובה לבחור עובד' }]}>
+                                                <Select
+                                                    onChange={(value) => handleEmployeeChange(index, value)}
+                                                    value={roleAndEmployee.employee}
+                                                >
+                                                    {jobForEmployee
+                                                        .filter(job => job.job_id === roleAndEmployee.job)
+                                                        .map(filteredEmployee => (
+                                                            <Option key={filteredEmployee.employee_id} value={filteredEmployee.employee_id}>
+                                                                {filteredEmployee.name}
+                                                            </Option>
+                                                        ))}
+                                                </Select>
+                                            </Form.Item>
+                                        </Col>
+                                    </Row>
+                                ))}
                             </div>
-                        </Form.Item>
-                    </Form>
-                </Card>
+                            <Form.Item>
+                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                                    <Button type="primary" htmlType="submit">
+                                        שמירה
+                                    </Button>
+                                    <Button onClick={onCancel} style={{ marginLeft: '10px' }}>
+                                        ביטול
+                                    </Button>
+                                </div>
+                            </Form.Item>
+                        </Form>
+                    </Card>
+                </div>
+                <Modal
+                    title="אזהרה"
+                    open={isModalVisible}
+                    onOk={handleOk}
+                    onCancel={handleCancel}
+                    okText="כן"
+                    cancelText="לא"
+                >
+                    <p>האם אתה בטוח שברצונך לעזוב את הטופס ללא שמירה?</p>
+                </Modal>
             </div>
-            <Modal
-                title="אזהרה"
-                open={isModalVisible}
-                onOk={handleOk}
-                onCancel={handleCancel}
-                okText="כן"
-                cancelText="לא"
-            >
-                <p>האם אתה בטוח שברצונך לעזוב את הטופס ללא שמירה?</p>
-            </Modal>
         </>
     );
 };

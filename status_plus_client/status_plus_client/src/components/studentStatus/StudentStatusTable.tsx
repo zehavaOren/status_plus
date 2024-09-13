@@ -8,7 +8,7 @@ import jsPDF from 'jspdf';
 import { DownloadOutlined } from '@ant-design/icons';
 import Message from '../Message';
 
-const { Title, Paragraph } = Typography;
+const { Title } = Typography;
 
 interface CategoryData {
     category: string;

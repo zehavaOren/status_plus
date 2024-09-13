@@ -22,7 +22,7 @@ export const Login = () => {
 
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
-      };
+    };
     // login to the system
     const login = async (values: any) => {
         setLoading(true);
@@ -33,6 +33,8 @@ export const Login = () => {
             const identityNumber = values.identityNumber;
             const userName = permissionFromDb.employeeData[1][0].name;
             setUser({ identityNumber, userName });
+            debugger
+            loginService.studentDetails(identityNumber, userName, permission);
             navigate('/menu');
         } catch (error) {
             addMessage(`אוי לא! משהו השתבש בעת שליפת הנתונים. בבקשה נסה שוב מאוחר יותר`, 'error')
