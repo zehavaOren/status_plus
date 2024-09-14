@@ -9,8 +9,6 @@ import { studentStatusService } from "../../../services/studentStatusService";
 import { downloadFile } from '../../../utils/fileUtils';
 import Message from '../../Message';
 
-// import Message from "antd/es/message";ש
-
 const StudentsList = () => {
 
     const { student_id } = useParams<{ student_id: string }>();

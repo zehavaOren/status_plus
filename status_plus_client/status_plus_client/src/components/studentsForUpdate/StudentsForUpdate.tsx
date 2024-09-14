@@ -9,9 +9,7 @@ import edit from '../../assets/edit.png';
 import view from '../../assets/view.png';
 import './studentsForUpdate.css'
 import Message from '../Message';
-import loginService from '../../services/loginService';
 import { MySingletonService } from '../../services/MySingletonService';
-// import { loginService } from '../../services/loginService';
 
 const StudentsForUpdate = () => {
 
@@ -187,7 +185,6 @@ const StudentsForUpdate = () => {
                         <Button type="primary" className="add-student-button" onClick={addNewStudent}>הוסף תלמיד חדש</Button>
                     )}
                 </div>
-                {/* <Button type="primary" className="add-student-button" onClick={addNewStudent}>הוסף תלמיד חדש</Button> */}
             </div>
             <div className="container">
                 <div className="inner-container">

@@ -1,14 +1,12 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button, Checkbox, Col, Form, Input, Row, Pagination, Card, Modal, Spin } from "antd";
 import html2canvas from 'html2canvas';
 import { jsPDF } from "jspdf";
 
 import './StatusForm.css'
-import { User } from "../../models/User";
 import { studentStatusService } from "../../services/studentStatusService";
 import { ValueSelected } from "../../models/ValueSelected";
-import { UserContext } from "../../context/UserContext";
 import { Category } from "../../models/Category";
 import { Value } from "../../models/Value";
 import Message from "../Message";
@@ -17,21 +15,11 @@ import { MySingletonService } from "../../services/MySingletonService";
 
 const { TextArea } = Input;
 
-// type ContextType = {
-//     user: User;
-//     setUser: React.Dispatch<React.SetStateAction<User>>;
-// };
-
 const StatusForm = () => {
     const { studentId } = useParams<{ studentId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from || '/default-path';
-    // const userContext = useContext(UserContext);
-    // if (!userContext) {
-    //     throw new Error('UserContext must be used within a UserProvider');
-    // }
-    // const { user, setUser } = userContext;
     const [user, setUser] = useState<BaseUser>();
     const [categories, setCategories] = useState<Category[]>([]);
     const [values, setValues] = useState<Value[]>([]);
@@ -250,7 +238,6 @@ const StatusForm = () => {
             </div>
         );
     };
-
     // move to another category
     const handlePageChange = useCallback((page: number) => {
         setCurrentPage(page);

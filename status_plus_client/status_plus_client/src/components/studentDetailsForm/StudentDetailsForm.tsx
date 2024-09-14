@@ -110,7 +110,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
             setLoading(false);
         }
     };
-
     // get the list of the cities
     const getCitiesList = async () => {
         try {
