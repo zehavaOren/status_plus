@@ -25,7 +25,11 @@ const StatusForm = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from || '/default-path';
-    const { user, setUser } = useContext(UserContext) as ContextType;
+    const userContext = useContext(UserContext);
+    if (!userContext) {
+        throw new Error('UserContext must be used within a UserProvider');
+    }
+    const { user, setUser } = userContext;
     const [categories, setCategories] = useState<Category[]>([]);
     const [values, setValues] = useState<Value[]>([]);
     const [formValues, setFormValues] = useState<ValueSelected[]>([]);
@@ -144,12 +148,9 @@ const StatusForm = () => {
         if (changedValues.length > 0) {
             try {
                 const saveRes = await studentStatusService.upsertStudentStatus(changedValues);
-
                 // בדיקה האם כל השמירות הצליחו
                 const allSuccessful = saveRes.every(res => res.status === 'success');
-                debugger
                 if (allSuccessful) {
-                    debugger
                     addMessage('כל השינויים נשמרו בהצלחה', 'success');
                 } else {
                     addMessage('חלק מהשינויים לא נשמרו בהצלחה', 'warning');

@@ -33,7 +33,6 @@ export const Login = () => {
             const identityNumber = values.identityNumber;
             const userName = permissionFromDb.employeeData[1][0].name;
             setUser({ identityNumber, userName });
-            debugger
             loginService.studentDetails(identityNumber, userName, permission);
             navigate('/menu');
         } catch (error) {

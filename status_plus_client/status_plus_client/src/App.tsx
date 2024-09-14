@@ -1,9 +1,8 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 import './App.css';
 import { Login } from './components/login/Login';
-import StudentsForUpdate from './components/studentsForUpdate/StudentsForUpdate';
 import Menu from './components/menu/Menu';
 import { UserProvider } from './context/UserContext';
 

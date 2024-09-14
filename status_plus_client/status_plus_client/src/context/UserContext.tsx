@@ -1,6 +1,9 @@
 import React, { createContext, useState, ReactNode, useEffect } from 'react';
 import { User } from '../models/User';
-import Cookies from 'js-cookie';
+import PaginatedStatusForm from '../components/PaginatedStatusForm';
+import { Login } from '../components/login/Login';
+import { Menu } from 'antd';
+import StatusForm from '../components/statusForm/StatusForm';
 
 interface UserContextValue {
   user: User;
@@ -10,20 +13,26 @@ interface UserContextValue {
 export const UserContext = createContext<UserContextValue | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  
   const [user, setUser] = useState<User>(() => {
-    const savedUser = Cookies.get('user');
+    const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : { identityNumber: '', userName: '' };
   });
 
   useEffect(() => {
-    if (user.identityNumber && user.userName) {
-      Cookies.set('user', JSON.stringify(user), { expires: 7 }); // Cookie expires in 7 days
-    } else {
-      Cookies.remove('user');
+    const existUser = localStorage.getItem('user');
+    const convertUser = existUser ? JSON.parse(existUser) : { identityNumber: '', userName: '' };
+    if ((convertUser && convertUser.identityNumber === "") || existUser === '{}') {
+      localStorage.setItem('user', JSON.stringify(user));
     }
   }, [user]);
 
+  const setItem = async (user: User) => {
+    const existUser = await localStorage.getItem('user');
+    const convertUser = existUser ? JSON.parse(existUser) : { identityNumber: '', userName: '' };
+    if ((convertUser && convertUser.identityNumber === "") || existUser === '{}') {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+  }
   return (
     <UserContext.Provider value={{ user, setUser }}>
       {children}

@@ -255,7 +255,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     }
     // when saving the form
     const onSave = async (values: StudentForm) => {
-        debugger
         const studentDeail = {
             'studentId': values.studentId,
             'lastName': values.lastName,

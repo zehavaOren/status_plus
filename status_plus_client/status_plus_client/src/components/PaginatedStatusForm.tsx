@@ -144,9 +144,7 @@ const PaginatedStatusForm = () => {
                 const saveRes = await studentStatusService.upsertStudentStatus(changedValues);
                 // בדיקה האם כל השמירות הצליחו
                 const allSuccessful = saveRes.every(res => res.status === 'success');
-                debugger
                 if (allSuccessful) {
-                    debugger
                     addMessage('כל השינויים נשמרו בהצלחה', 'success');
                 } else {
                     addMessage('חלק מהשינויים לא נשמרו בהצלחה', 'warning');
