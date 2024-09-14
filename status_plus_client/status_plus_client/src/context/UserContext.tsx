@@ -19,11 +19,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   });
 
   useEffect(() => {
-    const existUser = localStorage.getItem('user');
-    const convertUser = existUser ? JSON.parse(existUser) : { identityNumber: '', userName: '' };
-    if ((convertUser && convertUser.identityNumber === "") || existUser === '{}') {
+    // const existUser = localStorage.getItem('user');
+    // const convertUser = existUser ? JSON.parse(existUser) : { identityNumber: '', userName: '' };
+    // if ((convertUser && convertUser.identityNumber === "") || existUser === '{}') {
+    //   localStorage.setItem('user', JSON.stringify(user));
+    // }
+    // if(user){
       localStorage.setItem('user', JSON.stringify(user));
-    }
+    // }
   }, [user]);
 
   const setItem = async (user: User) => {

@@ -26,7 +26,7 @@ const StudentStatus = () => {
 
     useEffect(() => {
         fetchStudentStatus();
-    }, []);
+    }, [studentId]);
 
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
@@ -35,7 +35,8 @@ const StudentStatus = () => {
     const fetchStudentStatus = async () => {
         setLoading(true);
         try {
-            const studentSatusResponse = await studentStatusService.getStudentStatus(Number(studentId));
+            const id=Number(studentId);
+            const studentSatusResponse = await studentStatusService.getStudentStatus(id);
             setEmployeeDet(studentSatusResponse.studentStatusData[0]);
             setStudentDet(studentSatusResponse.studentStatusData[1][0]);
             setStudentStatus(studentSatusResponse.studentStatusData[2]);

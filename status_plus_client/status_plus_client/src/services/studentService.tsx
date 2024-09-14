@@ -120,8 +120,6 @@ export const studentService = {
                     throw new Error(`שגיאה בהכנסת תעודת זהות ${student.employee_id}`);
                 }
                 const result = await response.json();
-
-                debugger
                 results.push({ student, status: 'success', result });
             } catch (error: any) {
                 results.push({ student, status: 'error', error: error.message });

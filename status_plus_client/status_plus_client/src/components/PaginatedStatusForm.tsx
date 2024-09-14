@@ -7,23 +7,26 @@ import { Category } from "../models/Category";
 import { Value } from "../models/Value";
 import { ValueSelected } from "../models/ValueSelected";
 import { studentStatusService } from "../services/studentStatusService";
-import { UserContext } from "../context/UserContext";
-import { User } from "../models/User";
+// import { UserContext } from "../context/UserContext";
+// import { User } from "../models/User";
 import Message from "./Message";
+import { BaseUser } from "../models/BaseUser";
+import { MySingletonService } from "../services/MySingletonService";
 
 const { TextArea } = Input;
 
-type ContextType = {
-    user: User;
-    setUser: React.Dispatch<React.SetStateAction<User>>;
-};
+// type ContextType = {
+//     user: User;
+//     setUser: React.Dispatch<React.SetStateAction<User>>;
+// };
 
 const PaginatedStatusForm = () => {
     const { studentId } = useParams<{ studentId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from || '/default-path';
-    const { user, setUser } = useContext(UserContext) as ContextType;
+    // const { user, setUser } = useContext(UserContext) as ContextType;
+    const [user, setUser] = useState<BaseUser>();
     const [categories, setCategories] = useState<Category[]>([]);
     const [values, setValues] = useState<Value[]>([]);
     const [formValues, setFormValues] = useState<ValueSelected[]>([]);
@@ -57,27 +60,33 @@ const PaginatedStatusForm = () => {
     const addMessage = (message: string, type: any) => {
         setMessages([{ message, type, id: Date.now() }]);
     };
+    // get user data from singelton
+    const getBaseUser = async () => {
+        const user = await MySingletonService.getInstance().getBaseUser();
+        if (user) {
+            setUser(user);
+        }
+        else {
+            addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
+        }
+    }
     // get all the data from the DB
     const getData = async () => {
-        if (user.identityNumber) {
-            setUser(user);
-            setLoading(true);
-            try {
-                const categories = await studentStatusService.getCategoriesByEmployee(user.identityNumber);
-                const valuesRes = await studentStatusService.getValues(user.identityNumber);
-                const studentValuesRes = await studentStatusService.getValuesByStudentId({ studentId: studentId!, employeeId: user.identityNumber, year: 'תשפד' });
-                setCategories(categories.categories[0]);
-                setValues(valuesRes.valuesList[0]);
-                setFormValues(studentValuesRes.valuesList[0]);
-                setStudentName(studentValuesRes.valuesList[1][0].name)
-            } catch (error) {
-                addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
-            } finally {
-                setIsSaving(false);
-                setLoading(false);
-            }
-        } else {
-            addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
+        await getBaseUser();
+        setLoading(true);
+        try {
+            const categories = await studentStatusService.getCategoriesByEmployee(user!.identityNumber);
+            const valuesRes = await studentStatusService.getValues(user!.identityNumber);
+            const studentValuesRes = await studentStatusService.getValuesByStudentId({ studentId: studentId!, employeeId: user!.identityNumber, year: 'תשפד' });
+            setCategories(categories.categories[0]);
+            setValues(valuesRes.valuesList[0]);
+            setFormValues(studentValuesRes.valuesList[0]);
+            setStudentName(studentValuesRes.valuesList[1][0].name)
+        } catch (error) {
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
+        } finally {
+            setIsSaving(false);
+            setLoading(false);
         }
     };
     // check form changed

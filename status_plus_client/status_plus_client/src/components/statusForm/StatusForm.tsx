@@ -12,24 +12,27 @@ import { UserContext } from "../../context/UserContext";
 import { Category } from "../../models/Category";
 import { Value } from "../../models/Value";
 import Message from "../Message";
+import { BaseUser } from "../../models/BaseUser";
+import { MySingletonService } from "../../services/MySingletonService";
 
 const { TextArea } = Input;
 
-type ContextType = {
-    user: User;
-    setUser: React.Dispatch<React.SetStateAction<User>>;
-};
+// type ContextType = {
+//     user: User;
+//     setUser: React.Dispatch<React.SetStateAction<User>>;
+// };
 
 const StatusForm = () => {
     const { studentId } = useParams<{ studentId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from || '/default-path';
-    const userContext = useContext(UserContext);
-    if (!userContext) {
-        throw new Error('UserContext must be used within a UserProvider');
-    }
-    const { user, setUser } = userContext;
+    // const userContext = useContext(UserContext);
+    // if (!userContext) {
+    //     throw new Error('UserContext must be used within a UserProvider');
+    // }
+    // const { user, setUser } = userContext;
+    const [user, setUser] = useState<BaseUser>();
     const [categories, setCategories] = useState<Category[]>([]);
     const [values, setValues] = useState<Value[]>([]);
     const [formValues, setFormValues] = useState<ValueSelected[]>([]);
@@ -65,7 +68,8 @@ const StatusForm = () => {
     };
     // get all the data from the DB
     const getData = async () => {
-        if (user.identityNumber) {
+        const user = await MySingletonService.getInstance().getBaseUser();
+        if (user) {
             setUser(user);
             setLoading(true);
             try {
@@ -82,7 +86,8 @@ const StatusForm = () => {
                 setIsSaving(false);
                 setLoading(false);
             }
-        } else {
+        }
+        else {
             addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
         }
     };
@@ -215,17 +220,17 @@ const StatusForm = () => {
                                 <Col span={4}>{value.valueDescription}</Col>
                                 <Col span={4}>
                                     <Form.Item name={`strength_${value.valueId}`} valuePropName="checked" noStyle>
-                                        <Checkbox>חוזקה</Checkbox>
+                                        <Checkbox disabled={value.isFinalchoic}>חוזקה</Checkbox>
                                     </Form.Item>
                                 </Col>
                                 <Col span={4}>
                                     <Form.Item name={`weakness_${value.valueId}`} valuePropName="checked" noStyle>
-                                        <Checkbox>חולשה</Checkbox>
+                                        <Checkbox disabled={value.isFinalchoic}>חולשה</Checkbox>
                                     </Form.Item>
                                 </Col>
                                 <Col span={4}>
                                     <Form.Item name={`notes_${value.valueId}`} noStyle>
-                                        <TextArea style={{ height: '30px' }} placeholder="הערה" />
+                                        <TextArea style={{ height: '30px' }} placeholder="הערה" disabled={value.isFinalchoic} />
                                     </Form.Item>
                                 </Col>
                             </Row>
@@ -245,6 +250,7 @@ const StatusForm = () => {
             </div>
         );
     };
+
     // move to another category
     const handlePageChange = useCallback((page: number) => {
         setCurrentPage(page);

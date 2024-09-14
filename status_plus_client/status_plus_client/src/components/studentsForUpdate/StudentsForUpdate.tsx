@@ -9,6 +9,9 @@ import edit from '../../assets/edit.png';
 import view from '../../assets/view.png';
 import './studentsForUpdate.css'
 import Message from '../Message';
+import loginService from '../../services/loginService';
+import { MySingletonService } from '../../services/MySingletonService';
+// import { loginService } from '../../services/loginService';
 
 const StudentsForUpdate = () => {
 
@@ -41,7 +44,12 @@ const StudentsForUpdate = () => {
     };
     // update student details clicked
     const onUpdateStudentClick = (student: Student) => {
-        navigate(`/menu/student-details/${student.studentId}`, { state: { from: location.pathname } });
+        const userPermission = MySingletonService.getInstance().getBaseUser().permission;
+        if (userPermission === 2) {
+            navigate(`/menu/student-details/${student.studentId}`, { state: { from: location.pathname } });
+        } else {
+            addMessage('אין לך הרשאה לעדכן פרטי תלמיד', 'error');
+        }
     };
     // update student status clicked
     const onUpdateStatusClick = (student_id: string) => {
@@ -168,13 +176,18 @@ const StudentsForUpdate = () => {
             width: 150,
         }
     ];
-    
+    const userPermission = MySingletonService.getInstance().getBaseUser().permission;
     return (
         <>
             <Message messages={messages} duration={5000} />
             <div className="header">
                 <h1 className="title">תלמידים לעדכון סטטוס תלמיד</h1>
-                <Button type="primary" className="add-student-button" onClick={addNewStudent}>הוסף תלמיד חדש</Button>
+                <div>
+                    {userPermission === 2 && (
+                        <Button type="primary" className="add-student-button" onClick={addNewStudent}>הוסף תלמיד חדש</Button>
+                    )}
+                </div>
+                {/* <Button type="primary" className="add-student-button" onClick={addNewStudent}>הוסף תלמיד חדש</Button> */}
             </div>
             <div className="container">
                 <div className="inner-container">

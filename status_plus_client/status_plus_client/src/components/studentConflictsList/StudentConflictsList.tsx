@@ -5,6 +5,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { studentStatusService } from '../../services/studentStatusService';
 import Message from '../Message';
+import { MySingletonService } from '../../services/MySingletonService';
 
 const StudentConflictsList = () => {
 
@@ -38,7 +39,12 @@ const StudentConflictsList = () => {
     }
     // when clicking to resolve conflict to student
     const onConflictHandlingClick = (student: any) => {
-        navigate(`/menu/conflicts-list/${student.studentId}`, { state: { from: location.pathname } });
+        const userPermission = MySingletonService.getInstance().getBaseUser().permission;
+        if (userPermission === 2) {
+            navigate(`/menu/conflicts-list/${student.studentId}`, { state: { from: location.pathname } });
+        } else {
+            addMessage('אין לך הרשאה לעדכן פרטי תלמיד', 'error');
+        }
     }
     // columns list
     const columns: ColumnType<any>[] = [
