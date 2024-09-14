@@ -24,14 +24,7 @@ const { Header, Content } = Layout;
 const Menu: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  // const userContext = useContext(UserContext);
-
-  // if (!userContext) {
-  //   throw new Error('UserContext must be used within a UserProvider');
-  // }
-
   const { state } = location;
-  // const { user, setUser } = userContext;
   const [user, setUser] = useState<BaseUser | null>(null);
   const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
   const [currentPage, setCurrentPage] = useState(1);

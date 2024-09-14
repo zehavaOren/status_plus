@@ -7,25 +7,17 @@ import { Category } from "../models/Category";
 import { Value } from "../models/Value";
 import { ValueSelected } from "../models/ValueSelected";
 import { studentStatusService } from "../services/studentStatusService";
-// import { UserContext } from "../context/UserContext";
-// import { User } from "../models/User";
 import Message from "./Message";
 import { BaseUser } from "../models/BaseUser";
 import { MySingletonService } from "../services/MySingletonService";
 
 const { TextArea } = Input;
 
-// type ContextType = {
-//     user: User;
-//     setUser: React.Dispatch<React.SetStateAction<User>>;
-// };
-
 const PaginatedStatusForm = () => {
     const { studentId } = useParams<{ studentId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from || '/default-path';
-    // const { user, setUser } = useContext(UserContext) as ContextType;
     const [user, setUser] = useState<BaseUser>();
     const [categories, setCategories] = useState<Category[]>([]);
     const [values, setValues] = useState<Value[]>([]);

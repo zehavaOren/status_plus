@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { Form, Input, Button, Typography, Spin, Card } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import Message from '../Message';
 import logo from '../../assets/logo.png';
 import './login.css';
-// import { UserContext } from '../../context/UserContext';
 import loginService from '../../services/loginService';
 import { BaseUser } from '../../models/BaseUser';
 import { MySingletonService } from '../../services/MySingletonService';
@@ -17,12 +16,7 @@ export const Login = () => {
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]); const [loading, setLoading] = useState(false);
     const [permission, setPermission] = useState(0);
     const [user, setUser] = useState<BaseUser>();
-
     const navigate = useNavigate();
-
-    // const userContext = useContext(UserContext);
-    // const { setUser } = userContext!;
-
 
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
@@ -34,8 +28,6 @@ export const Login = () => {
             const permissionFromDb = await loginService.login(values);
             const permission = permissionFromDb.employeeData[0][0].permission_id;
             setPermission(permission);
-            // const identityNumber = values.identityNumber;
-            // const userName = permissionFromDb.employeeData[1][0].name;
             const user = await MySingletonService.getInstance().getBaseUser();
             if (user) {
                 setUser(user);

@@ -1,47 +1,5 @@
-// // import { User } from "../models/User";
-
 import { MySingletonService } from "./MySingletonService";
 
-// const BASE_URL = 'http://localhost:4000/auth';
-
-// interface loginService {
-
-//     identityNumber: string = '';
-//     userName: string = '';
-//     permission: number = 0;
-
-//     async login(userId: any) {
-//     try {
-//         const identityNumber = userId.identityNumber;
-//         const response = await fetch(`${BASE_URL}/${identityNumber}`);
-//         if (!response.ok) {
-//             throw new Error('Error fetching employees');
-//         }
-//         const data = await response.json();
-//         if (data) {
-//             this.identityNumber = data.identityNumber;
-//             this.userName = data.userName;
-//             this.permission = data.permission;
-//         }
-//         return data;
-//     } catch (error: any) {
-//         throw new Error(`Error fetching employees: ${error.message}`);
-//     }
-// }
-//     // login: async (userId: any) => {
-//     //     const identityNumber = userId.identityNumber;
-//     //     try {
-//     //         const response = await fetch(`${BASE_URL}/${identityNumber}`);
-//     //         if (!response.ok) {
-//     //             throw new Error('Error fetching employees');
-//     //         }
-//     //         return await response.json();
-//     //     } catch (error: any) {
-//     //         throw new Error(`Error fetching employees: ${error.message}`);
-//     //     }
-//     // },
-// }
-// export default new loginService();
 const BASE_URL = 'http://localhost:4000/auth';
 
 class loginService {
@@ -74,5 +32,4 @@ class loginService {
         }
     }
 }
-
 export default new loginService();
