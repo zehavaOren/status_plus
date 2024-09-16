@@ -32,7 +32,6 @@ const Menu: React.FC = () => {
   const [menuItems, setMenuItems] = useState<Array<{ key: string, label: string, path: string, permissions: Array<number> }>>([]);
 
   useEffect(() => {
-    debugger
     getBaseUser();
   }, []);
   // useEffect(() => {

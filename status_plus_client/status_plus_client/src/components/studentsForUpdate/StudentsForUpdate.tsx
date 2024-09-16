@@ -10,6 +10,7 @@ import view from '../../assets/view.png';
 import './studentsForUpdate.css'
 import Message from '../Message';
 import { MySingletonService } from '../../services/MySingletonService';
+import { studentStatusService } from '../../services/studentStatusService';
 
 const StudentsForUpdate = () => {
 
@@ -54,8 +55,27 @@ const StudentsForUpdate = () => {
         navigate(`/menu/status-form/${student_id}`, { state: { from: location.pathname } });
     };
     // open the status of the student
-    const onViewStatusClick = (student_id: string) => {
-        navigate(`/menu/student-status/${student_id}`, { state: { from: location.pathname } });
+    const onViewStatusClick = async (student_id: string) => {
+        const isStatusFinish = await checkStudentStatus(Number(student_id));
+        if (isStatusFinish) {
+            navigate(`/menu/student-status/${student_id}`, { state: { from: location.pathname } });
+        }
+        else {
+            addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
+        }
+    }
+    const checkStudentStatus = async (studentId: number) => {
+        try {
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId);
+            if (responseFromDB.totalExpectedValues === responseFromDB.totalFilledValues) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        } catch (error) {
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
+        }
     }
     //search
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {

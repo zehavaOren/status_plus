@@ -1,0 +1,12 @@
+.fixed-row-height {
+    height: 50px;  /* Set a fixed height for each row */
+}
+.fixed-row-height td {
+    height: 50px;  /* Set a fixed height for each row */
+    vertical-align: middle;  /* Center the text vertically */
+}
+.wrapped-row td {
+    vertical-align: top;  /* Ensure text in both columns aligns at the top */
+    word-wrap: break-word;  /* Break long words to fit into the column */
+    white-space: normal;  /* Allow the text to wrap onto multiple lines */
+}

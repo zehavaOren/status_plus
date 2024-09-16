@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Typography, Spin, Card, List } from 'antd';
-// import { jsPDF } from "jspdf";
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 import './StudentStatus.css'
 import { studentStatusService } from '../../services/studentStatusService';
 import { StudentStatusValue } from '../../models/StudentStatusValue';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Message from '../Message';
+import { DownloadOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
 
@@ -24,6 +24,8 @@ const StudentStatus = () => {
     const [studentStatus, setStudentStatus] = useState<StudentStatusValue[]>([]);
     const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
 
+    const contentRef = React.useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         fetchStudentStatus();
     }, [studentId]);
@@ -35,7 +37,7 @@ const StudentStatus = () => {
     const fetchStudentStatus = async () => {
         setLoading(true);
         try {
-            const id=Number(studentId);
+            const id = Number(studentId);
             const studentSatusResponse = await studentStatusService.getStudentStatus(id);
             setEmployeeDet(studentSatusResponse.studentStatusData[0]);
             setStudentDet(studentSatusResponse.studentStatusData[1][0]);
@@ -93,7 +95,7 @@ const StudentStatus = () => {
     ];
     // all the category
     const categoryData = Object.keys(groupedStatus).map(category => ({ key: category, category }));
-    // whe clicking category
+    // when clicking category
     const onExpand = (expanded: boolean, record: { key: string }) => {
         setExpandedKeys(keys =>
             expanded
@@ -101,117 +103,18 @@ const StudentStatus = () => {
                 : keys.filter(k => k !== record.key)
         );
     };
-    // export status to PDF
-    // const generatePDF = () => {
-    //     const input = document.getElementById('statusContent'); // Get the container element that includes the entire table
-    //     if (input) {
-    //         html2canvas(input).then((canvas) => {
-    //             const imgData = canvas.toDataURL('image/png');
-    //             const pdf = new jsPDF('p', 'mm', 'a4');
-    //             const imgProps = pdf.getImageProperties(imgData);
-    //             const pdfWidth = pdf.internal.pageSize.getWidth();
-    //             const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    //             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-
-    //             // Add a new page to the PDF and capture the content of the table
-    //             pdf.addPage();
-    //             pdf.html(input, {
-    //                 html2canvas: { scale: 0.19 },
-    //                 x: 10,
-    //                 y: 10,
-    //                 callback: () => {
-    //                     pdf.save("student-status.pdf");
-    //                 }
-    //             });
-    //         });
-    //     }
-    // };
-    const generatePDF = () => {
-        const doc = new jsPDF({
-            orientation: 'p',
-            unit: 'mm',
-            format: 'a4',
-            putOnlyUsedFonts: true,
-            floatPrecision: 16
-        });
-
-        // הוסף גופן עברי
-        doc.addFont('path/to/hebrew-font.ttf', 'Hebrew', 'normal');
-        doc.setFont('Hebrew');
-
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        let yOffset = 10;
-
-        // כותרת
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(16);
-        pdf.text(`סטטוס ${studentDet?.studentName} ${studentDet?.year}`, pdf.internal.pageSize.width / 2, yOffset, { align: "center" });
-        yOffset += 10;
-
-        // אנשי צוות
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(14);
-        pdf.text("אנשי צוות ממלאים:", 10, yOffset);
-        yOffset += 10;
-        pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(12);
-        employeeDet.forEach(employee => {
-            pdf.text(`${employee.employeeName} - ${employee.jobDesc}`, 10, yOffset);
-            yOffset += 7;
-        });
-
-        yOffset += 10;
-
-        // סטטוס התלמיד
-        Object.entries(groupedStatus).forEach(([category, values]) => {
-            // בדיקה אם צריך דף חדש
-            if (yOffset > 270) {
-                pdf.addPage();
-                yOffset = 10;
+    // open all tabsto print the page to pdf
+    const openAllCategories = () => {
+        // Automatically expand all rows by setting expanded keys to all categories
+        const allKeys = Object.keys(studentStatus.reduce((acc: { [key: string]: StudentStatusValue[] }, curr: StudentStatusValue) => {
+            if (!acc[curr.categoryDesc]) {
+                acc[curr.categoryDesc] = [];
             }
-
-            pdf.setFont("helvetica", "bold");
-            pdf.setFontSize(14);
-            pdf.text(category, 10, yOffset);
-            yOffset += 10;
-
-            pdf.setFont("helvetica", "normal");
-            pdf.setFontSize(12);
-            values.forEach(value => {
-                pdf.text(`ערך: ${value.valueDesc}`, 15, yOffset);
-                yOffset += 7;
-                pdf.text(`חוזקה: ${value.studentGrade === 'Strength' || value.studentGrade === 'both' ? '✓' : '-'}`, 15, yOffset);
-                yOffset += 7;
-                pdf.text(`חולשה: ${value.studentGrade === 'Weakness' || value.studentGrade === 'both' ? '✓' : '-'}`, 15, yOffset);
-                yOffset += 7;
-                if (value.note) {
-                    pdf.text(`הערות: ${value.note}`, 15, yOffset);
-                    yOffset += 7;
-                }
-                yOffset += 5;
-
-                // בדיקה אם צריך דף חדש
-                if (yOffset > 270) {
-                    pdf.addPage();
-                    yOffset = 10;
-                }
-            });
-        });
-
-        pdf.save("student-status.pdf");
-    };
-    function reverseRTL(str: string) {
-        return str.split('').reverse().join('');
+            acc[curr.categoryDesc].push(curr);
+            return acc;
+        }, {}));
+        setExpandedKeys(allKeys);
     }
-    const printPDF = () => {
-        // Open all the category tabs by setting all keys as expanded
-        setExpandedKeys(Object.keys(groupedStatus));
-
-        // Wait for a short delay to ensure all tabs are expanded before printing
-        setTimeout(() => {
-            window.print();
-        }, 1000); // Adjust the delay as needed
-    };
     // navigate to the privious component
     const navigateBack = () => {
         navigate(from);
@@ -220,24 +123,70 @@ const StudentStatus = () => {
     const changeVision = () => {
         navigate(`/menu/student-status-table/${studentId}`, { state: { from: location.pathname } });
     }
+    // PDF Generation Function
+    const generatePDF = async () => {
+        if (!contentRef.current) {
+            addMessage("אופס, שגיאה בהורדת PDF", "error");
+            return;
+        };
+        setLoading(true);
+        try {
+            await openAllCategories();
+            const input = contentRef.current;
+            const pdf = new jsPDF('p', 'pt', 'a4');
+            const canvas = await html2canvas(input, { scale: 1 }); // Lower scale if necessary
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = 595.28; // A4 page width in points
+            const imgHeight = (canvas.height * imgWidth) / canvas.width; // Maintain aspect ratio
+            const pageHeight = 841.89; // A4 page height in points
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            // Add pages if content exceeds one page
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+
+            pdf.save('student_status.pdf');
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            addMessage('שגיאה ביצירת PDF', 'error');
+        }
+        setLoading(false);
+    };
+
     return (
-        <><div style={{ direction: 'ltr' }} id="content-to-print">
-            <Message messages={messages} duration={5000} />
-            {loading && (
-                <div className="loading-overlay">
-                    <Spin size="large" />
-                </div>
-            )}
-            <div className='container'>
-                <Title level={2}>סטטוס {studentDet?.studentName} {studentDet?.year}</Title>
-                {/* <Button onClick={navigateBack} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
+        <div >
+            <div>
+                <Message messages={messages} duration={5000} />
+                {loading && (
+                    <div className="loading-overlay">
+                        <Spin size="large" />
+                    </div>
+                )}
+                <div className='container'>
+                    <Title level={2}>סטטוס {studentDet?.studentName} {studentDet?.year}</Title>
+                    {/* <Button onClick={navigateBack} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
                     חזרה
                 </Button> */}
-                <Button onClick={generatePDF} type="primary" style={{ marginTop: '10px', marginRight: '80px' }}>הורד PDF</Button>
-                <Button onClick={changeVision} style={{ marginRight: '60px' }}>שנה תצוגה</Button>
+                    <Button
+                        icon={<DownloadOutlined />}
+                        type="primary"
+                        onClick={generatePDF}
+                        style={{ marginBottom: '20px', backgroundColor: '#52c41a', color: '#fff', marginLeft: '20px' }}
+                    >
+                        הורד כ-PDF
+                    </Button>
+                    <Button onClick={changeVision} style={{ marginRight: '60px' }}>שנה תצוגה</Button>
+                </div>
             </div>
-        </div>
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '1px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '1px' }} ref={contentRef}>
                 <Card
                     style={{ borderRadius: '10px', width: '100%', maxWidth: '1200px', direction: 'rtl', backgroundColor: '#b4d3ef' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -269,7 +218,7 @@ const StudentStatus = () => {
                     </div>
                 </Card>
             </div>
-        </>
+        </div>
     );
 };
 

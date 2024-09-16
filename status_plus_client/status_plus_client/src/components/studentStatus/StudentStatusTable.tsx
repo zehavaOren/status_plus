@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, List, Spin, Table, Tag, Typography } from 'antd';
+import { Button, List, Spin, Table, Tag, Tooltip, Typography } from 'antd';
 import { StudentStatusValue } from '../../models/StudentStatusValue';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { studentStatusService } from '../../services/studentStatusService';
@@ -7,6 +7,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { DownloadOutlined } from '@ant-design/icons';
 import Message from '../Message';
+import './StudentStatusTable.css';
 
 const { Title } = Typography;
 
@@ -75,54 +76,100 @@ const StudentStatusTable = () => {
                 title: 'חוזקה',
                 dataIndex: 'strength',
                 key: 'strength',
-                render: (text: string) => (text ? <Tag color="green">{text}</Tag> : null),
+                width: '50%',
+                render: (text: string) => (
+                    <Tooltip title={text}>
+                        <div style={{
+                            //  whiteSpace: 'normal',   // Allow the text to wrap into multiple lines
+                            //  wordWrap: 'break-word', // Break long words if needed
+                            //  display: 'block',
+                            //  fontSize: '16px',
+                            //  lineHeight: '1.5',      // Ensure proper line height for wrapping
+                            //  minHeight: '50px',
+                            // whiteSpace: 'nowrap',
+                            // overflow: 'hidden',
+                            // textOverflow: 'ellipsis',                         
+                        }}>
+                            {text ? <Tag color="green" style={{ fontSize: '16px', whiteSpace: 'normal', wordWrap: 'break-word' }}>{text}</Tag> : null}
+                        </div>
+                    </Tooltip>
+                ),
             },
             {
                 title: 'חולשה',
                 dataIndex: 'weakness',
                 key: 'weakness',
-                render: (text: string) => (text ? <Tag color="red">{text}</Tag> : null),
+                width: '50%',
+                render: (text: string) => (
+                    <Tooltip title={text}>
+                        <div style={{
+                            //   whiteSpace: 'normal',   // Allow the text to wrap into multiple lines
+                            //   wordWrap: 'break-word', // Break long words if needed
+                            //   display: 'block',
+                            //   fontSize: '16px',
+                            //   lineHeight: '1.5',      // Ensure proper line height for wrapping
+                            //   minHeight: '50px',
+                        }}>
+                            {text ? <Tag color="red" style={{ fontSize: '16px', whiteSpace: 'normal', wordWrap: 'break-word' }}>{text}</Tag> : null}
+                        </div>
+                    </Tooltip>
+                ),
             },
         ];
 
-        return <Table dataSource={dataSource} columns={columns} pagination={false} />;
+        return (
+            <Table
+                dataSource={dataSource}
+                columns={columns}
+                pagination={false}
+                style={{ width: '70%', margin: '0 auto' }}  // Reduced width to 60% and centered
+                tableLayout="fixed" // Set fixed row height
+                rowClassName={() => 'wrapped-row'}
+            />
+        );
     };
-    // export pdf
-    const exportToPDF = async () => {
+    // PDF Generation Function
+    const generatePDF = async () => {
+        if (!contentRef.current) {
+            addMessage("אופס, שגיאה בהורדת PDF", "error");
+            return;
+        };
         setLoading(true);
         try {
-            if (!contentRef.current) return;
+            const input = contentRef.current;
+            const pdf = new jsPDF('p', 'pt', 'a4');  // A4 page in portrait orientation
+            const scale = 3;  // Increase this value to enlarge the content
 
-            const contentHeight = contentRef.current.clientHeight;
-            const pageHeight = 1123; // A4 page height in pixels
-            const totalPages = Math.ceil(contentHeight / pageHeight);
-
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'px',
-                format: [794, 1123] // A4 page size in pixels
+            const canvas = await html2canvas(input, {
+                scale: scale,  // Scale the content for better resolution and larger font
+                useCORS: true,  // Ensure cross-origin content is handled
             });
 
-            let currentPosition = 0;
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = 595.28; // A4 page width in points
+            const imgHeight = (canvas.height * imgWidth) / canvas.width; // Maintain aspect ratio
+            const pageHeight = 841.89; // A4 page height in points
+            let heightLeft = imgHeight;
 
-            for (let page = 1; page <= totalPages; page++) {
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight;
                 pdf.addPage();
-                const canvas = await html2canvas(contentRef.current, {
-                    y: currentPosition,
-                    height: pageHeight
-                });
-                const imgData = canvas.toDataURL('image/png');
-                pdf.addImage(imgData, 'PNG', 0, 0, 794, 1123); // A4 page dimensions
-
-                currentPosition += pageHeight;
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
             }
 
             pdf.save('student_status.pdf');
-            setLoading(false);
         }
-        catch {
-            addMessage('אופס, משהו השתבש בעת הורדת סטטוס התלמיד, אנא נסה שנית', 'error');
+        catch (error) {
+            console.error('Error generating PDF:', error);
+            addMessage('שגיאה ביצירת PDF', 'error');
         }
+        setLoading(false);
     };
     // navigate back
     const navigateBack = () => {
@@ -140,12 +187,12 @@ const StudentStatusTable = () => {
                 חזרה
             </Button>
             <Button
-                type="primary"
                 icon={<DownloadOutlined />}
-                onClick={exportToPDF}
-                style={{ marginBottom: '20px' }}
+                type="primary"
+                onClick={generatePDF}
+                style={{ marginBottom: '20px', backgroundColor: '#52c41a', color: '#fff' }}
             >
-                ייצא ל-PDF
+                הורד כ-PDF
             </Button>
             {/* רשימת אנשי הצוות */}
             <div style={{ width: '25%', marginLeft: '1200px' }}>
