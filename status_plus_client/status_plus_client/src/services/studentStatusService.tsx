@@ -152,4 +152,16 @@ export const studentStatusService = {
 
         return results;
     },
+
+    checkStudentStatus: async (studentId: number) => {
+        try {
+            const response = await fetch(`${BASE_URL}/checkStudentStatus/${studentId}/`);
+            if (!response.ok) {
+                throw new Error('Error getting data');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    },
 }
