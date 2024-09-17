@@ -38,12 +38,32 @@ const StudentConflictsList = () => {
         setLoading(false);
     }
     // when clicking to resolve conflict to student
-    const onConflictHandlingClick = (student: any) => {
-        const userPermission = MySingletonService.getInstance().getBaseUser().permission;
-        if (userPermission === 2) {
-            navigate(`/menu/conflicts-list/${student.studentId}`, { state: { from: location.pathname } });
-        } else {
-            addMessage('אין לך הרשאה לעדכן פרטי תלמיד', 'error');
+    const onConflictHandlingClick = async (student: any) => {
+        const isStatusFinish = await checkStudentStatus(Number(student.studentId));
+        if (isStatusFinish) {
+            const userPermission = MySingletonService.getInstance().getBaseUser().permission;
+            if (userPermission === 2) {
+                navigate(`/menu/conflicts-list/${student.studentId}`, { state: { from: location.pathname } });
+            } else {
+                addMessage('אין לך הרשאה לפתור קונפליקטים בסטטוס', 'error');
+            }
+        }
+        else {
+            addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות לפתור קונפליקטים", "error");
+        }
+    }
+    // check if all employees feel the status
+    const checkStudentStatus = async (studentId: number) => {
+        try {
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId);
+            if (responseFromDB.totalExpectedValues === responseFromDB.totalFilledValues) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        } catch (error) {
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
         }
     }
     // columns list
