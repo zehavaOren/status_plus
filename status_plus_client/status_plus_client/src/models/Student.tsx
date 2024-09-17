@@ -6,4 +6,5 @@ export interface Student {
   address: string;
   city: string;
   grade: string;
+  statusPercentage?: number;
 }

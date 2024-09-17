@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Input, Pagination, Table, Image, Button, Modal, Upload } from 'antd';
+import { Input, Pagination, Table, Image, Button, Modal, Upload, Progress } from 'antd';
 import { ColumnType } from 'antd/es/table';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -13,6 +13,7 @@ import deleteIcon from '../../assets/deleteIcon.png';
 import Message from '../Message';
 import './AllStudents.css';
 import { UploadOutlined } from '@ant-design/icons';
+import { studentStatusService } from '../../services/studentStatusService';
 
 
 
@@ -45,14 +46,49 @@ const AllStudents = () => {
         setLoading(true);
         try {
             const responseFromDB = await studentService.getAllStudents();
-            const Studentes = await responseFromDB.allStudents[0];
-            setStudents(Studentes);
+            const allStudents = responseFromDB.allStudents[0];
+            const studentsWithStatus = await addStatusToStudents(allStudents);
+            setStudents(studentsWithStatus);
         } catch (error) {
             addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
         } finally {
             setLoading(false);
         }
     };
+    // calc ths status Progress
+    const addStatusToStudents = async (students: Student[]): Promise<Student[]> => {
+        const updatedStudents = await Promise.all(
+            students.map(async (student) => {
+                const status = await getAmuntValues(Number(student.studentId));
+                if (status) {
+                    const { totalExpectedValues, totalFilledValues } = status;
+                    const statusPercentage = totalExpectedValues
+                        ? Math.round((totalFilledValues / totalExpectedValues) * 100)
+                        : 0; 
+                    return {
+                        ...student,
+                        statusPercentage, 
+                    };
+                }
+                return student;
+            })
+        );
+
+        return updatedStudents;
+    };
+    // get the anount of the values to calc the progress
+    const getAmuntValues = async (studentId: number) => {
+        try {
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId);
+            const numbersOfValues=responseFromDB.numbersOfValues[0][0];
+            return {
+                totalExpectedValues: numbersOfValues.totalExpectedValues,
+                totalFilledValues: numbersOfValues.totalFilledValues
+            };
+        } catch (error) {
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
+        }
+    }
     //see student statuses
     const onViewingStudentStatusClick = (student_id: string) => {
         navigate(`statuses-list/${student_id}`);
@@ -282,6 +318,17 @@ const AllStudents = () => {
             })),
             filteredValue: gradeFilter ? [gradeFilter] : null,
             onFilter: (value, record) => record.grade === value,
+        },
+        {
+            title: 'סטטוס מילוי נתונים',
+            key: 'statusPercentage',
+            render: (text, record) => (
+                <Progress
+                    percent={record.statusPercentage || 0}
+                    size="small"
+                    status={record.statusPercentage === 100 ? 'success' : 'active'}
+                />
+            ),
         },
         {
             title: 'עדכון פרטי התלמיד',

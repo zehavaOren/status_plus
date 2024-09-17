@@ -52,11 +52,12 @@ const StudentConflictsList = () => {
             addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות לפתור קונפליקטים", "error");
         }
     }
-    // check if all employees feel the status
+    // check if all employees fill the status
     const checkStudentStatus = async (studentId: number) => {
         try {
             const responseFromDB = await studentStatusService.checkStudentStatus(studentId);
-            if (responseFromDB.totalExpectedValues === responseFromDB.totalFilledValues) {
+            const numbersOfValues = responseFromDB.numbersOfValues[0][0];
+            if (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) {
                 return true;
             }
             else {
