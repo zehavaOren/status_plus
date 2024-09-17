@@ -50,16 +50,19 @@ const getEmployeeById = async (req, res) => {
 };
 
 const deleteEmployee = async (req, res) => {
-  const employeeId = req.body.employeeId;
+  const { employeeId } = req.params;
   try {
-    const employeeDelete = await dbService.executeStoredProcedure('sp_stpl_delete_student',
-      { employeeId: employeeId });
+    const employeeDelete = await dbService.executeStoredProcedure('sp_stpl_delete_employee', {
+      employeeId: employeeId
+    });
     res.status(200).json({ employeeDelete });
   } catch (err) {
     console.error('Error occurred:', err);
     res.status(500).json({ error: 'An error occurred while processing the request' });
   }
-}
+};
+
+
 module.exports = {
   getEmployeesByGrade,
   getAllEmployees,
