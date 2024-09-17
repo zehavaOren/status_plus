@@ -4,7 +4,7 @@ export const employeeService = {
 
     getEmployeesByGrade: async (data: any) => {
         const gradeId = data.gradeId;
-        const classId=data.classId;
+        const classId = data.classId;
 
         try {
             const response = await fetch(`${BASE_URL}/getEmployeesByGrade/${gradeId}/${classId}/`);
@@ -15,7 +15,31 @@ export const employeeService = {
         } catch (error: any) {
             throw new Error(`Error fetching employees: ${error.message}`);
         }
+    },
+
+    getAllEmployees: async () => {
+        try {
+            const response = await fetch(`${BASE_URL}/getAllEmployees/`);
+            if (!response.ok) {
+                throw new Error('Error fetching employees');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    },
+
+    getEmployeeById: async (employeeId: number) => {
+        try {
+            const response = await fetch(`${BASE_URL}/getEmployeeById/${employeeId}/`);
+            if (!response.ok) {
+                throw new Error('Error getting data');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
     }
-    
+
 }
 
