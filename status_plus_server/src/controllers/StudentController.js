@@ -67,7 +67,7 @@ const upsertEmployeesForStudent = async (req, res) => {
 const deleteStudent = async (req, res) => {
     const { studentId, year } = req.body;
     try {
-        const studentDelete = await dbService.executeStoredProcedure('sp_stpl_delete_detudent',
+        const studentDelete = await dbService.executeStoredProcedure('sp_stpl_delete_student',
             { studentId: studentId, year: year });
         res.status(200).json({ studentDelete });
     } catch (err) {
