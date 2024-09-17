@@ -9,5 +9,7 @@ const router = express.Router();
 const EmployeeController = require('../controllers/EmployeeController');
 
 router.get('/getEmployeesByGrade/:gradeId/:classId?/', EmployeeController.getEmployeesByGrade);
+router.get('/getAllEmployees/', EmployeeController.getAllEmployees);
+router.get('/getEmployeeById/:employeeId/');
 
 module.exports = router;
