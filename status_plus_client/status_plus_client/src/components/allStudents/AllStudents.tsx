@@ -64,10 +64,10 @@ const AllStudents = () => {
                     const { totalExpectedValues, totalFilledValues } = status;
                     const statusPercentage = totalExpectedValues
                         ? Math.round((totalFilledValues / totalExpectedValues) * 100)
-                        : 0; 
+                        : 0;
                     return {
                         ...student,
-                        statusPercentage, 
+                        statusPercentage,
                     };
                 }
                 return student;
@@ -80,7 +80,7 @@ const AllStudents = () => {
     const getAmuntValues = async (studentId: number) => {
         try {
             const responseFromDB = await studentStatusService.checkStudentStatus(studentId);
-            const numbersOfValues=responseFromDB.numbersOfValues[0][0];
+            const numbersOfValues = responseFromDB.numbersOfValues[0][0];
             return {
                 totalExpectedValues: numbersOfValues.totalExpectedValues,
                 totalFilledValues: numbersOfValues.totalFilledValues
@@ -324,8 +324,10 @@ const AllStudents = () => {
             key: 'statusPercentage',
             render: (text, record) => (
                 <Progress
+                    type="circle"
                     percent={record.statusPercentage || 0}
-                    size="small"
+                    width={40} 
+                    // size="small"
                     status={record.statusPercentage === 100 ? 'success' : 'active'}
                 />
             ),
