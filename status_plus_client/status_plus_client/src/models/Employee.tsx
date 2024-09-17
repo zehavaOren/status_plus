@@ -3,6 +3,7 @@ export interface Employee {
     firstName: string;
     lastName: string;
     phone: string;
+    email: string;
     job: string;
     grades: string[];
     permission: string;
