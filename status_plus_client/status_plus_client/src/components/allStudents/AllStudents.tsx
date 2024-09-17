@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Input, Pagination, Table, Image, Button, Modal, Upload, Progress } from 'antd';
+import { Input, Pagination, Table, Image, Button, Modal, Upload, Progress, Popconfirm } from 'antd';
 import { ColumnType } from 'antd/es/table';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -12,7 +12,7 @@ import edit from '../../assets/edit.png';
 import deleteIcon from '../../assets/deleteIcon.png';
 import Message from '../Message';
 import './AllStudents.css';
-import { UploadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import { studentStatusService } from '../../services/studentStatusService';
 
 
@@ -155,17 +155,15 @@ const AllStudents = () => {
         setIsModalVisible(true);
     };
     // delete student
-    const handleDelete = async () => {
-        if (studentToDelete) {
-            const deleteStudentRes = await studentService.deleteStudent(studentToDelete.studentId, 'תשפד');
-            if (deleteStudentRes.studentDelete[0][0].status === 1) {
-                addMessage('התלמיד נמחק בהצלחה', 'success');
-            } else {
-                addMessage('מחיקת התלמיד נכשלה', 'error');
-            }
-            getStudents();
-            setIsModalVisible(false);
+    const handleDelete = async (studentId: string) => {
+        const deleteStudentRes = await studentService.deleteStudent(studentId, 'תשפד');
+        if (deleteStudentRes.studentDelete[0][0].status === 1) {
+            addMessage('התלמיד נמחק בהצלחה', 'success');
+        } else {
+            addMessage('מחיקת התלמיד נכשלה', 'error');
         }
+        getStudents();
+        setIsModalVisible(false);
     };
     // cnacel delete
     const handleCancel = () => {
@@ -325,7 +323,7 @@ const AllStudents = () => {
                 <Progress
                     type="circle"
                     percent={record.statusPercentage || 0}
-                    width={40} 
+                    width={40}
                     // size="small"
                     status={record.statusPercentage === 100 ? 'success' : 'active'}
                 />
@@ -349,19 +347,18 @@ const AllStudents = () => {
         },
         {
             title: 'מחיקה',
-            key: 'deleteStudent',
-            render: (text, record) => (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Image
-                        src={deleteIcon}
-                        alt="מחיקת התלמיד"
-                        preview={false}
-                        style={{ cursor: 'pointer', width: '20px', height: '20px' }}
-                        onClick={() => showDeleteModal(record)}
-                    />
-                </div>
+            key: 'delete',
+            render: (text: any, record: any) => (
+                <Popconfirm
+                    title="האם אתה בטוח שברצונך למחוק את איש הצוות?"
+                    onConfirm={() => handleDelete(record.studentId)}
+                    okText="אישור"
+                    cancelText="ביטול"
+                >
+                    <Button icon={<DeleteOutlined />} danger />
+                </Popconfirm>
             ),
-            width: 150,
+            width: 100,
         },
         {
             title: 'צפייה בסטטוס התלמיד',
@@ -450,7 +447,7 @@ const AllStudents = () => {
                     />
                 </div>
             </div>
-            <Modal
+            {/* <Modal
                 title="אישור מחיקת תלמיד"
                 open={isModalVisible}
                 onOk={handleDelete}
@@ -468,7 +465,7 @@ const AllStudents = () => {
                 ]}
             >
                 <p>?האם אתה בטוח שברצונך למחוק את התלמיד</p>
-            </Modal>
+            </Modal> */}
         </>
     )
 }

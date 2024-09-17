@@ -19,6 +19,7 @@ import ConflictHandling from '../conflictHandling/ConflictHandling';
 import { MySingletonService } from '../../services/MySingletonService';
 import { BaseUser } from '../../models/BaseUser';
 import EmployeeManagement from '../employeeManagement/EmployeeManagement';
+import EmployeeForm from '../employeeForm/EmployeeForm';
 
 const { Header, Content } = Layout;
 
@@ -164,7 +165,8 @@ const Menu: React.FC = () => {
             <Route path="student-conflicts-list/:employeeId" element={<StudentConflictsList />} />
             <Route path="conflicts-list/:studentId" element={<ConflictHandling />} />
             <Route path="employee-management/" element={<EmployeeManagement />} />
-            
+            <Route path="employee-form/:employeeId/" element={<EmployeeForm />} />
+
             {/* <Route path="another-component" element={<AnotherComponent />} /> */}
           </Routes>
           <Outlet />

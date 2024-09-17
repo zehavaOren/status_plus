@@ -5,10 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { Employee } from '../../models/Employee';
 import { employeeService } from '../../services/employeeService';
 import { ColumnType } from 'antd/es/table';
+import Message from '../Message';
 
 const EmployeeManagement = () => {
     const [employees, setEmployees] = useState<Employee[]>([]); // Replace `any[]` with Employee model type.
     const [loading, setLoading] = useState(false);
+    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [employeeToDelete, setEmployeeToDelete] = useState(null);
     const navigate = useNavigate();
@@ -18,6 +20,10 @@ const EmployeeManagement = () => {
         fetchEmployees();
     }, []);
 
+    const addMessage = (message: string, type: any) => {
+        setMessages(prev => [...prev, { message, type, id: Date.now() }]);
+    };
+    // get employee data
     const fetchEmployees = async () => {
         setLoading(true);
         try {
@@ -32,13 +38,23 @@ const EmployeeManagement = () => {
 
     const handleDelete = async (employeeId: string) => {
         try {
-            // await employeeService.deleteEmployee(employeeId); // Call your delete service
-            fetchEmployees(); // Refresh the list after deletion
+            const isDelete = await employeeService.deleteEmployee(Number(employeeId));
+            if (isDelete.employeeDelete[0][0].status === 0) {
+                addMessage("אין אפשרות למחוק עובד שמקושר לתלמיד", "error");
+            }
+            else {
+                addMessage("העובד נמחק בהצלחה", "success");
+            }
+            fetchEmployees();
         } catch (error) {
             console.error("Failed to delete employee", error);
         }
     };
-
+    // navigate to edit the employee details
+    const onUpdateEmployeeClick = (employee: Employee) => {
+        navigate(`/menu/employee-form/${{ employeeId: employee.identityNumber }}`)
+    }
+    // columns to the table
     const columns: ColumnType<Employee>[] = [
         {
             title: 'תעודת זהות',
@@ -87,7 +103,7 @@ const EmployeeManagement = () => {
             render: (text: any, record: any) => (
                 <Button
                     icon={<EditOutlined />}
-                    onClick={() => navigate(`/employee-details/${record.idCard}`)} // Navigate to employee details screen
+                    onClick={() => onUpdateEmployeeClick(record)}
                 />
             ),
             width: 100,
@@ -98,7 +114,7 @@ const EmployeeManagement = () => {
             render: (text: any, record: any) => (
                 <Popconfirm
                     title="האם אתה בטוח שברצונך למחוק את איש הצוות?"
-                    onConfirm={() => handleDelete(record.idCard)}
+                    onConfirm={() => handleDelete(record.identityNumber)}
                     okText="אישור"
                     cancelText="ביטול"
                 >
@@ -124,6 +140,7 @@ const EmployeeManagement = () => {
     };
     return (
         <div>
+            <Message messages={messages} duration={5000} />
             <div className="header">
                 <h1 className="title">ניהול אנשי צוות</h1>
                 <Upload

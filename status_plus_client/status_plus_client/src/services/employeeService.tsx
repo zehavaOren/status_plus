@@ -39,7 +39,24 @@ export const employeeService = {
         } catch (error: any) {
             throw new Error(`Error fetching employees: ${error.message}`);
         }
-    }
+    },
+
+    deleteEmployee: async (employeeId: number) => {
+        try {
+            const response = await fetch(`${BASE_URL}/deleteEmployee/${employeeId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!response.ok) {
+                throw new Error('Error deleting employee');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error deleting employee: ${error.message}`);
+        }
+    },
 
 }
 
