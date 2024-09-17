@@ -18,6 +18,7 @@ import StudentConflictsList from '../studentConflictsList/StudentConflictsList';
 import ConflictHandling from '../conflictHandling/ConflictHandling';
 import { MySingletonService } from '../../services/MySingletonService';
 import { BaseUser } from '../../models/BaseUser';
+import EmployeeManagement from '../employeeManagement/EmployeeManagement';
 
 const { Header, Content } = Layout;
 
@@ -83,7 +84,7 @@ const Menu: React.FC = () => {
     { key: 'status-form', label: 'טופס סטטוס תלמיד', path: 'status-form', permissions: [1, 2, 3] },
     { key: 'student-status', label: 'סטטוס תלמיד', path: 'student-status', permissions: [1, 2, 3] },
     { key: 'student-conflicts-list', label: 'טיפול בקונפליטים', path: `/menu/student-conflicts-list/${user!.identityNumber}`, permissions: [1, 2] },
-
+    { key: 'employee-management', label: 'ניהול עובדים', path: `/menu/employee-management`, permissions: [3] },
     // ];
   ];
   // log out from the system
@@ -162,7 +163,8 @@ const Menu: React.FC = () => {
             <Route path="student-status-table/:studentId" element={<StudentStatusTable />} />
             <Route path="student-conflicts-list/:employeeId" element={<StudentConflictsList />} />
             <Route path="conflicts-list/:studentId" element={<ConflictHandling />} />
-
+            <Route path="employee-management/" element={<EmployeeManagement />} />
+            
             {/* <Route path="another-component" element={<AnotherComponent />} /> */}
           </Routes>
           <Outlet />
