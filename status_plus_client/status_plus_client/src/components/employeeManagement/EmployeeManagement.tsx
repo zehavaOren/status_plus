@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Upload, Image, Popconfirm, Input } from 'antd';
 import { UploadOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { Employee } from '../../models/Employee';
+import { employeeService } from '../../services/employeeService';
+import { ColumnType } from 'antd/es/table';
 
 const EmployeeManagement = () => {
-    const [employees, setEmployees] = useState<any[]>([]); // Replace `any[]` with Employee model type.
+    const [employees, setEmployees] = useState<Employee[]>([]); // Replace `any[]` with Employee model type.
     const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [employeeToDelete, setEmployeeToDelete] = useState(null);
@@ -18,9 +21,8 @@ const EmployeeManagement = () => {
     const fetchEmployees = async () => {
         setLoading(true);
         try {
-            // Replace with your service function
-            // const response = await employeeService.getAllEmployees();
-            // setEmployees(response.data); // Assuming the service returns an array of employees
+            const responseFromDB = await employeeService.getAllEmployees();
+            setEmployees(responseFromDB.allEmployees[0]);
         } catch (error) {
             console.error("Failed to fetch employees", error);
         } finally {
@@ -37,11 +39,11 @@ const EmployeeManagement = () => {
         }
     };
 
-    const columns = [
+    const columns: ColumnType<Employee>[] = [
         {
             title: 'תעודת זהות',
-            dataIndex: 'idCard',
-            key: 'idCard',
+            dataIndex: 'identityNumber',
+            key: 'identityNumber',
             width: 150,
         },
         {
@@ -60,19 +62,14 @@ const EmployeeManagement = () => {
             key: 'phone',
         },
         {
-            title: 'כתובת',
-            dataIndex: 'address',
-            key: 'address',
-        },
-        {
-            title: 'עיר',
-            dataIndex: 'city',
-            key: 'city',
+            title: 'אימייל',
+            dataIndex: 'email',
+            key: 'email',
         },
         {
             title: 'תפקיד',
-            dataIndex: 'position',
-            key: 'position',
+            dataIndex: 'job',
+            key: 'job',
         },
         {
             title: 'כיתה',

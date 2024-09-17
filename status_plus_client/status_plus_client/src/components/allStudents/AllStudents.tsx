@@ -216,7 +216,6 @@ const AllStudents = () => {
             })
             addMessage(`התלמידים יובאו בהצלחה`, 'success');
             exportExcelFile(failStudents);
-
         };
 
         reader.readAsBinaryString(file);
