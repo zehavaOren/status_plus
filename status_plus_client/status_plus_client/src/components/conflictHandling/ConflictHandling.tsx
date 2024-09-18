@@ -184,7 +184,10 @@ const ConflictHandling = () => {
             employeeId: employeeId!,
         }));
     };
-
+    // navigate to the privious component
+    const navigateBack = () => {
+        navigate(from);
+    };
     return (
         <>
             <div style={{ direction: 'ltr' }}>
@@ -194,8 +197,11 @@ const ConflictHandling = () => {
                         <Spin size="large" />
                     </div>
                 )}
-                <div>
+                <div className='container'>
                     <Title level={2}>קונפליקטי התלמיד: {studentDetails?.studentName}</Title>
+                    <Button onClick={navigateBack} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
+                        חזרה
+                    </Button>
                 </div>
                 <Table
                     columns={columns}
