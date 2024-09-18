@@ -38,11 +38,22 @@ const getJobs = async (req, res) => {
         console.error(err);
         res.status(500).json({ error: 'An error occurred while processing the request' });
     }
-}
+};
+
+const getPermission = async (req, res) => {
+    try {
+        const permissionList = await dbService.executeStoredProcedure('sp_stpl_get_all_permission');
+        res.status(200).json({ permissionList });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
 
 module.exports = {
     getCities,
     getJobForEmployee,
     getGradesAndClasses,
-    getJobs
+    getJobs,
+    getPermission
 };

@@ -6,5 +6,6 @@ router.get('/getCities', CommonController.getCities);
 router.get('/getJobForEmployee', CommonController.getJobForEmployee);
 router.get('/getGrades', CommonController.getGradesAndClasses);
 router.get('/getJobs', CommonController.getJobs);
+router.get('/getPermission', CommonController.getPermission);
 
 module.exports = router;
