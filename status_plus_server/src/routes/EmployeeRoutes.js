@@ -10,7 +10,7 @@ const EmployeeController = require('../controllers/EmployeeController');
 
 router.get('/getEmployeesByGrade/:gradeId/:classId?/', EmployeeController.getEmployeesByGrade);
 router.get('/getAllEmployees/', EmployeeController.getAllEmployees);
-router.get('/getEmployeeById/:employeeId/');
+router.get('/getEmployeeById/:employeeId/', EmployeeController.getEmployeeById);
 router.delete('/deleteEmployee/:employeeId/', EmployeeController.deleteEmployee);
 
 module.exports = router;
