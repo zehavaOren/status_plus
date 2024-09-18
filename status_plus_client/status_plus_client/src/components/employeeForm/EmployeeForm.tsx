@@ -12,10 +12,10 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 const EmployeeForm = () => {
-    const { employeeId } = useParams<{ employeeId: string }>(); // For fetching an existing employee by ID
+    const { employeeId } = useParams<{ employeeId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from || '/employees';
+    const from = location.state?.from || '/menu';
     const [employee, setEmployee] = useState<Employee | null>(null);
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
@@ -38,18 +38,16 @@ const EmployeeForm = () => {
     };
     // Fetch employee data by ID
     const fetchEmployeeData = async () => {
-        debugger
         setLoading(true);
         try {
             const dataFromServer = await employeeService.getEmployeeById(Number(employeeId!));
             const employeeDetails = dataFromServer.employeeData[0][0]
-            debugger
             setEmployee(employeeDetails);
             form.setFieldsValue(employeeDetails);
             form.setFieldsValue({
-                ...employeeDetails, // Set other employee fields
-                jobId: employeeDetails.jobId, // Set jobId
-                permissionId: employeeDetails.permissionId // Set permissionId
+                ...employeeDetails,
+                jobId: employeeDetails.jobId,
+                permissionId: employeeDetails.permissionId
             });
         } catch (error) {
             addMessage('Failed to fetch employee data.', 'error');
@@ -101,7 +99,6 @@ const EmployeeForm = () => {
             setIsFormChanged(false);
         }
     };
-
     // Confirm navigation away
     const showModal = () => {
         if (isFormChanged) {
@@ -110,17 +107,16 @@ const EmployeeForm = () => {
             navigateBack();
         }
     };
-
     // Handle cancel modal
     const handleOk = () => {
         setIsModalVisible(false);
         navigateBack();
     };
-
+    // ewhen user cancel the updates in the form
     const handleCancel = () => {
         setIsModalVisible(false);
     };
-
+    // navigate to all employees
     const navigateBack = () => {
         navigate(from);
     };

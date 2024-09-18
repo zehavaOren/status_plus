@@ -68,7 +68,7 @@ const StudentsForUpdate = () => {
     const checkStudentStatus = async (studentId: number) => {
         try {
             const responseFromDB = await studentStatusService.checkStudentStatus(studentId);
-            const numbersOfValues=responseFromDB.numbersOfValues[0][0];
+            const numbersOfValues = responseFromDB.numbersOfValues[0][0];
             if (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) {
                 return true;
             }

@@ -16,7 +16,7 @@ const StudentStatus = () => {
     const { studentId } = useParams<{ studentId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from || '/default-path';
+    const from = location.state?.from || '/menu';
     const [loading, setLoading] = useState(false);
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [studentDet, setStudentDet] = useState<{ studentName: string, year: string }>();
@@ -172,9 +172,9 @@ const StudentStatus = () => {
                 )}
                 <div className='container'>
                     <Title level={2}>סטטוס {studentDet?.studentName} {studentDet?.year}</Title>
-                    {/* <Button onClick={navigateBack} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
-                    חזרה
-                </Button> */}
+                    <Button onClick={navigateBack} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
+                        חזרה
+                    </Button>
                     <Button
                         icon={<DownloadOutlined />}
                         type="primary"

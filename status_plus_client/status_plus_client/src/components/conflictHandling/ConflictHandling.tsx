@@ -18,7 +18,7 @@ const ConflictHandling = () => {
     const { studentId } = useParams<{ studentId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from || '/default-path';
+    const from = location.state?.from || '/menu';
     const [loading, setLoading] = useState(false);
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [conflictsList, setConflictsList] = useState<ConflictData[]>([]);

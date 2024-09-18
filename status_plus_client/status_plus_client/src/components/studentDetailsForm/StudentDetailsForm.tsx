@@ -40,7 +40,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     const [employeesForStudent, setEmployeesForStudent] = useState<string[]>([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isFormChanged, setIsFormChanged] = useState(false);
-    const from = location.state?.from || '/default-path';
+    const from = location.state?.from || '/menu';
 
     useEffect(() => {
         if (studentId) {

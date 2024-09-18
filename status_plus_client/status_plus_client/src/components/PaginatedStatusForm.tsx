@@ -17,7 +17,7 @@ const PaginatedStatusForm = () => {
     const { studentId } = useParams<{ studentId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from || '/default-path';
+    const from = location.state?.from || '/menu';
     const [user, setUser] = useState<BaseUser>();
     const [categories, setCategories] = useState<Category[]>([]);
     const [values, setValues] = useState<Value[]>([]);

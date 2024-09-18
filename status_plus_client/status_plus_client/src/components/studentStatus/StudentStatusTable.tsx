@@ -26,7 +26,7 @@ const StudentStatusTable = () => {
     const contentRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from || '/default-path';
+    const from = location.state?.from || '/menu';
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
 
     useEffect(() => {

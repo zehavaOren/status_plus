@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Upload, Image, Popconfirm, Input } from 'antd';
 import { UploadOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Employee } from '../../models/Employee';
 import { employeeService } from '../../services/employeeService';
 import { ColumnType } from 'antd/es/table';
@@ -14,6 +14,7 @@ const EmployeeManagement = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [employeeToDelete, setEmployeeToDelete] = useState(null);
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Fetch employees from the service
     useEffect(() => {
@@ -52,7 +53,7 @@ const EmployeeManagement = () => {
     };
     // navigate to edit the employee details
     const onUpdateEmployeeClick = (employee: Employee) => {
-        navigate(`/menu/employee-form/${{ employeeId: employee.identityNumber }}`)
+        navigate(`/menu/employee-form/${employee.identityNumber}`, { state: { from: location.pathname } })
     }
     // columns to the table
     const columns: ColumnType<Employee>[] = [

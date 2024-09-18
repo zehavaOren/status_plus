@@ -86,6 +86,7 @@ const Menu: React.FC = () => {
     { key: 'student-status', label: 'סטטוס תלמיד', path: 'student-status', permissions: [1, 2, 3] },
     { key: 'student-conflicts-list', label: 'טיפול בקונפליטים', path: `/menu/student-conflicts-list/${user!.identityNumber}`, permissions: [1, 2] },
     { key: 'employee-management', label: 'ניהול עובדים', path: `/menu/employee-management`, permissions: [3] },
+    // { key: 'employee-form', label: 'טופס עובדים', path: `/menu/employee-form/${user!.identityNumber}`, permissions: [3] },
     // ];
   ];
   // log out from the system
@@ -159,8 +160,8 @@ const Menu: React.FC = () => {
             <Route path="student-details/:studentId" element={<StudentDetailsForm componentUrl={selectedComponent} />} />
             <Route path="student-details/" element={<StudentDetailsForm componentUrl={selectedComponent} />} />
             <Route path="all-students/" element={<AllStudents />} />
-            <Route path="status-form/:studentId" element={<StatusForm />} />
-            <Route path="student-status/:studentId" element={<StudentStatus />} />
+            <Route path="status-form/:studentId/" element={<StatusForm />} />
+            <Route path="student-status/:studentId/" element={<StudentStatus />} />
             <Route path="student-status-table/:studentId" element={<StudentStatusTable />} />
             <Route path="student-conflicts-list/:employeeId" element={<StudentConflictsList />} />
             <Route path="conflicts-list/:studentId" element={<ConflictHandling />} />
