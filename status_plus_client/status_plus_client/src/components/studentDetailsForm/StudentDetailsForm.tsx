@@ -34,7 +34,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     const [gradeList, setGradeList] = useState<Grade[]>([]);
     const [selectedGradeClasses, setSelectedGradeClasses] = useState<number[]>([]);
     const [grade, setGrade] = useState<number>();
-    const [jobsList, setJobsList] = useState<{ job_id: number, job_description: string }[]>([]);
+    const [jobsList, setJobsList] = useState<{ jobId: number, jobDescription: string }[]>([]);
     const [jobsAndEmployees, setJobsAndEmployees] = useState<Array<{ job: number, employee: string }>>([]);
     const [isItemDisabled, setIsItemDisabled] = useState(false);
     const [employeesForStudent, setEmployeesForStudent] = useState<string[]>([]);
@@ -541,8 +541,8 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                                     value={roleAndEmployee.job}
                                                 >
                                                     {jobsList.map(job => (
-                                                        <Option key={job.job_id} value={job.job_id}>
-                                                            {job.job_description}
+                                                        <Option key={job.jobId} value={job.jobId}>
+                                                            {job.jobDescription}
                                                         </Option>
                                                     ))}
                                                 </Select>
