@@ -28,9 +28,9 @@ const EmployeeForm = () => {
     useEffect(() => {
         if (employeeId) {
             fetchEmployeeData();
-            getJobs();
-            getPermission();
         }
+        getJobs();
+        getPermission();
     }, [employeeId]);
 
     const addMessage = (message: string, type: any) => {
@@ -141,33 +141,36 @@ const EmployeeForm = () => {
                         form={form}
                         layout="vertical"
                         onFinish={onFinish}
-                        onValuesChange={onValuesChange}
-                    >
+                        onValuesChange={onValuesChange}>
                         <Row gutter={16}>
                             <Col span={6}>
                                 <Form.Item
-                                    label="Identity Number"
+                                    label="תעודת זהות"
                                     name="identityNumber"
-                                    rules={[{ required: true, message: 'Please input the identity number' }]}>
+                                    rules={[{ required: true, message: 'חובה למלא תעודת זהות' }]}>
                                     <Input disabled={!!employeeId} />
                                 </Form.Item>
                             </Col>
                             <Col span={6}>
-                                <Form.Item label="שם משפחה" name="lastName" rules={[{ required: true, message: 'חובה למלא שם משפחה' }]}>
+                                <Form.Item
+                                    label="שם משפחה"
+                                    name="lastName"
+                                    rules={[{ required: true, message: 'חובה למלא שם משפחה' }]}>
                                     <Input />
                                 </Form.Item>
                             </Col>
                             <Col span={6}>
-                                <Form.Item label="שם פרטי" name="firstName" rules={[{ required: true, message: 'חובה למלא שם פרטי' }]}>
+                                <Form.Item
+                                    label="שם פרטי"
+                                    name="firstName"
+                                    rules={[{ required: true, message: 'חובה למלא שם פרטי' }]}>
                                     <Input />
                                 </Form.Item>
                             </Col>
                             <Col span={6}>
                                 <Form.Item
                                     label="טלפון"
-                                    name="phone"
-                                    rules={[{ required: true, message: 'Please input the phone number' }]}
-                                >
+                                    name="phone">
                                     <Input />
                                 </Form.Item>
                             </Col>
@@ -176,9 +179,7 @@ const EmployeeForm = () => {
                             <Col span={6}>
                                 <Form.Item
                                     label="אימייל"
-                                    name="email"
-                                    rules={[{ required: true, message: 'Please input the email number' }]}
-                                >
+                                    name="email">
                                     <Input />
                                 </Form.Item>
                             </Col>

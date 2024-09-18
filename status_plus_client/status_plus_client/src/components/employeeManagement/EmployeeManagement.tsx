@@ -137,7 +137,7 @@ const EmployeeManagement = () => {
 
     // add new student
     const addNewEmployee = () => {
-        navigate(`/menu/student-details/`);
+        navigate(`/menu/employee-form/`, { state: { from: location.pathname } })
     };
     return (
         <div>

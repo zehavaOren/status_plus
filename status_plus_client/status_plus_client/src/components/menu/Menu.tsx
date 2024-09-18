@@ -167,6 +167,7 @@ const Menu: React.FC = () => {
             <Route path="conflicts-list/:studentId" element={<ConflictHandling />} />
             <Route path="employee-management/" element={<EmployeeManagement />} />
             <Route path="employee-form/:employeeId/" element={<EmployeeForm />} />
+            <Route path="employee-form/" element={<EmployeeForm />} />
 
             {/* <Route path="another-component" element={<AnotherComponent />} /> */}
           </Routes>
