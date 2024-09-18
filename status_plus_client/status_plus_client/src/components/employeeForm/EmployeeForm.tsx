@@ -6,6 +6,7 @@ import { employeeService } from "../../services/employeeService"; // Import your
 import Message from "../Message";
 import { Job } from "../../models/Job";
 import { commonService } from "../../services/commonService";
+import { Permission } from "../../models/Permission";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -14,8 +15,7 @@ const EmployeeForm = () => {
     const { employeeId } = useParams<{ employeeId: string }>(); // For fetching an existing employee by ID
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from || '/employees'; // Default redirect after save/cancel
-
+    const from = location.state?.from || '/employees';
     const [employee, setEmployee] = useState<Employee | null>(null);
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
@@ -23,10 +23,13 @@ const EmployeeForm = () => {
     const [isFormChanged, setIsFormChanged] = useState(false);
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]); // Client messages
     const [jobs, setJobs] = useState<Job[]>([]);
+    const [permission, setPermission] = useState<Permission[]>([]);
+
     useEffect(() => {
         if (employeeId) {
             fetchEmployeeData();
             getJobs();
+            getPermission();
         }
     }, [employeeId]);
 
@@ -35,11 +38,19 @@ const EmployeeForm = () => {
     };
     // Fetch employee data by ID
     const fetchEmployeeData = async () => {
+        debugger
         setLoading(true);
         try {
-            const data = await employeeService.getEmployeeById(Number(employeeId!));
-            setEmployee(data);
-            form.setFieldsValue(data);
+            const dataFromServer = await employeeService.getEmployeeById(Number(employeeId!));
+            const employeeDetails = dataFromServer.employeeData[0][0]
+            debugger
+            setEmployee(employeeDetails);
+            form.setFieldsValue(employeeDetails);
+            form.setFieldsValue({
+                ...employeeDetails, // Set other employee fields
+                jobId: employeeDetails.jobId, // Set jobId
+                permissionId: employeeDetails.permissionId // Set permissionId
+            });
         } catch (error) {
             addMessage('Failed to fetch employee data.', 'error');
         } finally {
@@ -50,8 +61,16 @@ const EmployeeForm = () => {
     const getJobs = async () => {
         try {
             const responseFromDB = await commonService.getJobs();
-            debugger
             setJobs(responseFromDB.jobsList[0]);
+        } catch (error) {
+            addMessage('Failed to fetch employee data.', 'error');
+        }
+    }
+    //get permission list
+    const getPermission = async () => {
+        try {
+            const responseFromDB = await commonService.getPermission();
+            setPermission(responseFromDB.permissionList[0]);
         } catch (error) {
             addMessage('Failed to fetch employee data.', 'error');
         }
@@ -171,7 +190,7 @@ const EmployeeForm = () => {
                                 <Form.Item label="תפקיד" name="jobId" rules={[{ required: true, message: 'חובה לבחור תפקיד' }]}>
                                     <Select>
                                         {jobs.map(job => (
-                                            <Option key={job.jobId} value={job.jobDescription}>
+                                            <Option key={job.jobId} value={job.jobId}>
                                                 {job.jobDescription}
                                             </Option>
                                         ))}
@@ -179,11 +198,11 @@ const EmployeeForm = () => {
                                 </Form.Item>
                             </Col>
                             <Col span={6}>
-                                <Form.Item label="הרשאה" name="jobId" rules={[{ required: true, message: 'חובה לבחור הרשאה' }]}>
+                                <Form.Item label="הרשאה" name="permissionId" rules={[{ required: true, message: 'חובה לבחור הרשאה' }]}>
                                     <Select>
-                                        {jobs.map(job => (
-                                            <Option key={job.jobId} value={job.jobDescription}>
-                                                {job.jobDescription}
+                                        {permission.map(perm => (
+                                            <Option key={perm.permissionId} value={perm.permissionId}>
+                                                {perm.permissionDesc}
                                             </Option>
                                         ))}
                                     </Select>
@@ -191,21 +210,8 @@ const EmployeeForm = () => {
                             </Col>
                         </Row>
 
-                        {/* Job */}
-                        <Form.Item
-                            label="Job"
-                            name="job"
-                            rules={[{ required: true, message: 'Please select a job' }]}
-                        >
-                            <Select placeholder="Select a job">
-                                <Option value="Teacher">Teacher</Option>
-                                <Option value="Assistant">Assistant</Option>
-                                <Option value="Administrator">Administrator</Option>
-                            </Select>
-                        </Form.Item>
-
                         {/* Grades */}
-                        <Form.Item
+                        {/* <Form.Item
                             label="Grades"
                             name="grades"
                             rules={[{ required: true, message: 'Please select grades' }]}
@@ -215,29 +221,15 @@ const EmployeeForm = () => {
                                 <Option value="11/B">11/B</Option>
                                 <Option value="12/C">12/C</Option>
                             </Select>
-                        </Form.Item>
-
-                        {/* Permission */}
-                        <Form.Item
-                            label="Permission"
-                            name="permission"
-                            rules={[{ required: true, message: 'Please select a permission' }]}
-                        >
-                            <Select placeholder="Select permission">
-                                <Option value="Admin">Admin</Option>
-                                <Option value="Editor">Editor</Option>
-                                <Option value="Viewer">Viewer</Option>
-                            </Select>
-                        </Form.Item>
-
+                        </Form.Item> */}
                         {/* Save and Cancel Buttons */}
                         <Form.Item>
                             <div style={{ display: 'flex', justifyContent: 'center' }}>
                                 <Button type="primary" htmlType="submit">
-                                    Save
+                                    שמירה
                                 </Button>
                                 <Button onClick={showModal} style={{ marginLeft: '10px' }}>
-                                    Cancel
+                                    ביטול
                                 </Button>
                             </div>
                         </Form.Item>
@@ -246,14 +238,13 @@ const EmployeeForm = () => {
             </div>
             {/* Modal for confirming navigation away */}
             <Modal
-                title="Warning"
+                title="אזהרה!"
                 open={isModalVisible}
                 onOk={handleOk}
                 onCancel={handleCancel}
-                okText="Yes"
-                cancelText="No"
-            >
-                <p>Are you sure you want to leave the form without saving?</p>
+                okText="כן"
+                cancelText="לא">
+                <p>האם אתה בטוח שברצונך לעזוב את הטופס ללא שמירה?</p>
             </Modal>
         </div>
     );

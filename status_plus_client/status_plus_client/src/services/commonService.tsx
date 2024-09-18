@@ -48,5 +48,17 @@ export const commonService = {
         } catch (error: any) {
             throw new Error(`Error fetching employees: ${error.message}`);
         }
+    },
+
+    getPermission: async () => {
+        try {
+            const response = await fetch(`${BASE_URL}/getPermission`);
+            if (!response.ok) {
+                throw new Error('Error fetching employees');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
     }
 }
