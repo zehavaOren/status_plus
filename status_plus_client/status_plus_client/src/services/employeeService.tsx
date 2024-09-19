@@ -61,7 +61,6 @@ export const employeeService = {
     },
 
     upsertEmployee: async (employee: Employee) => {
-        debugger
         const employeeForSave = {
             employeeId: employee.identityNumber,
             lastName: employee.lastName,
