@@ -1,14 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button, Form, Input, Select, Spin, Modal, Card, Col, Row } from "antd";
-import { Employee } from "../../models/Employee"; // Assuming Employee is your model
-import { employeeService } from "../../services/employeeService"; // Import your service for fetching/saving employee data
+
+import { Employee } from "../../models/Employee";
+import { employeeService } from "../../services/employeeService";
 import Message from "../Message";
 import { Job } from "../../models/Job";
 import { commonService } from "../../services/commonService";
 import { Permission } from "../../models/Permission";
 
-const { TextArea } = Input;
+// const { TextArea } = Input;
 const { Option } = Select;
 
 const EmployeeForm = () => {
@@ -85,11 +86,11 @@ const EmployeeForm = () => {
         setLoading(true);
         try {
             const result = await employeeService.upsertEmployee(values);
-            if(result.employeeDetailsSave[0][0].status){
+            if (result.employeeDetailsSave[0][0].status) {
                 addMessage("פרטי איש הצוות נשמרו בהצלחה", "success");
                 navigate(from);
             }
-            else{
+            else {
                 addMessage("שגיאה בשמירת איש הצוות", "error");
             }
         } catch (error) {
@@ -184,7 +185,10 @@ const EmployeeForm = () => {
                                 </Form.Item>
                             </Col>
                             <Col span={6}>
-                                <Form.Item label="תפקיד" name="jobId" rules={[{ required: true, message: 'חובה לבחור תפקיד' }]}>
+                                <Form.Item
+                                    label="תפקיד"
+                                    name="jobId"
+                                    rules={[{ required: true, message: 'חובה לבחור תפקיד' }]}>
                                     <Select>
                                         {jobs.map(job => (
                                             <Option key={job.jobId} value={job.jobId}>
@@ -195,7 +199,10 @@ const EmployeeForm = () => {
                                 </Form.Item>
                             </Col>
                             <Col span={6}>
-                                <Form.Item label="הרשאה" name="permissionId" rules={[{ required: true, message: 'חובה לבחור הרשאה' }]}>
+                                <Form.Item
+                                    label="הרשאה"
+                                    name="permissionId"
+                                    rules={[{ required: true, message: 'חובה לבחור הרשאה' }]}>
                                     <Select>
                                         {permission.map(perm => (
                                             <Option key={perm.permissionId} value={perm.permissionId}>
@@ -233,7 +240,6 @@ const EmployeeForm = () => {
                     </Form>
                 </Card>
             </div>
-            {/* Modal for confirming navigation away */}
             <Modal
                 title="אזהרה!"
                 open={isModalVisible}

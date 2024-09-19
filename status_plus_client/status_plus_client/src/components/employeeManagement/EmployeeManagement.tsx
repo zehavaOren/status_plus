@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Upload, Image, Popconfirm, Input } from 'antd';
+import { Table, Button, Upload, Popconfirm } from 'antd';
 import { UploadOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { ColumnType } from 'antd/es/table';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import { useLocation, useNavigate } from 'react-router-dom';
+
 import { Employee } from '../../models/Employee';
 import { employeeService } from '../../services/employeeService';
-import { ColumnType } from 'antd/es/table';
 import Message from '../Message';
 import './EmployeeManagement.css';
+import { commonService } from '../../services/commonService';
+import { Job } from '../../models/Job';
+import { Permission } from '../../models/Permission';
 
 const EmployeeManagement = () => {
     const [employees, setEmployees] = useState<Employee[]>([]); // Replace `any[]` with Employee model type.
@@ -19,10 +25,14 @@ const EmployeeManagement = () => {
     const [currentPage, setCurrentPage] = useState(1); // Current page
     const [pageSize, setPageSize] = useState(10); // Page size
     const [totalEmployees, setTotalEmployees] = useState(0); // Total number of employees
+    const [jobs, setJobs] = useState<Job[]>([]);
+    const [permission, setPermission] = useState<Permission[]>([]);
 
     // Fetch employees from the service
     useEffect(() => {
         fetchEmployee();
+        getJobs();
+        getPermission();
     }, []);
 
     const addMessage = (message: string, type: any) => {
@@ -41,7 +51,25 @@ const EmployeeManagement = () => {
             setLoading(false);
         }
     };
-
+    // get jobs list
+    const getJobs = async () => {
+        try {
+            const responseFromDB = await commonService.getJobs();
+            setJobs(responseFromDB.jobsList[0]);
+        } catch (error) {
+            addMessage('Failed to fetch employee data.', 'error');
+        }
+    }
+    //get permission list
+    const getPermission = async () => {
+        try {
+            const responseFromDB = await commonService.getPermission();
+            setPermission(responseFromDB.permissionList[0]);
+        } catch (error) {
+            addMessage('Failed to fetch employee data.', 'error');
+        }
+    }
+    // deleting employee
     const handleDelete = async (employeeId: string) => {
         try {
             const isDelete = await employeeService.deleteEmployee(Number(employeeId));
@@ -130,26 +158,120 @@ const EmployeeManagement = () => {
             width: 100,
         },
     ];
-
-    const handleUpload = (file: any) => {
+    // import employees
+    const handleUpload = async (file: any) => {
+        setLoading(true);
         const reader = new FileReader();
+
         reader.onload = async (e) => {
             const data = e.target?.result;
-            // Process Excel file data here using XLSX or any other library
+            const workbook = XLSX.read(data, { type: 'binary' });
+
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+
+            const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+            const employees: Employee[] = jsonData.map((item: any) => ({
+                identityNumber: item['תעודת זהות'],
+                lastName: item['שם משפחה'],
+                firstName: item['שם פרטי'],
+                phone: item['טלפון'],
+                email: item['אימייל'],
+                job: item['תפקיד'],
+                jobId: mapJobToId(item['תפקיד']),
+                grades: [],
+                permission: item['הרשאה'],
+                permissionId: mapPermissionToId(item['הרשאה']),
+            }));
+
+            const failedImports: { employee: Employee; status: string; error?: string }[] = [];
+            for (const employee of employees) {
+                try {
+                    const saveRes = await employeeService.upsertEmployee(employee);
+                    if (saveRes.employeeDetailsSave[0][0].status !== 1) {
+                        failedImports.push({ employee, status: 'Failed', error: saveRes.message || 'Unknown error' });
+                        addMessage(`שגיאה בשמירת עובד ${employee.firstName} ${employee.lastName}`, 'error');
+                    }
+                } catch (error: any) {
+                    debugger
+                    failedImports.push({ employee, status: 'Failed', error: error });
+                    console.error("Failed to import employee", error);
+                }
+            }
+
+            if (failedImports.length > 0) {
+                await exportExcelFile(failedImports);
+            } else {
+                addMessage("כל העובדים נשמרו בהצלחה", "success");
+            }
+
+            fetchEmployee();
         };
+
         reader.readAsBinaryString(file);
+        setLoading(false);
+    };
+    // map job
+    const mapJobToId = (jobDescription: string) => {
+        const job = jobs.find(j => j.jobDescription === jobDescription);
+        return job ? job.jobId : 0;
+    };
+    // map permission
+    const mapPermissionToId = (permissionDescription: string) => {
+        const perm = permission.find(p => p.permissionDesc === permissionDescription);
+        return perm ? perm.permissionId : 0;
+    };
+    // export to excel all employees that not import
+    const exportExcelFile = async (rows: { employee: Employee; status: string; error?: any }[]) => {
+        const perfectRows: any[] = [];
+
+        rows.forEach(row => {
+            const obj = {
+                'תעודת זהות': row.employee.identityNumber,
+                'שם משפחה': row.employee.lastName,
+                'שם פרטי': row.employee.firstName,
+                'טלפון': row.employee.phone,
+                'אימייל': row.employee.email,
+                'תפקיד': row.employee.job,
+                'הרשאה': row.employee.permission,
+                'שגיאת הכנסה': row.error.message
+            };
+            perfectRows.push(obj);
+        });
+
+        try {
+            const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(perfectRows);
+            const wscols = [
+                { wch: 20 }, // Adjust column widths as needed
+                { wch: 20 },
+                { wch: 20 },
+                { wch: 20 },
+                { wch: 30 },
+                { wch: 20 },
+                { wch: 20 },
+                { wch: 50 }
+            ];
+            worksheet['!cols'] = wscols;
+            const workbook: XLSX.WorkBook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Failed Imports");
+            const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const data: Blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+            saveAs(data, 'עובדים שלא יובאו.xlsx');
+        } catch (error) {
+            console.error('Error creating Excel file:', error);
+        }
     };
     // add new student
     const addNewEmployee = () => {
         navigate(`/menu/employee-form/`, { state: { from: location.pathname } })
     };
+    // paging
     const handleTableChange = (pagination: any) => {
-        setCurrentPage(pagination.current); // Update the current page
-        setPageSize(pagination.pageSize); // Update the page size
+        setCurrentPage(pagination.current);
+        setPageSize(pagination.pageSize);
         fetchEmployee();
-        // fetchEmployee(pagination.current, pagination.pageSize); // Fetch new page data
     };
-    const paginatedEmployees = employees.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
     return (
         <div>
