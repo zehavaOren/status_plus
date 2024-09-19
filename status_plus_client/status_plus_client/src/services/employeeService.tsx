@@ -1,3 +1,5 @@
+import { Employee } from "../models/Employee";
+
 const BASE_URL = 'http://localhost:4000/employee';
 
 export const employeeService = {
@@ -55,6 +57,32 @@ export const employeeService = {
             return await response.json();
         } catch (error: any) {
             throw new Error(`Error deleting employee: ${error.message}`);
+        }
+    },
+
+    upsertEmployee: async (employee: Employee) => {
+        const employeeForSave = {
+            employeeId: employee.identityNumber,
+            lastName: employee.lastName,
+            firstName: employee.firstName,
+            phone: employee.phone,
+            email: employee.email,
+            jobId: employee.jobId
+        }
+        try {
+            const response = await fetch(`${BASE_URL}/upsertEmployee/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(employeeForSave)
+            });
+            if (!response.ok) {
+                throw new Error('Error fetching employees');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
         }
     },
 

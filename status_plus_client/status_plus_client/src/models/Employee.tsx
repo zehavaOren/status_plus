@@ -5,6 +5,7 @@ export interface Employee {
     phone: string;
     email: string;
     job: string;
+    jobId?: number;
     grades: string[];
     permission: string;
 }
