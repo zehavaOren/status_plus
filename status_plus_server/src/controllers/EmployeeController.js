@@ -69,8 +69,9 @@ const upsertEmployee = async (req, res) => {
   const phone = req.body.phone;
   const email = req.body.email;
   const jobId = req.body.jobId;
+  const permissionId = req.body.permissionId;
   try {
-    const employeeDetailsSave = await dbService.executeStoredProcedure('sp_stpl_upsert_employee', { employeeId, lastName, firstName, phone, email, jobId });
+    const employeeDetailsSave = await dbService.executeStoredProcedure('sp_stpl_upsert_employee', { employeeId, lastName, firstName, phone, email, jobId, permissionId });
     res.status(200).json({ employeeDetailsSave });
   } catch (err) {
     console.error(err);
