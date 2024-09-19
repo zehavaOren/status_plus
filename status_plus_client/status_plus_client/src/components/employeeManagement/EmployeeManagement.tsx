@@ -6,6 +6,7 @@ import { Employee } from '../../models/Employee';
 import { employeeService } from '../../services/employeeService';
 import { ColumnType } from 'antd/es/table';
 import Message from '../Message';
+import './EmployeeManagement.css';
 
 const EmployeeManagement = () => {
     const [employees, setEmployees] = useState<Employee[]>([]); // Replace `any[]` with Employee model type.
@@ -15,21 +16,25 @@ const EmployeeManagement = () => {
     const [employeeToDelete, setEmployeeToDelete] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
+    const [currentPage, setCurrentPage] = useState(1); // Current page
+    const [pageSize, setPageSize] = useState(10); // Page size
+    const [totalEmployees, setTotalEmployees] = useState(0); // Total number of employees
 
     // Fetch employees from the service
     useEffect(() => {
-        fetchEmployees();
+        fetchEmployee();
     }, []);
 
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
     // get employee data
-    const fetchEmployees = async () => {
+    const fetchEmployee = async () => {
         setLoading(true);
         try {
             const responseFromDB = await employeeService.getAllEmployees();
             setEmployees(responseFromDB.allEmployees[0]);
+            setTotalEmployees(responseFromDB.totalCount); // Set the total number of employees from the API response
         } catch (error) {
             console.error("Failed to fetch employees", error);
         } finally {
@@ -46,7 +51,7 @@ const EmployeeManagement = () => {
             else {
                 addMessage("העובד נמחק בהצלחה", "success");
             }
-            fetchEmployees();
+            fetchEmployee();
         } catch (error) {
             console.error("Failed to delete employee", error);
         }
@@ -134,11 +139,18 @@ const EmployeeManagement = () => {
         };
         reader.readAsBinaryString(file);
     };
-
     // add new student
     const addNewEmployee = () => {
         navigate(`/menu/employee-form/`, { state: { from: location.pathname } })
     };
+    const handleTableChange = (pagination: any) => {
+        setCurrentPage(pagination.current); // Update the current page
+        setPageSize(pagination.pageSize); // Update the page size
+        fetchEmployee();
+        // fetchEmployee(pagination.current, pagination.pageSize); // Fetch new page data
+    };
+    const paginatedEmployees = employees.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
     return (
         <div>
             <Message messages={messages} duration={5000} />
@@ -182,8 +194,28 @@ const EmployeeManagement = () => {
                         columns={columns}
                         dataSource={employees}
                         loading={loading}
-                        rowKey="student_id"
-                        pagination={false}
+                        rowKey="identityNumber"
+                        pagination={{
+                            current: currentPage,
+                            pageSize: pageSize,
+                            total: totalEmployees,
+                            showSizeChanger: true,
+                            pageSizeOptions: ['10', '20', '50', '100'],
+                            onChange: handleTableChange,
+                            locale: {
+                                items_per_page: 'לכל דף',
+                                jump_to: 'עבור ל',
+                                jump_to_confirm: 'אישור',
+                                page: 'עמוד',
+                                prev_page: 'העמוד הקודם',
+                                next_page: 'העמוד הבא',
+                                prev_5: 'הקודם 5',
+                                next_5: 'הבא 5',
+                                prev_3: 'הקודם 3',
+                                next_3: 'הבא 3',
+                            },
+                        }}
+                        // pagination={false}
                         className="table"
                         components={{
                             header: {

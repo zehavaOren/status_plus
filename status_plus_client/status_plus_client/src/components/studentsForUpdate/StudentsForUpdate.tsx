@@ -197,6 +197,7 @@ const StudentsForUpdate = () => {
         }
     ];
     const userPermission = MySingletonService.getInstance().getBaseUser().permission;
+    
     return (
         <>
             <Message messages={messages} duration={5000} />
