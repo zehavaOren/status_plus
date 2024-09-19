@@ -31,7 +31,7 @@ export const Login = () => {
             const user = await MySingletonService.getInstance().getBaseUser();
             if (user) {
                 setUser(user);
-                navigate('/menu');
+                navigate(`menu/students-for-update/${user.identityNumber}`);
             }
             else {
                 addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
