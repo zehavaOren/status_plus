@@ -12,6 +12,6 @@ router.get('/getEmployeesByGrade/:gradeId/:classId?/', EmployeeController.getEmp
 router.get('/getAllEmployees/', EmployeeController.getAllEmployees);
 router.get('/getEmployeeById/:employeeId/', EmployeeController.getEmployeeById);
 router.delete('/deleteEmployee/:employeeId/', EmployeeController.deleteEmployee);
-router.post('/upsertEmployee/')
+router.post('/upsertEmployee/', EmployeeController.upsertEmployee);
 
 module.exports = router;
