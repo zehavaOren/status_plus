@@ -8,4 +8,5 @@ export interface Employee {
     jobId?: number;
     grades: string[];
     permission: string;
+    permissionId?: number;
 }

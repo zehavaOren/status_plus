@@ -61,13 +61,15 @@ export const employeeService = {
     },
 
     upsertEmployee: async (employee: Employee) => {
+        debugger
         const employeeForSave = {
             employeeId: employee.identityNumber,
             lastName: employee.lastName,
             firstName: employee.firstName,
             phone: employee.phone,
             email: employee.email,
-            jobId: employee.jobId
+            jobId: employee.jobId,
+            permissionId: employee.permissionId
         }
         try {
             const response = await fetch(`${BASE_URL}/upsertEmployee/`, {

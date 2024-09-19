@@ -82,16 +82,16 @@ const EmployeeForm = () => {
         if (!employeeId) {
             return;
         }
-
         setLoading(true);
         try {
-            // const result = await employeeService.saveEmployee({ ...employee, ...values });
-            // if (result.success) {
-            addMessage('Employee saved successfully', 'success');
-            navigate(from); // Redirect back to the employee list
-            // } else {
-            addMessage('Failed to save employee', 'error');
-            // }
+            const result = await employeeService.upsertEmployee(values);
+            if(result.employeeDetailsSave[0][0].status){
+                addMessage("פרטי איש הצוות נשמרו בהצלחה", "success");
+                navigate(from);
+            }
+            else{
+                addMessage("שגיאה בשמירת איש הצוות", "error");
+            }
         } catch (error) {
             addMessage('Error while saving employee', 'error');
         } finally {
