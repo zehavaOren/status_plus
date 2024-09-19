@@ -62,10 +62,26 @@ const deleteEmployee = async (req, res) => {
   }
 };
 
+const upsertEmployee = async (req, res) => {
+  const employeeId = req.body.employeeId;
+  const lastName = req.body.lastName;
+  const firstName = req.body.firstName;
+  const phone = req.body.phone;
+  const email = req.body.email;
+  const jobId = req.body.jobId;
+  try {
+    const employeeDetailsSave = await dbService.executeStoredProcedure('sp_stpl_upsert_student_details', { employeeId, lastName, firstName, phone, email, jobId });
+    res.status(200).json({ employeeDetailsSave });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'An error occurred while processing the request' });
+  }
+}
 
 module.exports = {
   getEmployeesByGrade,
   getAllEmployees,
   getEmployeeById,
-  deleteEmployee
+  deleteEmployee,
+  upsertEmployee
 }
