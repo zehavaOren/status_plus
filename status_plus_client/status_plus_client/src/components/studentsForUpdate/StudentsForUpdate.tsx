@@ -23,6 +23,7 @@ const StudentsForUpdate = () => {
 
     useEffect(() => {
         getStudentsForUpdate(identityNumber || '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [identityNumber]);
 
     const addMessage = (message: string, type: any) => {
