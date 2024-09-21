@@ -21,6 +21,7 @@ interface StudentDetailsFormProps {
 const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const from = location.state?.from || '/menu';
     const { studentId } = useParams<{ studentId: string }>();
     const [form] = Form.useForm();
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
@@ -40,7 +41,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     const [employeesForStudent, setEmployeesForStudent] = useState<string[]>([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isFormChanged, setIsFormChanged] = useState(false);
-    const from = location.state?.from || '/menu';
 
     useEffect(() => {
         if (studentId) {
@@ -376,6 +376,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     };
     // navigate to the privious component
     const navigateBack = () => {
+        debugger
         navigate(from);
     };
     return (

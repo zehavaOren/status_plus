@@ -97,7 +97,7 @@ const StudentsForUpdate = () => {
     }));
     // add new student
     const addNewStudent = () => {
-        navigate(`/menu/student-details/`);
+        navigate(`/menu/student-details/`, { state: { from: location.pathname } });
     }
 
     const columns: ColumnType<Student>[] = [

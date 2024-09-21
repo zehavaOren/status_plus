@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Layout, Menu as AntdMenu, Dropdown, Image, ConfigProvider } from 'antd';
+import { Layout, Menu as AntdMenu, Dropdown, Image, ConfigProvider, Spin } from 'antd';
 import { LogoutOutlined } from '@ant-design/icons';
 import { Link, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 
@@ -30,12 +30,34 @@ const Menu: React.FC = () => {
   const [user, setUser] = useState<BaseUser | null>(null);
   const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [selectedComponent, setSelectedComponent] = useState('');
   const [menuItems, setMenuItems] = useState<Array<{ key: string, label: string, path: string, permissions: Array<number> }>>([]);
 
   useEffect(() => {
-    getBaseUser();
-  }, []);
+    const initializeUser = async () => {
+      const userService = MySingletonService.getInstance();
+      const fetchedUser = await userService.initializeBaseUser();
+      debugger
+      if (fetchedUser) {
+        setUser(fetchedUser);
+        setMenuItems(generateMenuItems(fetchedUser));
+      } else {
+        if (userService) {
+          setUser(userService.baseUser);
+          setMenuItems(generateMenuItems(userService.baseUser));
+        }
+        else {
+          navigate('/'); // Redirect to login if user data couldn't be fetched
+        }
+      }
+    };
+
+    initializeUser();
+  }, [navigate]);
+  // useEffect(() => {
+  //   getBaseUser();
+  // }, []);
   // useEffect(() => {
   //   // if (location.state) {
   //   // const { identityNumber, userName } = location.state;
@@ -73,32 +95,31 @@ const Menu: React.FC = () => {
       console.error('Error fetching user data:', error);
       addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
     }
-  }
+  };
   const generateMenuItems = (user: BaseUser) => [
     // const menuItems = [
+      { key: 'employee-management', label: 'ניהול עובדים', path: `/menu/${user!.identityNumber}/employee-management`, permissions: [3] },
+      { key: 'student-conflicts-list', label: 'טיפול בקונפליטים', path: `/menu/student-conflicts-list/${user!.identityNumber}`, permissions: [1, 2] },
+      { key: 'all-students', label: 'כל התלמידים', path: 'all-students', permissions: [3] },
+
     { key: 'students-for-update', label: 'תלמידים לעדכון סטטוס תלמיד', path: `/menu/students-for-update/${user!.identityNumber}`, permissions: [1, 2] },
     // { key: 'students-statuses', label: 'סטטוסי התלמידים', path: '/menu/students-statuses' },
     // { key: 'another-component2', label: 'תלמידים לעדכון סטטוס תלמיד', path: `/menu/students-for-update2/${user.identityNumber}` },
     // { key: 'another-component3', label: 'נוספת קומפוננטה', path: '/menu/another-component3' },
     { key: 'students-statuses', label: 'סטטוס כל התלמידים', path: 'students-statuses', permissions: [1, 2, 3] },
-    { key: 'all-students', label: 'כל התלמידים', path: 'all-students', permissions: [3] },
     // { key: 'status-form', label: 'טופס סטטוס תלמיד', path: 'status-form', permissions: [1, 2, 3] },
     // { key: 'student-status', label: 'סטטוס תלמיד', path: 'student-status', permissions: [1, 2, 3] },
-    { key: 'student-conflicts-list', label: 'טיפול בקונפליטים', path: `/menu/student-conflicts-list/${user!.identityNumber}`, permissions: [1, 2] },
-    { key: 'employee-management', label: 'ניהול עובדים', path: `/menu/employee-management`, permissions: [3] },
     // { key: 'employee-form', label: 'טופס עובדים', path: `/menu/employee-form/${user!.identityNumber}`, permissions: [3] },
     // ];
   ];
   // log out from the system
   const handleLogout = () => {
     setSelectedComponent('');
-    setUser({ identityNumber: '', userName: '', permission: 0 });
-    localStorage.removeItem('user');
+    setUser(null);
+    MySingletonService.getInstance().setBaseUser({ identityNumber: '', userName: '', permission: 0 });
     navigate('/');
   };
   // menu items list
-
-
   const userMenu = (
     <AntdMenu>
       <AntdMenu.Item key="logout" onClick={handleLogout}>
@@ -108,7 +129,11 @@ const Menu: React.FC = () => {
   );
 
   if (!user) {
-    return <div>Loading...</div>; // Or any loading indicator you prefer
+    return <div> {loading && (
+      <div className="loading-overlay">
+        <Spin size="large" />
+      </div>
+    )}</div>;
   }
 
   return (
@@ -165,7 +190,7 @@ const Menu: React.FC = () => {
             <Route path="student-status-table/:studentId" element={<StudentStatusTable />} />
             <Route path="student-conflicts-list/:employeeId" element={<StudentConflictsList />} />
             <Route path="conflicts-list/:studentId" element={<ConflictHandling />} />
-            <Route path="employee-management/" element={<EmployeeManagement />} />
+            <Route path=":employeeId/employee-management/" element={<EmployeeManagement />} />
             <Route path="employee-form/:employeeId/" element={<EmployeeForm />} />
             <Route path="employee-form/" element={<EmployeeForm />} />
 

@@ -13,7 +13,8 @@ import { MySingletonService } from '../../services/MySingletonService';
 const { Title } = Typography;
 
 export const Login = () => {
-    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]); const [loading, setLoading] = useState(false);
+    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
+    const [loading, setLoading] = useState(false);
     const [permission, setPermission] = useState(0);
     const [user, setUser] = useState<BaseUser>();
     const navigate = useNavigate();
