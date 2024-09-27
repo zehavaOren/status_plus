@@ -28,6 +28,7 @@ const ConflictHandling = () => {
 
     useEffect(() => {
         getConflictsList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
     const addMessage = (message: string, type: any) => {

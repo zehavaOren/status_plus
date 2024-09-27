@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Input, Pagination, Table, Image, Button, Modal, Upload, Progress, Popconfirm } from 'antd';
+import { Input, Pagination, Table, Image, Button, Upload, Progress, Popconfirm } from 'antd';
 import { ColumnType } from 'antd/es/table';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -9,7 +9,6 @@ import view from '../../assets/view.png';
 import { Student } from '../../models/Student';
 import { studentService } from '../../services/studentService';
 import edit from '../../assets/edit.png';
-import deleteIcon from '../../assets/deleteIcon.png';
 import Message from '../Message';
 import './AllStudents.css';
 import { DeleteOutlined, UploadOutlined } from '@ant-design/icons';
@@ -21,18 +20,20 @@ const AllStudents = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
-    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]); const [loading, setLoading] = useState(false);
+    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]); 
+    const [loading, setLoading] = useState(false);
     const [students, setStudents] = useState<Student[]>([]);
     const [searchText, setSearchText] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+    // const [isModalVisible, setIsModalVisible] = useState(false);
+    // const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
     const [gradeFilter, setGradeFilter] = useState<string | null>(null);
-    const [file, setFile] = useState(null);
+    // const [file, setFile] = useState(null);
 
     useEffect(() => {
         getStudents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     useEffect(() => {
         setCurrentPage(1);
@@ -150,10 +151,10 @@ const AllStudents = () => {
         navigate(`/menu/student-details/${student.studentId}`, { state: { from: location.pathname } });
     }
     // confirm the delete modal
-    const showDeleteModal = (student: Student) => {
-        setStudentToDelete(student);
-        setIsModalVisible(true);
-    };
+    // const showDeleteModal = (student: Student) => {
+    //     setStudentToDelete(student);
+    //     setIsModalVisible(true);
+    // };
     // delete student
     const handleDelete = async (studentId: string) => {
         const deleteStudentRes = await studentService.deleteStudent(studentId, 'תשפד');
@@ -163,13 +164,13 @@ const AllStudents = () => {
             addMessage('מחיקת התלמיד נכשלה', 'error');
         }
         getStudents();
-        setIsModalVisible(false);
+        // setIsModalVisible(false);
     };
     // cnacel delete
-    const handleCancel = () => {
-        setIsModalVisible(false);
-        setStudentToDelete(null);
-    };
+    // const handleCancel = () => {
+    //     setIsModalVisible(false);
+    //     setStudentToDelete(null);
+    // };
     // add new student
     const addNewStudent = () => {
         navigate(`/menu/student-details/`, { state: { from: location.pathname } });
@@ -221,6 +222,7 @@ const AllStudents = () => {
     // export to excel the students how dont imported to DB
     const exportExcelFile = async (rows: ({ student: any; status: string; result: any; error?: undefined; } | { student: any; status: string; error: any; result?: undefined; })[]) => {
         const perfectRows: any[] = [];
+        // eslint-disable-next-line array-callback-return
         rows.map(row => {
             const obj = {
                 'תעודת זהות': row.student.studentId,

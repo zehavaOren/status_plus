@@ -21,6 +21,7 @@ const StudentsStatuses = () => {
 
     useEffect(() => {
         getStudentsStatuses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const addMessage = (message: string, type: any) => {

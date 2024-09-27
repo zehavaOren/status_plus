@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, Button, Upload, Popconfirm } from 'antd';
 import { UploadOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { ColumnType } from 'antd/es/table';
@@ -18,8 +18,8 @@ const EmployeeManagement = () => {
     const [employees, setEmployees] = useState<Employee[]>([]); // Replace `any[]` with Employee model type.
     const [loading, setLoading] = useState(false);
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [employeeToDelete, setEmployeeToDelete] = useState(null);
+    // const [isModalVisible, setIsModalVisible] = useState(false);
+    // const [employeeToDelete, setEmployeeToDelete] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
     const [currentPage, setCurrentPage] = useState(1); // Current page
@@ -33,6 +33,7 @@ const EmployeeManagement = () => {
         fetchEmployee();
         getJobs();
         getPermission();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const addMessage = (message: string, type: any) => {

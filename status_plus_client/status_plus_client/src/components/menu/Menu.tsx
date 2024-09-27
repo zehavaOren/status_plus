@@ -1,7 +1,7 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout, Menu as AntdMenu, Dropdown, Image, ConfigProvider, Spin } from 'antd';
 import { LogoutOutlined } from '@ant-design/icons';
-import { Link, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 
 import './menu.css';
 import logo from '../../assets/clear_logo.png';
@@ -24,12 +24,13 @@ import EmployeeForm from '../employeeForm/EmployeeForm';
 const { Header, Content } = Layout;
 
 const Menu: React.FC = () => {
-  const location = useLocation();
+  // const location = useLocation();
   const navigate = useNavigate();
-  const { state } = location;
+  // const { state } = location;
   const [user, setUser] = useState<BaseUser | null>(null);
-  const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  // const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
+  // const [currentPage, setCurrentPage] = useState(1);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState(false);
   const [selectedComponent, setSelectedComponent] = useState('');
   const [menuItems, setMenuItems] = useState<Array<{ key: string, label: string, path: string, permissions: Array<number> }>>([]);
@@ -77,25 +78,25 @@ const Menu: React.FC = () => {
   // }, [location]);
 
   // client message
-  const addMessage = (message: string, type: any) => {
-    setMessages([{ message, type, id: Date.now() }]);
-  };
+  // const addMessage = (message: string, type: any) => {
+  //   setMessages([{ message, type, id: Date.now() }]);
+  // };
   // get user data from singelton
-  const getBaseUser = async () => {
-    try {
-      const user = await MySingletonService.getInstance().getBaseUser();
-      if (user) {
-        setUser(user);
-        setMenuItems(generateMenuItems(user));
-        setSelectedComponent(`/menu/students-for-update/${user.identityNumber}`);
-      } else {
-        addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
-    }
-  };
+  // const getBaseUser = async () => {
+  //   try {
+  //     const user = await MySingletonService.getInstance().getBaseUser();
+  //     if (user) {
+  //       setUser(user);
+  //       setMenuItems(generateMenuItems(user));
+  //       setSelectedComponent(`/menu/students-for-update/${user.identityNumber}`);
+  //     } else {
+  //       addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching user data:', error);
+  //     addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
+  //   }
+  // };
   const generateMenuItems = (user: BaseUser) => [
     // const menuItems = [
     { key: 'employee-management', label: 'ניהול עובדים', path: `/menu/${user!.identityNumber}/employee-management`, permissions: [3] },

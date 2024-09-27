@@ -17,7 +17,7 @@ const EmployeeForm = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from || '/menu';
-    const [employee, setEmployee] = useState<Employee | null>(null);
+    // const [employee, setEmployee] = useState<Employee | null>(null);
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -32,6 +32,7 @@ const EmployeeForm = () => {
         }
         getJobs();
         getPermission();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [employeeId]);
 
     const addMessage = (message: string, type: any) => {
@@ -43,7 +44,7 @@ const EmployeeForm = () => {
         try {
             const dataFromServer = await employeeService.getEmployeeById(Number(employeeId!));
             const employeeDetails = dataFromServer.employeeData[0][0]
-            setEmployee(employeeDetails);
+            // setEmployee(employeeDetails);
             form.setFieldsValue(employeeDetails);
             form.setFieldsValue({
                 ...employeeDetails,

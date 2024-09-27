@@ -20,7 +20,7 @@ interface CategoryData {
 const StudentStatusTable = () => {
     const { studentId } = useParams<{ studentId: string }>();
     const [loading, setLoading] = useState(false);
-    const [studentDet, setStudentDet] = useState<{ studentName: string, year: string }>();
+    // const [studentDet, setStudentDet] = useState<{ studentName: string, year: string }>();
     const [employeeDet, setEmployeeDet] = useState<{ employeeName: string, jobId: number, jobDesc: string }[]>([]);
     const [studentStatus, setStudentStatus] = useState<StudentStatusValue[]>([]);
     const contentRef = useRef<HTMLDivElement>(null);
@@ -31,6 +31,7 @@ const StudentStatusTable = () => {
 
     useEffect(() => {
         fetchStudentStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const addMessage = (message: string, type: any) => {
@@ -42,7 +43,7 @@ const StudentStatusTable = () => {
         try {
             const studentStatusResponse = await studentStatusService.getStudentStatus(Number(studentId));
             setEmployeeDet(studentStatusResponse.studentStatusData[0]);
-            setStudentDet(studentStatusResponse.studentStatusData[1][0]);
+            // setStudentDet(studentStatusResponse.studentStatusData[1][0]);
             setStudentStatus(studentStatusResponse.studentStatusData[2]);
         } catch (error) {
             addMessage('אופס, שגיאה בקבלת הנתונים', 'error');

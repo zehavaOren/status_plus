@@ -54,6 +54,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         getCitiesList();
         getJobForEmployee();
         getJobsList();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
     useEffect(() => {
@@ -70,6 +71,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
             }
             setIsFormChanged(false);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentDetails, form]);
 
     useEffect(() => {
@@ -295,6 +297,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
             'job_id': 19
         }
         ];
+        // eslint-disable-next-line array-callback-return
         jobsAndEmployees.map(job => {
             const perfectJob = {
                 'student_id': values.studentId,
@@ -328,6 +331,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     // save the employees for studnet list
     const saveEmployeesForStudent = async (employeesForStudent: any[]) => {
         const employeesStudentRes = await studentService.upsertEmployeesForStudent(employeesForStudent);
+        // eslint-disable-next-line array-callback-return
         employeesStudentRes.map(empUpsert => {
             if (empUpsert.status !== "success") {
                 return "error";

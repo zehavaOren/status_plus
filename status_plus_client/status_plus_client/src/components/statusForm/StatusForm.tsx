@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button, Checkbox, Col, Form, Input, Row, Pagination, Card, Modal, Spin } from "antd";
-import html2canvas from 'html2canvas';
-import { jsPDF } from "jspdf";
 
 import './StatusForm.css'
 import { studentStatusService } from "../../services/studentStatusService";
@@ -26,7 +24,7 @@ const StatusForm = () => {
     const [formValues, setFormValues] = useState<ValueSelected[]>([]);
     const [loading, setLoading] = useState(false);
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]); const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(1);
+    // const [pageSize, setPageSize] = useState(1);
     const [form] = Form.useForm();
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isFormChanged, setIsFormChanged] = useState(false);
@@ -34,9 +32,11 @@ const StatusForm = () => {
     const [studentName, setStudentName] = useState("");
     const next = "הבא>";
     const previos = "<הקודם";
+    const pageSize=1;
 
     useEffect(() => {
         getData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
     // allow choose few inputs
     useEffect(() => {
@@ -157,6 +157,7 @@ const StatusForm = () => {
         } else {
             addMessage('לא בוצעו שינויים', 'info');
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, formValues, studentId]);
     // when canceling the form
     const onCancel = () => {
