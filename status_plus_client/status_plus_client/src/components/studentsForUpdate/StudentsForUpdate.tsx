@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Input, Image } from 'antd';
+import { Table, Button, Input, Image, Modal } from 'antd';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ColumnType } from 'antd/es/table';
 
@@ -20,10 +20,14 @@ const StudentsForUpdate = () => {
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]); const [loading, setLoading] = useState(false);
     const [students, setStudents] = useState<Student[]>([]);
     const [searchText, setSearchText] = useState('');
+    const [hasCheckedConflicts, setHasCheckedConflicts] = useState(false); // Flag to ensure the modal shows only once
 
     useEffect(() => {
         getStudentsForUpdate(identityNumber || '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (!hasCheckedConflicts) {
+            getIsStudentsWithConflicts();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [identityNumber]);
 
     const addMessage = (message: string, type: any) => {
@@ -63,6 +67,32 @@ const StudentsForUpdate = () => {
         }
         else {
             addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
+        }
+    }
+    const showConflictModal = () => {
+        Modal.confirm({
+            title: 'יש לך תלמידים עם קונפליקטים',
+            content: 'האם ברצונך לנסות לפתור אותם?',
+            okText: 'כן',
+            cancelText: 'לא',
+            onOk() {
+                navigate(`/menu/student-conflicts-list/${identityNumber}`, { state: { from: location.pathname } });
+            },
+            onCancel() {
+                // Do nothing, just close the modal
+            },
+        });
+    };
+    // check if there is a students with conflicts
+    const getIsStudentsWithConflicts = async () => {
+        try {
+            const responseFromDB = await studentStatusService.getStdentsConflicts(Number(identityNumber));
+            if (responseFromDB.studentConflicts[0].length > 0) {
+                showConflictModal();
+            }
+            setHasCheckedConflicts(true);
+        } catch (error) {
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
         }
     }
     // check if all employees fill the status
@@ -198,7 +228,7 @@ const StudentsForUpdate = () => {
         }
     ];
     const userPermission = MySingletonService.getInstance().getBaseUser().permission;
-    
+
     return (
         <>
             <Message messages={messages} duration={5000} />

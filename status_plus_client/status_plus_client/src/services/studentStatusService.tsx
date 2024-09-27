@@ -2,6 +2,7 @@ import { ConflictChoice } from "../models/ConflictChoice";
 import { ValueSelected } from "../models/ValueSelected";
 
 const BASE_URL = 'http://localhost:4000/studentStatus';
+// const BASE_URL = `${process.env.REACT_APP_API_BASE_URL}/studentStatus`;
 
 export const studentStatusService = {
 

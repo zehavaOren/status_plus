@@ -89,7 +89,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
     // get the student details and init the form
-    const fetchStudentDetails = async (studentId: string) => {
+    const fetchStudentDetails = async (studentId: string, isShowError?: boolean) => {
         setLoading(true);
         try {
             if (studentId) {
@@ -105,7 +105,9 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                 setEmployeesForStudent(employees);
             }
         } catch (error) {
-            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
+            if (!isShowError) {
+                addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
+            }
         } finally {
             setLoading(false);
         }
@@ -350,9 +352,9 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         setJobsAndEmployees(newRolesAndEmployees);
     };
     // get the data of student with the written ID
-    const handleStudentIdChange: React.EventHandler<any> = (value: any) => {
-        fetchStudentDetails(value.target.value);
-    }
+    const handleStudentIdBlur: React.FocusEventHandler<HTMLInputElement> = (event) => {
+        fetchStudentDetails(event.target.value, true);
+    };
     // update that there is a change in the form
     const onFieldsChange = (changedFields: any, allFields: any) => {
         setIsFormChanged(true);
@@ -405,8 +407,17 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                             onFieldsChange={onFieldsChange}>
                             <Row gutter={16}>
                                 <Col span={6}>
-                                    <Form.Item label="תעודת זהות" className='disabledInput' name="studentId" rules={[{ required: true, message: 'חובה למלא תעודת זהות' }]}>
-                                        <Input value={studentId} disabled={isItemDisabled} style={{ backgroundColor: 'white' }} onChange={handleStudentIdChange} />
+                                    <Form.Item
+                                        label="תעודת זהות"
+                                        className="disabledInput"
+                                        name="studentId"
+                                        rules={[{ required: true, message: 'חובה למלא תעודת זהות' }]}>
+                                        <Input
+                                            value={studentId}
+                                            disabled={isItemDisabled}
+                                            style={{ backgroundColor: 'white' }}
+                                            onBlur={handleStudentIdBlur}
+                                        />
                                     </Form.Item>
                                 </Col>
                                 <Col span={6}>

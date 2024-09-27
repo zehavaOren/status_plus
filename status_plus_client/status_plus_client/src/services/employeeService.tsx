@@ -1,6 +1,8 @@
 import { Employee } from "../models/Employee";
 
 const BASE_URL = 'http://localhost:4000/employee';
+// const BASE_URL = `${process.env.REACT_APP_API_BASE_URL}/employee`;
+
 
 export const employeeService = {
 

@@ -1,6 +1,8 @@
 import { MySingletonService } from "./MySingletonService";
 
 const BASE_URL = 'http://localhost:4000/auth';
+// const BASE_URL = `${process.env.REACT_APP_API_BASE_URL}/auth`;
+
 
 class loginService {
     identityNumber: string = '';
