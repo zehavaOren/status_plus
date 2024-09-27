@@ -28,7 +28,7 @@ const Menu: React.FC = () => {
   const navigate = useNavigate();
   // const { state } = location;
   const [user, setUser] = useState<BaseUser | null>(null);
-  // const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
+  const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
   // const [currentPage, setCurrentPage] = useState(1);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState(false);
@@ -78,25 +78,26 @@ const Menu: React.FC = () => {
   // }, [location]);
 
   // client message
-  // const addMessage = (message: string, type: any) => {
-  //   setMessages([{ message, type, id: Date.now() }]);
-  // };
+  const addMessage = (message: string, type: any) => {
+    setMessages([{ message, type, id: Date.now() }]);
+  };
   // get user data from singelton
-  // const getBaseUser = async () => {
-  //   try {
-  //     const user = await MySingletonService.getInstance().getBaseUser();
-  //     if (user) {
-  //       setUser(user);
-  //       setMenuItems(generateMenuItems(user));
-  //       setSelectedComponent(`/menu/students-for-update/${user.identityNumber}`);
-  //     } else {
-  //       addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching user data:', error);
-  //     addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
-  //   }
-  // };
+  const getBaseUser = async () => {
+    try {
+      const user = await MySingletonService.getInstance().getBaseUser();
+      if (user) {
+        setUser(user);
+        setMenuItems(generateMenuItems(user));
+        setSelectedComponent(`/menu/students-for-update/${user.identityNumber}`);
+      } else {
+        addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
+    }
+  };
+
   const generateMenuItems = (user: BaseUser) => [
     // const menuItems = [
     { key: 'employee-management', label: 'ניהול עובדים', path: `/menu/${user!.identityNumber}/employee-management`, permissions: [3] },

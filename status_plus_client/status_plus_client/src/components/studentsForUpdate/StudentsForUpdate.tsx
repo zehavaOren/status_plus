@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Table, Button, Input, Image, Modal } from 'antd';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ColumnType } from 'antd/es/table';
@@ -21,12 +21,16 @@ const StudentsForUpdate = () => {
     const [students, setStudents] = useState<Student[]>([]);
     const [searchText, setSearchText] = useState('');
     const [hasCheckedConflicts, setHasCheckedConflicts] = useState(false); // Flag to ensure the modal shows only once
-
+    const hasInitialized = useRef(false);
+    
     useEffect(() => {
+        if (hasInitialized.current) return;
         getStudentsForUpdate(identityNumber || '');
-        if (!hasCheckedConflicts) {
+        const conflictCheckDone = sessionStorage.getItem('hasCheckedConflicts');
+        if (!conflictCheckDone && !hasCheckedConflicts) {
             getIsStudentsWithConflicts();
         }
+        hasInitialized.current = true;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [identityNumber]);
 
@@ -91,6 +95,7 @@ const StudentsForUpdate = () => {
                 showConflictModal();
             }
             setHasCheckedConflicts(true);
+            sessionStorage.setItem('hasCheckedConflicts', 'true');
         } catch (error) {
             addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
         }

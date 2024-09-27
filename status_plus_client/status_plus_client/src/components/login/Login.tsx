@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import Message from '../Message';
 import logo from '../../assets/logo.png';
 import './login.css';
-// import loginService from '../../services/loginService';
+import loginService from '../../services/loginService';
 import { BaseUser } from '../../models/BaseUser';
 import { MySingletonService } from '../../services/MySingletonService';
 
@@ -15,7 +15,7 @@ const { Title } = Typography;
 export const Login = () => {
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [loading, setLoading] = useState(false);
-    // const [permission, setPermission] = useState(0);
+    const [permission, setPermission] = useState(0);
     const [user, setUser] = useState<BaseUser>();
     const navigate = useNavigate();
 
@@ -26,9 +26,9 @@ export const Login = () => {
     const login = async (values: any) => {
         setLoading(true);
         try {
-            // const permissionFromDb = await loginService.login(values);
-            // const permission = permissionFromDb.employeeData[0][0].permission_id;
-            // setPermission(permission);
+            const permissionFromDb = await loginService.login(values);
+            const permission = permissionFromDb.employeeData[0][0].permission_id;
+            setPermission(permission);
             const user = await MySingletonService.getInstance().getBaseUser();
             if (user) {
                 setUser(user);

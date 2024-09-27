@@ -25,13 +25,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     // }
   }, [user]);
 
-  // const setItem = async (user: User) => {
-  //   const existUser = await localStorage.getItem('user');
-  //   const convertUser = existUser ? JSON.parse(existUser) : { identityNumber: '', userName: '' };
-  //   if ((convertUser && convertUser.identityNumber === "") || existUser === '{}') {
-  //     localStorage.setItem('user', JSON.stringify(user));
-  //   }
-  // }
+  const setItem = async (user: User) => {
+    const existUser = await localStorage.getItem('user');
+    const convertUser = existUser ? JSON.parse(existUser) : { identityNumber: '', userName: '' };
+    if ((convertUser && convertUser.identityNumber === "") || existUser === '{}') {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+  }
   return (
     <UserContext.Provider value={{ user, setUser }}>
       {children}
