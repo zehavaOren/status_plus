@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Table, Button, Input, Image, Modal } from 'antd';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ColumnType } from 'antd/es/table';
@@ -22,7 +22,8 @@ const StudentsForUpdate = () => {
     const [searchText, setSearchText] = useState('');
     const [hasCheckedConflicts, setHasCheckedConflicts] = useState(false); // Flag to ensure the modal shows only once
     const hasInitialized = useRef(false);
-    
+    const userPermission = useMemo(() => MySingletonService.getInstance().getBaseUser().permission, []);
+
     useEffect(() => {
         if (hasInitialized.current) return;
         getStudentsForUpdate(identityNumber || '');
@@ -52,7 +53,6 @@ const StudentsForUpdate = () => {
     };
     // update student details clicked
     const onUpdateStudentClick = (student: Student) => {
-        const userPermission = MySingletonService.getInstance().getBaseUser().permission;
         if (userPermission === 2) {
             navigate(`/menu/student-details/${student.studentId}`, { state: { from: location.pathname } });
         } else {
@@ -134,105 +134,110 @@ const StudentsForUpdate = () => {
     const addNewStudent = () => {
         navigate(`/menu/student-details/`, { state: { from: location.pathname } });
     }
+    const columns: ColumnType<Student>[] = useMemo(() => {
+        const baseColumns = [
+            {
+                title: 'תעודת זהות',
+                dataIndex: 'studentId',
+                key: 'studentId',
+                sorter: (a: Student, b: Student) => a.studentId.localeCompare(b.studentId),
+                width: 150,
+            },
+            {
+                title: 'שם פרטי',
+                dataIndex: 'firstName',
+                key: 'firstName',
+                sorter: (a: Student, b: Student) => a.firstName.localeCompare(b.firstName),
 
-    const columns: ColumnType<Student>[] = [
-        {
-            title: 'תעודת זהות',
-            dataIndex: 'studentId',
-            key: 'studentId',
-            sorter: (a: Student, b: Student) => a.studentId.localeCompare(b.studentId),
-            width: 150,
-        },
-        {
-            title: 'שם פרטי',
-            dataIndex: 'firstName',
-            key: 'firstName',
-            sorter: (a: Student, b: Student) => a.firstName.localeCompare(b.firstName),
+            },
+            {
+                title: 'שם משפחה',
+                dataIndex: 'lastName',
+                key: 'lastName',
+                sorter: (a: Student, b: Student) => a.lastName.localeCompare(b.lastName),
 
-        },
-        {
-            title: 'שם משפחה',
-            dataIndex: 'lastName',
-            key: 'lastName',
-            sorter: (a: Student, b: Student) => a.lastName.localeCompare(b.lastName),
+            },
+            {
+                title: 'טלפון',
+                dataIndex: 'phone',
+                key: 'phone',
+            },
+            {
+                title: 'כתובת',
+                dataIndex: 'address',
+                key: 'address',
+                sorter: (a: Student, b: Student) => a.address.localeCompare(b.address),
 
-        },
-        {
-            title: 'טלפון',
-            dataIndex: 'phone',
-            key: 'phone',
-        },
-        {
-            title: 'כתובת',
-            dataIndex: 'address',
-            key: 'address',
-            sorter: (a: Student, b: Student) => a.address.localeCompare(b.address),
+            },
+            {
+                title: 'עיר',
+                dataIndex: 'city',
+                key: 'city',
+                sorter: (a: Student, b: Student) => a.city.localeCompare(b.city),
 
-        },
-        {
-            title: 'עיר',
-            dataIndex: 'city',
-            key: 'city',
-            sorter: (a: Student, b: Student) => a.city.localeCompare(b.city),
-
-        },
-        {
-            title: 'כיתה',
-            dataIndex: 'grade',
-            key: 'grade',
-            filters: gradeFilterOptions,
-            onFilter: (value, record) => record.grade?.indexOf(value as string) === 0,
-        },
-        {
-            title: 'עדכון פרטי התלמיד',
-            key: 'updateStudent',
-            render: (text, record) => (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Image
-                        src={edit}
-                        alt="עדכון פרטי התלמיד"
-                        preview={false}
-                        style={{ cursor: 'pointer', width: '20px', height: '20px' }}
-                        onClick={() => onUpdateStudentClick(record)}
-                    />
-                </div>
-            ),
-            width: 150,
-        },
-        {
-            title: 'עדכון סטטוס התלמיד',
-            key: 'updateStatus',
-            render: (text, record) => (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Image
-                        src={edit}
-                        alt="עדכון סטטוס התלמיד"
-                        preview={false}
-                        style={{ cursor: 'pointer', width: '20px', height: '20px' }}
-                        onClick={() => onUpdateStatusClick(record.studentId)}
-                    />
-                </div>
-            ),
-            width: 150,
-        },
-        {
-            title: 'צפייה בסטטוס התלמיד',
-            key: 'viewStatus',
-            render: (text, record) => (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Image
-                        src={view}
-                        alt="צפייה בסטטוס התלמיד"
-                        preview={false}
-                        style={{ cursor: 'pointer', width: '20px', height: '20px' }}
-                        onClick={() => onViewStatusClick(record.studentId)}
-                    />
-                </div>
-            ),
-            width: 150,
+            },
+            {
+                title: 'כיתה',
+                dataIndex: 'grade',
+                key: 'grade',
+                filters: gradeFilterOptions,
+                onFilter: (value: any, record: any) => record.grade?.indexOf(value as string) === 0,
+            },
+            {
+                title: 'עדכון סטטוס התלמיד',
+                key: 'updateStatus',
+                render: (text: any, record: any) => (
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <Image
+                            src={edit}
+                            alt="עדכון סטטוס התלמיד"
+                            preview={false}
+                            style={{ cursor: 'pointer', width: '20px', height: '20px' }}
+                            onClick={() => onUpdateStatusClick(record.studentId)}
+                        />
+                    </div>
+                ),
+                width: 150,
+            },
+            {
+                title: 'צפייה בסטטוס התלמיד',
+                key: 'viewStatus',
+                render: (text: any, record: any) => (
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <Image
+                            src={view}
+                            alt="צפייה בסטטוס התלמיד"
+                            preview={false}
+                            style={{ cursor: 'pointer', width: '20px', height: '20px' }}
+                            onClick={() => onViewStatusClick(record.studentId)}
+                        />
+                    </div>
+                ),
+                width: 150,
+            }
+        ];
+        if (userPermission !== 1) {
+            baseColumns.push({
+                title: 'עדכון פרטי תלמיד',
+                key: 'updateStudent',
+                render: (text, record) => (
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <Image
+                            src={edit}
+                            alt="Update student information"
+                            preview={false}
+                            style={{ cursor: 'pointer', width: '20px', height: '20px' }}
+                            onClick={() => onUpdateStudentClick(record)}
+                        />
+                    </div>
+                ),
+                width: 150,
+            });
         }
-    ];
-    const userPermission = MySingletonService.getInstance().getBaseUser().permission;
+
+        return baseColumns;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userPermission]);
 
     return (
         <>
