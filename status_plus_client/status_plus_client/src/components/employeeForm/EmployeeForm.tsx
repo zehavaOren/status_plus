@@ -28,21 +28,21 @@ const EmployeeForm = () => {
 
     useEffect(() => {
         if (employeeId) {
-            fetchEmployeeData();
+            fetchEmployeeData(employeeId);
         }
         getJobs();
         getPermission();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [employeeId]);
 
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
     // Fetch employee data by ID
-    const fetchEmployeeData = async () => {
+    const fetchEmployeeData = async (employeeID: string) => {
         setLoading(true);
         try {
-            const dataFromServer = await employeeService.getEmployeeById(Number(employeeId!));
+            const dataFromServer = await employeeService.getEmployeeById(Number(employeeID!));
             const employeeDetails = dataFromServer.employeeData[0][0]
             // setEmployee(employeeDetails);
             form.setFieldsValue(employeeDetails);
@@ -122,7 +122,10 @@ const EmployeeForm = () => {
     const navigateBack = () => {
         navigate(from);
     };
-
+    // get the data of student with the written ID
+    const handleemployeeIdBlur: React.FocusEventHandler<HTMLInputElement> = (event) => {
+        fetchEmployeeData(event.target.value);
+    };
     return (
         <div>
             {loading && (
@@ -150,7 +153,7 @@ const EmployeeForm = () => {
                                     label="תעודת זהות"
                                     name="identityNumber"
                                     rules={[{ required: true, message: 'חובה למלא תעודת זהות' }]}>
-                                    <Input disabled={!!employeeId} />
+                                    <Input disabled={!!employeeId} onBlur={handleemployeeIdBlur} />
                                 </Form.Item>
                             </Col>
                             <Col span={6}>
