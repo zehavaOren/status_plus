@@ -46,13 +46,10 @@ const StatusForm = () => {
         }
     }, [formValues, form]);
 
-    // const addMessage = (message: string, type: 'error' | 'success' | 'warning' | 'info') => {
-    //     AntMessage.destroy();  // Clear existing messages before displaying a new one
-    //     AntMessage[type](message);  // Display the new message
-    // };
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
+
     const getData = async () => {
         const user = await MySingletonService.getInstance().getBaseUser();
         if (user) {
@@ -79,6 +76,12 @@ const StatusForm = () => {
 
     const onValuesChange = () => {
         setIsFormChanged(true);
+    };
+
+    // Get the corresponding `isFinalChoice` from `formValues`
+    const getIsFinalChoice = (valueId: number) => {
+        const selectedValue = formValues.find(v => v.valueId === valueId);
+        return selectedValue ? selectedValue.isFinalChoice : false;
     };
 
     // Handle the validation manually
@@ -109,7 +112,6 @@ const StatusForm = () => {
         }
     };
     
-
     const onFinish = useCallback(async (values: { [key: string]: any }) => {
         if (isSaving) return;
         setIsSaving(true);
@@ -136,7 +138,8 @@ const StatusForm = () => {
                     studentId,
                     employeeId,
                     valueId,
-                    year
+                    year,
+                    isFinalChoice: false // Ensure isFinalChoice is set
                 };
             }
 
@@ -163,7 +166,7 @@ const StatusForm = () => {
         });
 
         if (hasValidationError) {
-            addMessage('אופס,יש ערך שנבחרו לו חוזקה וחולשה ביחד', 'error');
+            addMessage('אופס, יש ערך שנבחרו לו חוזקה וחולשה ביחד', 'error');
             setIsSaving(false);
             return;
         }
@@ -212,6 +215,7 @@ const StatusForm = () => {
         setIsSaving(false);
     }, [user, formValues, studentId]);
 
+    // Updated renderCategoryValues to use getIsFinalChoice to check if value is final
     const renderCategoryValues = (categoryId: number) => {
         const categoryValues = values.filter(value => value.categoryId === categoryId);
 
@@ -226,7 +230,7 @@ const StatusForm = () => {
                             <Col span={6}>
                                 <Form.Item name={`strength_${value.valueId}`} valuePropName="checked" noStyle>
                                     <Checkbox
-                                        disabled={value.isFinalChoice}
+                                        disabled={getIsFinalChoice(value.valueId)}
                                         onChange={() => handleStrengthWeaknessChange(value.valueId)}
                                     >
                                         חוזקה
@@ -236,7 +240,7 @@ const StatusForm = () => {
                             <Col span={6}>
                                 <Form.Item name={`weakness_${value.valueId}`} valuePropName="checked" noStyle>
                                     <Checkbox
-                                        disabled={value.isFinalChoice}
+                                        disabled={getIsFinalChoice(value.valueId)}
                                         onChange={() => handleStrengthWeaknessChange(value.valueId)}
                                     >
                                         חולשה
@@ -245,7 +249,7 @@ const StatusForm = () => {
                             </Col>
                             <Col span={6}>
                                 <Form.Item name={`notes_${value.valueId}`} noStyle>
-                                    <TextArea placeholder="הערה" disabled={value.isFinalChoice} />
+                                    <TextArea placeholder="הערה" disabled={getIsFinalChoice(value.valueId)} />
                                 </Form.Item>
                             </Col>
                         </Row>

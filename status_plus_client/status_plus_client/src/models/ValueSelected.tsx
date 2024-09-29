@@ -6,4 +6,5 @@ export interface ValueSelected {
     weakness?: boolean;
     notes?: string;
     year: string;
+    isFinalChoice: boolean;
 }
