@@ -78,8 +78,9 @@ const upsertStudentStatus = async (req, res) => {
     const weakness = req.body.weakness;
     const notes = req.body.notes;
     const year = req.body.year;
+    const isFinalChoice= req.body.isFinalChoice;
     try {
-        const studentStatusSave = await dbService.executeStoredProcedure('sp_stpl_upsert_student_status', { studentId, employeeId, valueId, strength, weakness, notes, year });
+        const studentStatusSave = await dbService.executeStoredProcedure('sp_stpl_upsert_student_status', { studentId, employeeId, valueId, strength, weakness, notes, year, isFinalChoice });
         res.status(200).json({ studentStatusSave });
     } catch (err) {
         console.error(err);
