@@ -39,7 +39,6 @@ const Menu: React.FC = () => {
     const initializeUser = async () => {
       const userService = MySingletonService.getInstance();
       const fetchedUser = await userService.initializeBaseUser();
-      debugger
       if (fetchedUser) {
         setUser(fetchedUser);
         setMenuItems(generateMenuItems(fetchedUser));

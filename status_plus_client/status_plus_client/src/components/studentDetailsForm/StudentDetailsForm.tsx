@@ -382,7 +382,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     };
     // navigate to the privious component
     const navigateBack = () => {
-        debugger
         navigate(from);
     };
     return (

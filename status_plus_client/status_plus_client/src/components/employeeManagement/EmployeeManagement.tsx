@@ -195,7 +195,6 @@ const EmployeeManagement = () => {
                         addMessage(`שגיאה בשמירת עובד ${employee.firstName} ${employee.lastName}`, 'error');
                     }
                 } catch (error: any) {
-                    debugger
                     failedImports.push({ employee, status: 'Failed', error: error });
                     console.error("Failed to import employee", error);
                 }
