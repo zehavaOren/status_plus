@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Button, Checkbox, Col, Form, Input, Row, Pagination, Card, Modal, Spin } from "antd";
-
-import './StatusForm.css'
+import { Button, Checkbox, Col, Form, Input, Row, Card, Steps, message as AntMessage } from "antd";
+import './StatusForm.css';
 import { studentStatusService } from "../../services/studentStatusService";
 import { ValueSelected } from "../../models/ValueSelected";
 import { Category } from "../../models/Category";
@@ -12,6 +11,7 @@ import { BaseUser } from "../../models/BaseUser";
 import { MySingletonService } from "../../services/MySingletonService";
 
 const { TextArea } = Input;
+const { Step } = Steps;
 
 const StatusForm = () => {
     const { studentId } = useParams<{ studentId: string }>();
@@ -23,22 +23,17 @@ const StatusForm = () => {
     const [values, setValues] = useState<Value[]>([]);
     const [formValues, setFormValues] = useState<ValueSelected[]>([]);
     const [loading, setLoading] = useState(false);
-    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]); const [currentPage, setCurrentPage] = useState(1);
-    // const [pageSize, setPageSize] = useState(1);
+    const [currentStep, setCurrentStep] = useState(0);  // Tracks current category index
     const [form] = Form.useForm();
-    const [isModalVisible, setIsModalVisible] = useState(false);
     const [isFormChanged, setIsFormChanged] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [studentName, setStudentName] = useState("");
-    const next = "הבא>";
-    const previos = "<הקודם";
-    const pageSize=1;
+    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
 
     useEffect(() => {
         getData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
-    // allow choose few inputs
+
     useEffect(() => {
         if (formValues.length > 0) {
             const initialValues: Record<string, any> = formValues.reduce((acc: Record<string, any>, value: ValueSelected) => {
@@ -50,11 +45,14 @@ const StatusForm = () => {
             form.setFieldsValue(initialValues);
         }
     }, [formValues, form]);
-    // client message
+
+    // const addMessage = (message: string, type: 'error' | 'success' | 'warning' | 'info') => {
+    //     AntMessage.destroy();  // Clear existing messages before displaying a new one
+    //     AntMessage[type](message);  // Display the new message
+    // };
     const addMessage = (message: string, type: any) => {
-        setMessages([{ message, type, id: Date.now() }]);
+        setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
-    // get all the data from the DB
     const getData = async () => {
         const user = await MySingletonService.getInstance().getBaseUser();
         if (user) {
@@ -67,23 +65,51 @@ const StatusForm = () => {
                 setCategories(categories.categories[0]);
                 setValues(valuesRes.valuesList[0]);
                 setFormValues(studentValuesRes.valuesList[0]);
-                setStudentName(studentValuesRes.valuesList[1][0].name)
+                setStudentName(studentValuesRes.valuesList[1][0].name);
             } catch (error) {
                 addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
             } finally {
                 setIsSaving(false);
                 setLoading(false);
             }
-        }
-        else {
+        } else {
             addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
         }
     };
-    // check form changed
+
     const onValuesChange = () => {
         setIsFormChanged(true);
     };
-    // save the form data
+
+    // Handle the validation manually
+    const handleStrengthWeaknessChange = (valueId: number) => {
+        const strength = form.getFieldValue(`strength_${valueId}`);
+        const weakness = form.getFieldValue(`weakness_${valueId}`);
+    
+        // Clear all existing errors first
+        form.setFields([
+            {
+                name: `strength_${valueId}`,
+                errors: [],
+            },
+            {
+                name: `weakness_${valueId}`,
+                errors: [],
+            },
+        ]);
+    
+        // If both strength and weakness are selected, set a single validation error
+        if (strength && weakness) {
+            form.setFields([
+                {
+                    name: `strength_${valueId}`,
+                    errors: ['אין אפשרות לבחור עבור ערך חוזקה חולשה ביחד'],
+                }
+            ]);
+        }
+    };
+    
+
     const onFinish = useCallback(async (values: { [key: string]: any }) => {
         if (isSaving) return;
         setIsSaving(true);
@@ -91,15 +117,20 @@ const StatusForm = () => {
             console.error('User context is not available');
             return;
         }
+
         const employeeId = user.identityNumber;
         const year = "תשפד";
         const changedValues: ValueSelected[] = [];
         const groupedValues: { [key: number]: Partial<ValueSelected> } = {};
 
+        // Validate that strength and weakness are not both selected
+        let hasValidationError = false;
+
         Object.keys(values).forEach(key => {
             const [type, id] = key.split('_');
             const valueId = parseInt(id);
 
+            // Skip processing if the valueId is not valid
             if (!groupedValues[valueId]) {
                 groupedValues[valueId] = {
                     studentId,
@@ -109,30 +140,53 @@ const StatusForm = () => {
                 };
             }
 
-            if (type === 'notes') {
-                groupedValues[valueId].notes = values[key] || '';
-            } else if (type === 'strength') {
-                groupedValues[valueId].strength = values[key] || false;
-            } else if (type === 'weakness') {
-                groupedValues[valueId].weakness = values[key] || false;
+            if (type === 'notes' && values[key] && values[key].trim() !== "") {
+                groupedValues[valueId].notes = values[key];
+            }
+            if (type === 'strength' && values[key] !== undefined) {
+                groupedValues[valueId].strength = values[key];
+            }
+            if (type === 'weakness' && values[key] !== undefined) {
+                groupedValues[valueId].weakness = values[key];
+            }
+
+            // Check for validation errors: both strength and weakness are selected
+            if (groupedValues[valueId].strength && groupedValues[valueId].weakness) {
+                hasValidationError = true;
+                form.setFields([
+                    {
+                        name: `strength_${valueId}`,
+                        errors: ['אין אפשרות לבחור עבור ערך חוזקה חולשה ביחד'],
+                    }
+                ]);
             }
         });
 
-        // בדוק אילו ערכים השתנו
+        if (hasValidationError) {
+            addMessage('אופס,יש ערך שנבחרו לו חוזקה וחולשה ביחד', 'error');
+            setIsSaving(false);
+            return;
+        }
+
+        // Now check which values have actually changed and filter out undefined ones
         Object.values(groupedValues).forEach(updatedValue => {
             const originalValue = formValues.find(v => v.valueId === updatedValue.valueId);
             let isChanged = false;
 
+            // Check if notes are different or not empty
             if (updatedValue.notes !== undefined && updatedValue.notes !== (originalValue?.notes ?? '')) {
                 isChanged = true;
             }
+            // Check if strength has changed
             if (updatedValue.strength !== undefined && updatedValue.strength !== (originalValue?.strength ?? false)) {
                 isChanged = true;
             }
+            // Check if weakness has changed
             if (updatedValue.weakness !== undefined && updatedValue.weakness !== (originalValue?.weakness ?? false)) {
                 isChanged = true;
             }
 
+            // Only add values that have actually changed
             if (isChanged) {
                 changedValues.push(updatedValue as ValueSelected);
             }
@@ -141,171 +195,114 @@ const StatusForm = () => {
         if (changedValues.length > 0) {
             try {
                 const saveRes = await studentStatusService.upsertStudentStatus(changedValues);
-                // בדיקה האם כל השמירות הצליחו
                 const allSuccessful = saveRes.every(res => res.status === 'success');
                 if (allSuccessful) {
                     addMessage('כל השינויים נשמרו בהצלחה', 'success');
                 } else {
                     addMessage('חלק מהשינויים לא נשמרו בהצלחה', 'warning');
                 }
-
                 await getData();
-                setIsFormChanged(false);
             } catch (error) {
                 addMessage('שגיאה בשמירת השינויים', 'error');
             }
         } else {
             addMessage('לא בוצעו שינויים', 'info');
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, formValues, studentId]);
-    // when canceling the form
-    const onCancel = () => {
-        showModal();
-    };
-    // cancel returning
-    const handleCancel = () => {
-        setIsModalVisible(false);
-    };
-    // confirm returning
-    const handleOk = () => {
-        setIsModalVisible(false);
-        navigateBack();
-    };
-    // navigate to the privious component
-    const navigateBack = () => {
-        navigate(from);
-    };
-    // set categories
-    const renderCategoryForm = (categoryId: any) => {
-        const categoryValues = values.filter(value => value.categoryId === categoryId);
-        const categoryDesc = categories.find(category => category.categoryId === categoryId)?.categoryDesc;
 
-        return (
+        setIsSaving(false);
+    }, [user, formValues, studentId]);
+
+    const renderCategoryValues = (categoryId: number) => {
+        const categoryValues = values.filter(value => value.categoryId === categoryId);
+
+        return categoryValues.length > 0 ? (
             <div>
-                <div style={{ textAlign: 'center', marginTop: '20px', borderBottom: '2px solid black', alignItems: 'center' }}>
-                    <h2 >
-                        {currentPage !== 1 && (
-                            <Button type="link" onClick={handlePreviousPageChange} style={{ fontSize: '20px' }}>
-                                {previos}
-                            </Button>
-                        )}
-                        {categoryDesc}
-                        {currentPage < categories.length && (
-                            <Button type="link" onClick={() => handlePageChange(currentPage + 1)} style={{ marginLeft: 'auto', fontSize: '20px' }}>
-                                {next}
-                            </Button>
-                        )}
-                    </h2>
-                </div>
-                <Form
-                    form={form}
-                    layout="vertical"
-                    onFinish={onFinish}
-                    onValuesChange={onValuesChange}>
-                    {categoryValues.map(value => (
-                        <Form.Item key={`value_${value.valueId}`}>
-                            <Row gutter={16}>
-                                <Col span={4}>{value.valueDescription}</Col>
-                                <Col span={4}>
-                                    <Form.Item name={`strength_${value.valueId}`} valuePropName="checked" noStyle>
-                                        <Checkbox disabled={value.isFinalchoic}>חוזקה</Checkbox>
-                                    </Form.Item>
-                                </Col>
-                                <Col span={4}>
-                                    <Form.Item name={`weakness_${value.valueId}`} valuePropName="checked" noStyle>
-                                        <Checkbox disabled={value.isFinalchoic}>חולשה</Checkbox>
-                                    </Form.Item>
-                                </Col>
-                                <Col span={4}>
-                                    <Form.Item name={`notes_${value.valueId}`} noStyle>
-                                        <TextArea style={{ height: '30px' }} placeholder="הערה" disabled={value.isFinalchoic} />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                        </Form.Item>
-                    ))}
-                    <Form.Item>
-                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-                            <Button type="primary" htmlType="submit">
-                                שמירה
-                            </Button>
-                            <Button onClick={onCancel} style={{ marginLeft: '10px' }}>
-                                ביטול
-                            </Button>
-                        </div>
+                {categoryValues.map(value => (
+                    <Form.Item key={`value_${value.valueId}`}>
+                        <Row gutter={16}>
+                            <Col span={6}>
+                                <span>{value.valueDescription}</span>
+                            </Col>
+                            <Col span={6}>
+                                <Form.Item name={`strength_${value.valueId}`} valuePropName="checked" noStyle>
+                                    <Checkbox
+                                        disabled={value.isFinalChoice}
+                                        onChange={() => handleStrengthWeaknessChange(value.valueId)}
+                                    >
+                                        חוזקה
+                                    </Checkbox>
+                                </Form.Item>
+                            </Col>
+                            <Col span={6}>
+                                <Form.Item name={`weakness_${value.valueId}`} valuePropName="checked" noStyle>
+                                    <Checkbox
+                                        disabled={value.isFinalChoice}
+                                        onChange={() => handleStrengthWeaknessChange(value.valueId)}
+                                    >
+                                        חולשה
+                                    </Checkbox>
+                                </Form.Item>
+                            </Col>
+                            <Col span={6}>
+                                <Form.Item name={`notes_${value.valueId}`} noStyle>
+                                    <TextArea placeholder="הערה" disabled={value.isFinalChoice} />
+                                </Form.Item>
+                            </Col>
+                        </Row>
                     </Form.Item>
-                </Form>
+                ))}
             </div>
+        ) : (
+            <p>אין ערכים זמינים עבור הקטגוריה הזו.</p>
         );
     };
-    // move to another category
-    const handlePageChange = useCallback((page: number) => {
-        setCurrentPage(page);
-        window.scrollTo(0, 0); // Scroll to the top of the page
-    }, []);
-    // category
-    const itemRender = (_: any, type: any, originalElement: any) => {
-        if (type === 'page') {
-            return <span style={{ minWidth: '200px', display: 'inline-block', textAlign: 'center' }}>{categories[_ - 1]?.categoryDesc}</span>;
-        }
-        return originalElement;
+
+    const handleStepChange = (current: number) => {
+        setCurrentStep(current);
     };
-    // confirm to leave the page
-    const showModal = () => {
-        if (isFormChanged) {
-            setIsModalVisible(true);
-        } else {
-            navigateBack();
-        }
+
+    const handleSaveAll = () => {
+        form.submit();  // This will trigger the onFinish method automatically
     };
-    const handlePreviousPageChange = () => {
-        if (currentPage > 1) {
-            handlePageChange(currentPage - 1);
-        }
-    };
+
     return (
-        <div style={{ direction: 'ltr' }} id="statusContent">
-            <Message messages={messages} duration={5000} />
-            {loading && (
-                <div className="loading-overlay">
-                    <Spin size="large" />
-                </div>
-            )}
-            <div className='container'>
-                <h1 style={{ textAlign: 'center' }}>סטטוס התלמיד {studentName}</h1>
-                <Button onClick={showModal} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
-                    חזרה
+        <div>
+           <Message messages={messages} duration={5000} />
+            <div className="steps-container">
+                <Steps current={currentStep} onChange={handleStepChange}>
+                    {categories.map((category) => (
+                        <Step key={category.categoryId} title={category.categoryDesc} />
+                    ))}
+                </Steps>
+            </div>
+
+            <Card className="card-container">
+                <Form form={form} layout="vertical" onValuesChange={onValuesChange} onFinish={onFinish}>
+                    <h2>{categories[currentStep]?.categoryDesc}</h2>
+                    {categories[currentStep] && renderCategoryValues(categories[currentStep].categoryId)}
+                    <div style={{ marginTop: '24px', textAlign: 'center' }}>
+                        {currentStep > 0 && (
+                            <Button onClick={() => setCurrentStep(currentStep - 1)} style={{ marginRight: '10px' }}>
+                                קטגוריה קודמת
+                            </Button>
+                        )}
+                        {currentStep < categories.length - 1 && (
+                            <Button type="primary" onClick={() => setCurrentStep(currentStep + 1)}>
+                                קטגוריה הבאה
+                            </Button>
+                        )}
+                    </div>
+                </Form>
+            </Card>
+
+            {/* Save button at the bottom to save all categories */}
+            <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                <Button type="primary" onClick={handleSaveAll} loading={isSaving}>
+                    שמור הכל
                 </Button>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '1px' }}>
-                <Card
-                    key={`category_${categories[currentPage - 1]?.categoryId}`}
-                    style={{ borderRadius: '10px', width: '100%', maxWidth: '1200px', direction: 'rtl', backgroundColor: '#b4d3ef' }}>
-                    <div style={{ marginTop: 24, direction: 'rtl' }}>
-                        {categories[currentPage - 1] && renderCategoryForm(categories[currentPage - 1].categoryId)}
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'center', overflowX: 'auto', whiteSpace: 'nowrap' }}>
-                        <Pagination
-                            current={currentPage}
-                            onChange={handlePageChange}
-                            total={categories.length}
-                            pageSize={pageSize}
-                            itemRender={itemRender}
-                            style={{ marginBottom: 24, direction: 'rtl' }} />
-                    </div>
-                </Card>
-            </div>
-            <Modal
-                title="אזהרה"
-                open={isModalVisible}
-                onOk={handleOk}
-                onCancel={handleCancel}
-                okText="כן"
-                cancelText="לא">
-                <p>האם אתה בטוח שברצונך לעזוב את הטופס ללא שמירה?</p>
-            </Modal>
         </div>
     );
 };
+
 export default StatusForm;

@@ -1,31 +1,55 @@
 .custom-steps.ant-steps-vertical {
-    display: flex;
-    flex-direction: row;
-  }
-  
-  .custom-steps .ant-steps-item {
-    margin-right: 8px;
-  }
-  
-  .custom-steps .ant-steps-item-icon {
-    width: 10px;
-    height: 24px;
-    font-size: 16px;
-    line-height: 24px;
-  }
-  
-  .custom-steps .ant-steps-icon-dot {
-    width: 8px;
-    height: 8px;
-  }
-  
-  .custom-steps .ant-steps-item-custom .ant-steps-item-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 16px;
-    top: 2px;
-  }
-  
-  .custom-steps .ant-steps-item-container .ant-steps-item-content {
-    margin-top: 4px;
-  }
+  display: flex;
+  flex-direction: row;
+}
+
+.custom-steps .ant-steps-item {
+  margin-right: 8px;
+}
+
+.custom-steps .ant-steps-item-icon {
+  width: 10px;
+  height: 24px;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.custom-steps .ant-steps-icon-dot {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-steps .ant-steps-item-custom .ant-steps-item-icon {
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  top: 2px;
+}
+
+.custom-steps .ant-steps-item-container .ant-steps-item-content {
+  margin-top: 4px;
+}
+
+/* Add this to your StatusForm.css */
+.steps-container {
+  overflow-x: auto;
+  /* Allow horizontal scrolling */
+  white-space: nowrap;
+  /* Prevent wrapping to a new line */
+  padding: 10px;
+  direction: rtl;
+}
+
+.steps-container .ant-steps-item {
+  min-width: 150px;
+  /* Set a minimum width for each step */
+  direction: rtl;
+}
+
+.card-container {
+  padding: 20px;
+  max-width: 80%;
+  margin: 0 auto;
+  padding: 20px;
+  direction: rtl;
+}
