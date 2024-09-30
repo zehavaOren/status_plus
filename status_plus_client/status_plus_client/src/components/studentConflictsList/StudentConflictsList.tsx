@@ -11,7 +11,6 @@ const StudentConflictsList = () => {
     const { employeeId } = useParams<{ employeeId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    // const from = location.state?.from || '/default-path';
     const [loading, setLoading] = useState(false);
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [studentsConflictsList, setStudentsConflictsList] = useState();

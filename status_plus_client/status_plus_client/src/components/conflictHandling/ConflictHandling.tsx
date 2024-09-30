@@ -211,6 +211,21 @@ const ConflictHandling = () => {
             addMessage('יש למלא את שני השדות - בחירת משתמש והערה', 'error');
         }
     };
+    // check if all employees fill the status
+    const checkStudentStatus = async (studentId: number) => {
+        try {
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, 'תשפד');
+            const numbersOfValues = responseFromDB.numbersOfValues[0][0];
+            if (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        } catch (error) {
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
+        }
+    }
     // Find the educator's employee id
     const findEmployeeIdByJobId = (conflictsList: any[]): number | undefined => {
         const employee = conflictsList.find(conflict => conflict.jobId === 10);
@@ -270,9 +285,9 @@ const ConflictHandling = () => {
                     <Table
                         columns={columns}
                         dataSource={tableData}
-                        pagination={{ ...pagination, locale: paginationLocale }}  // Apply pagination settings
+                        pagination={{ ...pagination, locale: paginationLocale }}
                         bordered
-                        onChange={handleTableChange} // Handle pagination changes
+                        onChange={handleTableChange}
                         style={{ direction: 'rtl' }}
                     />
                 </div>

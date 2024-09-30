@@ -1,40 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Input, Pagination, Table, Image, Button, Upload, Progress, Popconfirm } from 'antd';
-import { ColumnType } from 'antd/es/table';
+import { Input, Pagination, Table, Image, Button, Upload, Progress, Popconfirm, message as AntMessage } from 'antd';
+import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-
-import view from '../../assets/view.png';
-import { Student } from '../../models/Student';
 import { studentService } from '../../services/studentService';
+import { studentStatusService } from '../../services/studentStatusService';
+import { Student } from '../../models/Student';
+import view from '../../assets/view.png';
 import edit from '../../assets/edit.png';
 import Message from '../Message';
 import './AllStudents.css';
-import { DeleteOutlined, UploadOutlined } from '@ant-design/icons';
-import { studentStatusService } from '../../services/studentStatusService';
-
-
 
 const AllStudents = () => {
-
     const navigate = useNavigate();
     const location = useLocation();
-    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
-    const [loading, setLoading] = useState(false);
     const [students, setStudents] = useState<Student[]>([]);
-    const [searchText, setSearchText] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
-    // const [isModalVisible, setIsModalVisible] = useState(false);
-    // const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+    const [searchText, setSearchText] = useState('');
     const [gradeFilter, setGradeFilter] = useState<string | null>(null);
-    // const [file, setFile] = useState(null);
 
     useEffect(() => {
         getStudents();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
     useEffect(() => {
         setCurrentPage(1);
     }, [searchText, gradeFilter]);
@@ -42,7 +34,7 @@ const AllStudents = () => {
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
-    // get the studnets list
+
     const getStudents = async () => {
         setLoading(true);
         try {
@@ -51,12 +43,12 @@ const AllStudents = () => {
             const studentsWithStatus = await addStatusToStudents(allStudents);
             setStudents(studentsWithStatus);
         } catch (error) {
-            addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
+            addMessage('Error fetching students data', 'error');
         } finally {
             setLoading(false);
         }
     };
-    // calc ths status Progress
+
     const addStatusToStudents = async (students: Student[]): Promise<Student[]> => {
         const updatedStudents = await Promise.all(
             students.map(async (student) => {
@@ -77,399 +69,96 @@ const AllStudents = () => {
 
         return updatedStudents;
     };
-    // get the anount of the values to calc the progress
+
     const getAmuntValues = async (studentId: number) => {
         try {
-            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, 'תשפד');
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, 'year');
             const numbersOfValues = responseFromDB.numbersOfValues[0][0];
             return {
                 totalExpectedValues: numbersOfValues.totalExpectedValues,
                 totalFilledValues: numbersOfValues.totalFilledValues
             };
         } catch (error) {
-            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
+            addMessage('Error fetching student status', 'error');
         }
-    }
-    //see student statuses
-    const onViewingStudentStatusClick = (student_id: string) => {
-        debugger
-        navigate(`statuses-list/${student_id}`, { state: { from: location.pathname } });
-    }
-    //search
-    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchText(e.target.value);
     };
-    // filter and sort data before pagination
-    const getFilteredAndSortedData = () => {
-        let filteredStudents = students;
-        if (searchText) {
-            filteredStudents = students.filter(student =>
-                Object.keys(student).some(key =>
-                    student[key as keyof Student]?.toString().toLowerCase().includes(searchText.toLowerCase())
-                )
-            );
-        }
-        if (gradeFilter) {
-            filteredStudents = filteredStudents.filter(student => student.grade === gradeFilter);
-        }
-        return filteredStudents;
-    };
-    // sort and filter before paging
-    const handleTableChange = (pagination: any, filters: any, sorter: any) => {
-        if (filters.grade && filters.grade.length > 0) {
-            setGradeFilter(filters.grade[0]);
-        } else {
-            setGradeFilter(null);
-        }
 
-        const { field, order } = sorter;
-        let sortedStudents = [...students];
-
-        if (field && order) {
-            sortedStudents.sort((a: any, b: any) => {
-                if (a[field] < b[field]) {
-                    return order === 'ascend' ? -1 : 1;
-                }
-                if (a[field] > b[field]) {
-                    return order === 'ascend' ? 1 : -1;
-                }
-                return 0;
-            });
-        }
-
-        setStudents(sortedStudents);
-        setCurrentPage(1);
+    // Convert file to base64 string
+    const convertToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = error => reject(error);
+        });
     };
-    const filteredAndSortedData = getFilteredAndSortedData();
-    const paginatedStudents = filteredAndSortedData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-    // paging
-    const handlePageChange = (page: number, pageSize: number) => {
-        setCurrentPage(page);
-        setPageSize(pageSize);
-    };
-    // navigate to student form
-    const onUpdateStudentClick = (student: Student) => {
-        navigate(`/menu/student-details/${student.studentId}`, { state: { from: location.pathname } });
-    }
-    // confirm the delete modal
-    // const showDeleteModal = (student: Student) => {
-    //     setStudentToDelete(student);
-    //     setIsModalVisible(true);
+
+    // Handle file upload
+    // const handleUpload = async (file: File, studentId: string) => {
+    //     try {
+    //         const base64PDF = await convertToBase64(file);  // Convert PDF to base64
+    //         // Save base64 string to database (through service)
+    //         await studentService.uploadStudentPDF(studentId, base64PDF, 'תשפד');  // Create an appropriate API service
+    //         addMessage(`PDF uploaded successfully for student ID: ${studentId}`, 'success');
+    //     } catch (error) {
+    //         addMessage(`Error uploading PDF for student ID: ${studentId}`, 'error');
+    //     }
     // };
-    // delete student
-    const handleDelete = async (studentId: string) => {
-        const deleteStudentRes = await studentService.deleteStudent(studentId, 'תשפד');
-        if (deleteStudentRes.studentDelete[0][0].status === 1) {
-            addMessage('התלמיד נמחק בהצלחה', 'success');
-        } else {
-            addMessage('מחיקת התלמיד נכשלה', 'error');
-        }
-        getStudents();
-        // setIsModalVisible(false);
-    };
-    // cnacel delete
-    // const handleCancel = () => {
-    //     setIsModalVisible(false);
-    //     setStudentToDelete(null);
-    // };
-    // add new student
-    const addNewStudent = () => {
-        navigate(`/menu/student-details/`, { state: { from: location.pathname } });
-    };
-    // map excel columns to hebrow
-    const columnMapping: { [key: string]: string } = {
-        'תעודת זהות': 'studentId',
-        'שם משפחה': 'lastName',
-        'שם פרטי': 'firstName',
-        'טלפון 1': 'phone1',
-        'טלפון 2': 'phone2',
-        'תאריך לידה': 'birthDate',
-        'כתובת': 'address',
-        'עיר': 'city',
-        'שכבה': 'grade',
-        'כיתה': 'clas',
-    };
-    // import the excel file
-    const handleFileChange = (file: any) => {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const data = e.target?.result;
-            const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
-            const sheetName = workbook.SheetNames[0];
-            const sheet = workbook.Sheets[sheetName];
-            const students = XLSX.utils.sheet_to_json(sheet);
 
-            const mappedStudents = students.map((student: any) => {
-                const mappedStudent: { [key: string]: any } = {};
-                for (const [hebrewKey, value] of Object.entries(student)) {
-                    const englishKey = columnMapping[hebrewKey] || hebrewKey;
-                    mappedStudent[englishKey] = value;
-                }
-                return mappedStudent;
-            });
-            const resImport = await studentService.importStudents(mappedStudents);
-            let failStudents: any[] = [];
-            resImport.map(async res => {
-                if (res.status === 'error') {
-                    failStudents.push(res);
-                }
-            })
-            addMessage(`התלמידים יובאו בהצלחה`, 'success');
-            exportExcelFile(failStudents);
-        };
-
-        reader.readAsBinaryString(file);
-    };
-    // export to excel the students how dont imported to DB
-    const exportExcelFile = async (rows: ({ student: any; status: string; result: any; error?: undefined; } | { student: any; status: string; error: any; result?: undefined; })[]) => {
-        const perfectRows: any[] = [];
-        // eslint-disable-next-line array-callback-return
-        rows.map(row => {
-            const obj = {
-                'תעודת זהות': row.student.studentId,
-                'שם משפחה': row.student.lastName,
-                'שם פרטי': row.student.firstName,
-                'טלפון 1': row.student.phone1,
-                'טלפון 2': row.student.phone2,
-                'תאריך לידה': row.student.birthDate,
-                'כתובת': row.student.address,
-                'עיר': row.student.city,
-                'שכבה': row.student.grade,
-                'כיתה': row.student.clas,
-                'שגיאת הכנסה': row.error
-            }
-            perfectRows.push(obj);
-        })
-        try {
-            const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(perfectRows);
-            const wscols = [
-                { wch: 10 },
-                { wch: 10 },
-                { wch: 10 },
-                { wch: 10 },
-                { wch: 10 },
-                { wch: 10 },
-                { wch: 10 },
-                { wch: 10 },
-                { wch: 10 },
-                { wch: 10 },
-                { wch: 30 }
-            ];
-            worksheet['!cols'] = wscols;
-            const workbook: XLSX.WorkBook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Failed Imports");
-            const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-            const data: Blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
-            saveAs(data, 'תלמידים שלא יובאו.xlsx');
-        } catch (error) {
-            console.error('Error creating Excel file:', error);
-        }
-
-    }
-
-    const columns: ColumnType<Student>[] = [
+    const columns = [
         {
-            title: 'תעודת זהות',
+            title: 'Student ID',
             dataIndex: 'studentId',
             key: 'studentId',
-            sorter: (a: Student, b: Student) => a.studentId.localeCompare(b.studentId),
-            width: 150,
         },
         {
-            title: 'שם פרטי',
+            title: 'First Name',
             dataIndex: 'firstName',
             key: 'firstName',
-            sorter: (a: Student, b: Student) => a.firstName.localeCompare(b.firstName),
-
         },
         {
-            title: 'שם משפחה',
+            title: 'Last Name',
             dataIndex: 'lastName',
             key: 'lastName',
-            sorter: (a: Student, b: Student) => a.lastName.localeCompare(b.lastName),
-
         },
         {
-            title: 'טלפון',
-            dataIndex: 'phone',
-            key: 'phone',
-        },
-        {
-            title: 'כתובת',
-            dataIndex: 'address',
-            key: 'address',
-            sorter: (a: Student, b: Student) => a.address.localeCompare(b.address),
-
-        },
-        {
-            title: 'עיר',
-            dataIndex: 'city',
-            key: 'city',
-            sorter: (a: Student, b: Student) => a.city.localeCompare(b.city),
-
-        },
-        {
-            title: 'כיתה',
-            dataIndex: 'grade',
-            key: 'grade',
-            filters: Array.from(new Set(students.map(student => student.grade))).map(grade => ({
-                text: grade,
-                value: grade,
-            })),
-            filteredValue: gradeFilter ? [gradeFilter] : null,
-            onFilter: (value, record) => record.grade === value,
-        },
-        {
-            title: 'סטטוס מילוי נתונים',
-            key: 'statusPercentage',
-            render: (text, record) => (
-                <Progress
-                    type="circle"
-                    percent={record.statusPercentage || 0}
-                    width={40}
-                    // size="small"
-                    status={record.statusPercentage === 100 ? 'success' : 'active'}
-                />
-            ),
-        },
-        {
-            title: 'עדכון פרטי התלמיד',
-            key: 'updateStudent',
-            render: (text, record) => (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Image
-                        src={edit}
-                        alt="עדכון פרטי התלמיד"
-                        preview={false}
-                        style={{ cursor: 'pointer', width: '20px', height: '20px' }}
-                        onClick={() => onUpdateStudentClick(record)}
-                    />
-                </div>
-            ),
-            width: 150,
-        },
-        {
-            title: 'מחיקה',
-            key: 'delete',
-            render: (text: any, record: any) => (
-                <Popconfirm
-                    title="האם אתה בטוח שברצונך למחוק את איש הצוות?"
-                    onConfirm={() => handleDelete(record.studentId)}
-                    okText="אישור"
-                    cancelText="ביטול"
+            title: 'Upload PDF',
+            key: 'uploadPDF',
+            render: (text: any, record: Student) => (
+                <Upload
+                    accept=".pdf"
+                    showUploadList={false}
+                    beforeUpload={(file) => {
+                        // handleUpload(file, record.studentId);
+                        return false;  // Prevent automatic upload, we handle it manually
+                    }}
                 >
-                    <Button icon={<DeleteOutlined />} danger />
-                </Popconfirm>
+                    <Button icon={<UploadOutlined />}>Upload PDF</Button>
+                </Upload>
             ),
-            width: 100,
         },
-        {
-            title: 'צפייה בסטטוס התלמיד',
-            key: 'viewStatus',
-            render: (text, record) => (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Image
-                        src={view}
-                        alt="צפייה סטטוס התלמיד"
-                        preview={false}
-                        style={{ cursor: 'pointer', width: '20px', height: '20px' }}
-                        onClick={() => onViewingStudentStatusClick(record.studentId)}
-                    />
-                </div>
-            ),
-            width: 150,
-        }
     ];
 
     return (
         <>
             <Message messages={messages} duration={5000} />
-            <div className="header">
-                <h1 className="title">תלמידי בית הספר</h1>
-                <Upload
-                    accept=".xlsx, .xls"
-                    showUploadList={false}
-                    beforeUpload={(file) => {
-                        handleFileChange(file);
-                        return false;
-                    }}
-                >
-                    <Button icon={<UploadOutlined />} className='ant-btn ant-btn-primary import-students-button'>ייבוא תלמידים</Button>
-                </Upload>
-                <Button type="primary" className="add-student-button" onClick={addNewStudent}>הוסף תלמיד חדש</Button>
-            </div>
-            <div className="container">
-                <div className="inner-container">
-                    <div className="search-container">
-                        <Input
-                            placeholder="חיפוש תלמיד"
-                            value={searchText}
-                            onChange={handleSearch}
-                            className="search-input"
-                        />
-                    </div>
-                    <Table
-                        columns={columns}
-                        dataSource={paginatedStudents}
-                        loading={loading}
-                        rowKey="student_id"
-                        pagination={false}
-                        className="table"
-                        components={{
-                            header: {
-                                cell: (props: any) => (
-                                    <th {...props} style={{ ...props.style, backgroundColor: '#0066ff', color: 'white', textAlign: 'center' }} />
-                                ),
-                            },
-                        }}
-                        rowClassName={(record, index) =>
-                            index % 2 === 0 ? 'table-row-light' : 'table-row-dark'
-                        }
-                        onChange={handleTableChange}
-                    />
-                    <Pagination
-                        current={currentPage}
-                        pageSize={pageSize}
-                        total={filteredAndSortedData.length}
-                        onChange={handlePageChange}
-                        showSizeChanger
-                        pageSizeOptions={['10', '20', '50', '100']}
-                        locale={{
-                            items_per_page: 'לכל דף',
-                            jump_to: 'עבור ל',
-                            jump_to_confirm: 'אישור',
-                            page: '',
-                            prev_page: 'העמוד הקודם',
-                            next_page: 'העמוד הבא',
-                            prev_5: 'הקודם 5',
-                            next_5: 'הבא 5',
-                            prev_3: 'הקודם 3',
-                            next_3: 'הבא 3',
-                        }}
-                        className="pagination"
-                    />
-                </div>
-            </div>
-            {/* <Modal
-                title="אישור מחיקת תלמיד"
-                open={isModalVisible}
-                onOk={handleDelete}
-                onCancel={handleCancel}
-                okText="אישור"
-                cancelText="ביטול"
-                style={{ textAlign: 'center' }}
-                footer={[
-                    <Button key="cancel" onClick={handleCancel}>
-                        ביטול
-                    </Button>,
-                    <Button key="delete" type="primary" onClick={handleDelete}>
-                        אישור
-                    </Button>,
-                ]}
-            >
-                <p>?האם אתה בטוח שברצונך למחוק את התלמיד</p>
-            </Modal> */}
+            <Table
+                columns={columns}
+                dataSource={students}
+                loading={loading}
+                rowKey="studentId"
+                pagination={{
+                    current: currentPage,
+                    pageSize: pageSize,
+                    total: students.length,
+                    onChange: (page, pageSize) => {
+                        setCurrentPage(page);
+                        setPageSize(pageSize);
+                    },
+                }}
+            />
         </>
-    )
-}
+    );
+};
+
 export default AllStudents;

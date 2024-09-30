@@ -127,5 +127,26 @@ export const studentService = {
             }
         }
         return results;
-    }
+    },
+
+    uploadStudentPDF: async (studentId: string, base64PDF: any, year: string) => {
+        try {
+            const response = await fetch(`${BASE_URL}/uploadStudentPDF`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ studentId, base64PDF, year }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to upload PDF');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error uploading PDF:', error);
+            throw new Error(`Error uploading PDF: ${error}`);
+        }
+    },
 }

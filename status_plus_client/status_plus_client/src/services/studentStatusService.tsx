@@ -183,4 +183,16 @@ export const studentStatusService = {
             throw new Error(`Error fetching employees: ${error.message}`);
         }
     },
+
+    getHistoryStudentStatuses: async (studentId: number) => {
+        try {
+            const response = await fetch(`${BASE_URL}/getHistoryStudentStatuses/${studentId}`);
+            if (!response.ok) {
+                throw new Error('Error fetching employees');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    }
 }

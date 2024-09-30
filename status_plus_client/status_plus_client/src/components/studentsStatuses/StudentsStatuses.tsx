@@ -1,34 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Image, Pagination } from 'antd';
+import { Table, Input, Image, Pagination, Upload, Button, message as AntMessage } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
 import { ColumnType } from 'antd/es/table';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { StudentsStatus } from "../../models/StudentStatus";
 import view from '../../assets/view.png';
 import { studentStatusService } from '../../services/studentStatusService';
-import './StudentsStatuses.css'
+import './StudentsStatuses.css';
 import Message from '../Message';
+import { studentService } from '../../services/studentService';
+
+const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB per chunk
 
 const StudentsStatuses = () => {
-
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [loading, setLoading] = useState(false);
     const [studentsStatuses, setStudentsStatuses] = useState<StudentsStatus[]>([]);
     const [searchText, setSearchText] = useState('');
-    const navigate = useNavigate();
-    const location = useLocation();
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         getStudentsStatuses();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
-    // get all the studens and their statuses from the last 5 years
+
+    // Get all students' statuses from the last 5 years
     const getStudentsStatuses = async () => {
         setLoading(true);
         try {
@@ -41,27 +45,66 @@ const StudentsStatuses = () => {
             setLoading(false);
         }
     };
-    //see student statuses
+
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onload = () => {
+                const result = reader.result as string; // Ensure result is a string (data URL)
+                const base64String = result.split(',')[1]; // Extract base64 part
+                resolve(base64String);
+            };
+
+            reader.onerror = error => reject(error);
+
+            reader.readAsDataURL(file); // Read file as base64 encoded data URL
+        });
+    };
+
+
+    // Handle file upload
+    const handleUpload = async (file: any, studentId: string) => {
+        try {
+            setUploading(true);
+            // Convert the PDF to base64
+            const base64PDF = await fileToBase64(file);
+            // Upload the base64 PDF via the service
+            await studentService.uploadStudentPDF(studentId, base64PDF, 'תשפד');
+            AntMessage.success('ה-PDF הועלה ונשמר בהצלחה');
+        } catch (error) {
+            console.error('Error uploading PDF:', error);
+            AntMessage.error('שגיאה בהעלאת ה-PDF');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+
+    // Handle viewing student status
     const onViewingStudentStatusClick = (student_id: string) => {
-        debugger
         navigate(`statuses-list/${student_id}`, { state: { from: location.pathname } });
-        // navigate(`statuses-list/${student_id}`, { state: { from: location.pathname } });
-    }
-    //search
+    };
+
+    // Handle search
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(e.target.value);
     };
-    //filter
+
+    // Filter students based on search text
     const filteredStudents = studentsStatuses.filter(student =>
         Object.keys(student).some(key =>
             student[key as keyof StudentsStatus]?.toString().toLowerCase().includes(searchText.toLowerCase())
         )
     );
-    // paging
+
+    // Pagination handler
     const handlePageChange = (page: number, pageSize: number) => {
         setCurrentPage(page);
         setPageSize(pageSize);
     };
+
+    // Paginated students
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     const paginatedStudents = filteredStudents.slice(startIndex, endIndex);
@@ -79,14 +122,12 @@ const StudentsStatuses = () => {
             dataIndex: 'firstName',
             key: 'firstName',
             sorter: (a: StudentsStatus, b: StudentsStatus) => a.firstName.localeCompare(b.firstName),
-
         },
         {
             title: 'שם משפחה',
             dataIndex: 'lastName',
             key: 'lastName',
             sorter: (a: StudentsStatus, b: StudentsStatus) => a.lastName.localeCompare(b.lastName),
-
         },
         {
             title: 'טלפון',
@@ -98,14 +139,12 @@ const StudentsStatuses = () => {
             dataIndex: 'address',
             key: 'address',
             sorter: (a: StudentsStatus, b: StudentsStatus) => a.address.localeCompare(b.address),
-
         },
         {
             title: 'עיר',
             dataIndex: 'city',
             key: 'city',
             sorter: (a: StudentsStatus, b: StudentsStatus) => a.city.localeCompare(b.city),
-
         },
         {
             title: 'צפייה בסטטוס התלמיד',
@@ -122,7 +161,24 @@ const StudentsStatuses = () => {
                 </div>
             ),
             width: 150,
-        }
+        },
+        {
+            title: 'העלה PDF',
+            key: 'uploadPDF',
+            render: (text, record) => (
+                <Upload
+                    accept=".pdf"
+                    showUploadList={false}
+                    beforeUpload={(file) => {
+                        handleUpload(file, record.studentId); // Replace with actual student ID
+                        return false;
+                    }}
+                >
+                    <Button icon={<UploadOutlined />} loading={uploading}>Upload PDF</Button>
+                </Upload>
+            ),
+            width: 150,
+        },
     ];
 
     return (
@@ -182,6 +238,7 @@ const StudentsStatuses = () => {
                 </div>
             </div>
         </>
-    )
+    );
 }
+
 export default StudentsStatuses;
