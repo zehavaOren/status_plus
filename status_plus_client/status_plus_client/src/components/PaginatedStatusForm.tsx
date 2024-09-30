@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button, Checkbox, Col, Form, Input, Row, Pagination, Card, Modal, Spin } from "antd";
 
@@ -17,7 +17,6 @@ const PaginatedStatusForm = () => {
     const { studentId } = useParams<{ studentId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from || '/menu';
     const [user, setUser] = useState<BaseUser>();
     const [categories, setCategories] = useState<Category[]>([]);
     const [values, setValues] = useState<Value[]>([]);
@@ -32,11 +31,12 @@ const PaginatedStatusForm = () => {
     const [studentName, setStudentName] = useState("");
     const next = "הבא>";
     const previos = "<הקודם";
-    const pageSize=1;
+    const pageSize = 1;
+    const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
 
     useEffect(() => {
         getData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
     // allow choose few inputs
     useEffect(() => {
@@ -54,6 +54,16 @@ const PaginatedStatusForm = () => {
     const addMessage = (message: string, type: any) => {
         setMessages([{ message, type, id: Date.now() }]);
     };
+    // Determine the back navigation route
+    const from = useMemo(() => {
+        if (employeeDet.permission === 1 || employeeDet.permission === 2) {
+            return `/students-for-update/${employeeDet.identityNumber}`;
+        } else if (employeeDet.permission === 3) {
+            return '/all-students';
+        } else {
+            return location.state?.from || '/menu';
+        }
+    }, [employeeDet, location.state?.from]);
     // get user data from singelton
     const getBaseUser = async () => {
         const user = await MySingletonService.getInstance().getBaseUser();
@@ -161,7 +171,7 @@ const PaginatedStatusForm = () => {
         } else {
             addMessage('לא בוצעו שינויים', 'info');
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, formValues, studentId]);
     // when canceling the form
     const onCancel = () => {

@@ -18,14 +18,13 @@ const ConflictHandling = () => {
     const { studentId } = useParams<{ studentId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from || '/menu';
     const [loading, setLoading] = useState(false);
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [conflictsList, setConflictsList] = useState<ConflictData[]>([]);
     const [columns, setColumns] = useState<ColumnsType<ProcessedConflictData>>([]);
     const [tableData, setTableData] = useState<ProcessedConflictData[]>([]);
     const [studentDetails, setStudentDetails] = useState<{ id: number, studentName: string }>();
-    const userPermission = useMemo(() => MySingletonService.getInstance().getBaseUser().permission, []);
+    const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
 
     // Pagination State
     const [pagination, setPagination] = useState<TablePaginationConfig>({
@@ -41,18 +40,28 @@ const ConflictHandling = () => {
 
     useEffect(() => {
         getConflictsList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
     useEffect(() => {
         // Paginate table data based on pagination settings
         paginateData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pagination.current, pagination.pageSize, fullData]);
 
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
+    // Determine the back navigation route
+    const from = useMemo(() => {
+        if (employeeDet.permission === 1 || employeeDet.permission === 2) {
+            return `/students-for-update/${employeeDet.identityNumber}`;
+        } else if (employeeDet.permission === 3) {
+            return '/all-students';
+        } else {
+            return location.state?.from || '/menu';
+        }
+    }, [employeeDet, location.state?.from]);
     // Fetch conflicts list and process data
     const getConflictsList = async () => {
         setLoading(true);
@@ -97,7 +106,7 @@ const ConflictHandling = () => {
         ];
 
         // Conditionally add user choice and comment columns if user has permission 2
-        if (userPermission === 2) {
+        if (employeeDet.permission === 2) {
             columns.push(
                 {
                     title: 'בחירת משתמש',
@@ -267,7 +276,7 @@ const ConflictHandling = () => {
                     />
                 </div>
                 <div>
-                    {userPermission === 2 && (
+                    {employeeDet.permission === 2 && (
                         <Button onClick={handleSave}>שמור</Button>
                     )}
                 </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, List, Spin, Table, Tag, Tooltip, Typography } from 'antd';
 import { StudentStatusValue } from '../../models/StudentStatusValue';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -8,6 +8,7 @@ import jsPDF from 'jspdf';
 import { DownloadOutlined } from '@ant-design/icons';
 import Message from '../Message';
 import './StudentStatusTable.css';
+import { MySingletonService } from '../../services/MySingletonService';
 
 const { Title } = Typography;
 
@@ -21,13 +22,13 @@ const StudentStatusTable = () => {
     const { studentId } = useParams<{ studentId: string }>();
     const [loading, setLoading] = useState(false);
     // const [studentDet, setStudentDet] = useState<{ studentName: string, year: string }>();
-    const [employeeDet, setEmployeeDet] = useState<{ employeeName: string, jobId: number, jobDesc: string }[]>([]);
+    const [employeeDetails, setEmployeeDetails] = useState<{ employeeName: string, jobId: number, jobDesc: string }[]>([]);
     const [studentStatus, setStudentStatus] = useState<StudentStatusValue[]>([]);
     const contentRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from || '/menu';
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
+    const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
 
     useEffect(() => {
         fetchStudentStatus();
@@ -37,12 +38,22 @@ const StudentStatusTable = () => {
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
+     // Determine the back navigation route
+     const from = useMemo(() => {
+        if (employeeDet.permission === 1 || employeeDet.permission === 2) {
+            return `/students-for-update/${employeeDet.identityNumber}`;
+        } else if (employeeDet.permission === 3) {
+            return '/all-students';
+        } else {
+            return location.state?.from || '/menu';
+        }
+    }, [employeeDet, location.state?.from]);
     // get the student data
     const fetchStudentStatus = async () => {
         setLoading(true);
         try {
             const studentStatusResponse = await studentStatusService.getStudentStatus(Number(studentId));
-            setEmployeeDet(studentStatusResponse.studentStatusData[0]);
+            setEmployeeDetails(studentStatusResponse.studentStatusData[0]);
             // setStudentDet(studentStatusResponse.studentStatusData[1][0]);
             setStudentStatus(studentStatusResponse.studentStatusData[2]);
         } catch (error) {
@@ -199,7 +210,7 @@ const StudentStatusTable = () => {
             <div style={{ width: '25%', marginLeft: '1200px' }}>
                 <Title level={4}>אנשי צוות ממלאים</Title>
                 <List
-                    dataSource={employeeDet}
+                    dataSource={employeeDetails}
                     renderItem={item => (
                         <List.Item>
                             <div>{item.employeeName} - {item.jobDesc}</div>

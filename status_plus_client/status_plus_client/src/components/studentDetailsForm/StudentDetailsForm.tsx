@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Form, Input, Button, Card, Row, Col, Select, DatePicker, Modal, Spin } from 'antd';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import moment from 'moment';
@@ -11,6 +11,7 @@ import { JobForEmployee } from '../../models/JobForEmployee';
 import { Grade } from '../../models/Grades';
 import { employeeService } from '../../services/employeeService';
 import Message from '../Message';
+import { MySingletonService } from '../../services/MySingletonService';
 
 const { Option } = Select;
 
@@ -21,7 +22,6 @@ interface StudentDetailsFormProps {
 const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from || '/menu';
     const { studentId } = useParams<{ studentId: string }>();
     const [form] = Form.useForm();
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
@@ -41,6 +41,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     const [employeesForStudent, setEmployeesForStudent] = useState<string[]>([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isFormChanged, setIsFormChanged] = useState(false);
+    const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
 
     useEffect(() => {
         if (studentId) {
@@ -90,6 +91,16 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
+     // Determine the back navigation route
+     const from = useMemo(() => {
+        if (employeeDet.permission === 1 || employeeDet.permission === 2) {
+            return `/students-for-update/${employeeDet.identityNumber}`;
+        } else if (employeeDet.permission === 3) {
+            return '/all-students';
+        } else {
+            return location.state?.from || '/menu';
+        }
+    }, [employeeDet, location.state?.from]);
     // get the student details and init the form
     const fetchStudentDetails = async (studentId: string, isShowError?: boolean) => {
         setLoading(true);

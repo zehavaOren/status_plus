@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button, Form, Input, Select, Spin, Modal, Card, Col, Row } from "antd";
 
@@ -8,6 +8,7 @@ import Message from "../Message";
 import { Job } from "../../models/Job";
 import { commonService } from "../../services/commonService";
 import { Permission } from "../../models/Permission";
+import { MySingletonService } from "../../services/MySingletonService";
 
 // const { TextArea } = Input;
 const { Option } = Select;
@@ -16,7 +17,6 @@ const EmployeeForm = () => {
     const { employeeId } = useParams<{ employeeId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from || '/menu';
     // const [employee, setEmployee] = useState<Employee | null>(null);
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
@@ -25,6 +25,7 @@ const EmployeeForm = () => {
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]); // Client messages
     const [jobs, setJobs] = useState<Job[]>([]);
     const [permission, setPermission] = useState<Permission[]>([]);
+    const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
 
     useEffect(() => {
         if (employeeId) {
@@ -38,6 +39,16 @@ const EmployeeForm = () => {
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
+     // Determine the back navigation route
+     const from = useMemo(() => {
+        if (employeeDet.permission === 1 || employeeDet.permission === 2) {
+            return `/students-for-update/${employeeDet.identityNumber}`;
+        } else if (employeeDet.permission === 3) {
+            return '/all-students';
+        } else {
+            return location.state?.from || '/menu';
+        }
+    }, [employeeDet, location.state?.from]);
     // Fetch employee data by ID
     const fetchEmployeeData = async (employeeID: string) => {
         setLoading(true);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Table, Button, Typography, Spin, Card, List } from 'antd';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -9,6 +9,7 @@ import { StudentStatusValue } from '../../models/StudentStatusValue';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Message from '../Message';
 import { DownloadOutlined } from '@ant-design/icons';
+import { MySingletonService } from '../../services/MySingletonService';
 
 const { Title } = Typography;
 
@@ -16,31 +17,40 @@ const StudentStatus = () => {
     const { studentId } = useParams<{ studentId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from || '/menu';
     const [loading, setLoading] = useState(false);
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [studentDet, setStudentDet] = useState<{ studentName: string, year: string }>();
-    const [employeeDet, setEmployeeDet] = useState<{ employeeName: string, jobId: number, jobDesc: string }[]>([]);
+    const [employeeDetails, setEmployeeDetails] = useState<{ employeeName: string, jobId: number, jobDesc: string }[]>([]);
     const [studentStatus, setStudentStatus] = useState<StudentStatusValue[]>([]);
     const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
-
+    const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
     const contentRef = React.useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         fetchStudentStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
+    // Determine the back navigation route
+    const from = useMemo(() => {
+        if (employeeDet.permission === 1 || employeeDet.permission === 2) {
+            return `/students-for-update/${employeeDet.identityNumber}`;
+        } else if (employeeDet.permission === 3) {
+            return '/all-students';
+        } else {
+            return location.state?.from || '/menu';
+        }
+    }, [employeeDet, location.state?.from]);
     // get status data
     const fetchStudentStatus = async () => {
         setLoading(true);
         try {
             const id = Number(studentId);
             const studentSatusResponse = await studentStatusService.getStudentStatus(id);
-            setEmployeeDet(studentSatusResponse.studentStatusData[0]);
+            setEmployeeDetails(studentSatusResponse.studentStatusData[0]);
             setStudentDet(studentSatusResponse.studentStatusData[1][0]);
             setStudentStatus(studentSatusResponse.studentStatusData[2]);
         } catch (error) {
@@ -195,7 +205,7 @@ const StudentStatus = () => {
                         <div style={{ width: '25%', marginLeft: '20px' }}>
                             <Title level={4}>אנשי צוות ממלאים</Title>
                             <List
-                                dataSource={employeeDet}
+                                dataSource={employeeDetails}
                                 renderItem={item => (
                                     <List.Item>
                                         <div>{item.employeeName} - {item.jobDesc}</div>
