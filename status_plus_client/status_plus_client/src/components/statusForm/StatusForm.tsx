@@ -195,6 +195,7 @@ const StatusForm = () => {
         });
 
         if (changedValues.length > 0) {
+            setLoading(true);
             try {
                 const saveRes = await studentStatusService.upsertStudentStatus(changedValues);
                 const allSuccessful = saveRes.every(res => res.status === 'success');
@@ -203,18 +204,53 @@ const StatusForm = () => {
                 } else {
                     addMessage('חלק מהשינויים לא נשמרו בהצלחה', 'warning');
                 }
+                const isStatusReady = await checkStudentStatus(Number(studentId));
+                if (isStatusReady) {
+                    const conflictList = await getConflictsList();
+                    if (conflictList.length === 0) {
+                        const statusUpdateToReady = await studentStatusService.upsertStudentStatusReady(studentId!, 'תשפד');
+                        if (statusUpdateToReady.studentStatusReady[0].status === 0) {
+                            console.error("error update ready ststus");
+                        }
+                    }
+                }
                 await getData();
+                setLoading(false);
             } catch (error) {
                 addMessage('שגיאה בשמירת השינויים', 'error');
             }
         } else {
             addMessage('לא בוצעו שינויים', 'info');
         }
-
         setIsSaving(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, formValues, studentId]);
-
+    // check if all employees fill the status
+    const checkStudentStatus = async (studentId: number) => {
+        try {
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, 'תשפד');
+            const numbersOfValues = responseFromDB.numbersOfValues[0][0];
+            if (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        } catch (error) {
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
+        }
+    }
+    // get the conflicts list
+    const getConflictsList = async () => {
+        const employeeNumber = Number(studentId);
+        try {
+            const studentConflictsResponse = await studentStatusService.getConflictsList(employeeNumber);
+            const conflictsList = studentConflictsResponse.conflictsList[0];
+            return conflictsList;
+        } catch (error) {
+            console.error('Error fetching student status:', error);
+        }
+    }
     // Updated renderCategoryValues to use getIsFinalChoice to check if value is final
     const renderCategoryValues = (categoryId: number) => {
         const categoryValues = values.filter(value => value.categoryId === categoryId);

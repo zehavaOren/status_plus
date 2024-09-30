@@ -19,7 +19,7 @@ const StudentConflictsList = () => {
 
     useEffect(() => {
         getStudentsConflictsList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [employeeId]);
     // message managment
     const addMessage = (message: string, type: any) => {
@@ -42,12 +42,13 @@ const StudentConflictsList = () => {
     const onConflictHandlingClick = async (student: any) => {
         const isStatusFinish = await checkStudentStatus(Number(student.studentId));
         if (isStatusFinish) {
-            const userPermission = MySingletonService.getInstance().getBaseUser().permission;
-            if (userPermission === 2) {
-                navigate(`/menu/conflicts-list/${student.studentId}`, { state: { from: location.pathname } });
-            } else {
-                addMessage('אין לך הרשאה לפתור קונפליקטים בסטטוס', 'error');
-            }
+            navigate(`/menu/conflicts-list/${student.studentId}`, { state: { from: location.pathname } });
+            // const userPermission = MySingletonService.getInstance().getBaseUser().permission;
+            // if (userPermission === 2) {
+            //     navigate(`/menu/conflicts-list/${student.studentId}`, { state: { from: location.pathname } });
+            // } else {
+            //     addMessage('אין לך הרשאה לפתור קונפליקטים בסטטוס', 'error');
+            // }
         }
         else {
             addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות לפתור קונפליקטים", "error");
@@ -56,7 +57,7 @@ const StudentConflictsList = () => {
     // check if all employees fill the status
     const checkStudentStatus = async (studentId: number) => {
         try {
-            const responseFromDB = await studentStatusService.checkStudentStatus(studentId);
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, 'תשפד');
             const numbersOfValues = responseFromDB.numbersOfValues[0][0];
             if (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) {
                 return true;

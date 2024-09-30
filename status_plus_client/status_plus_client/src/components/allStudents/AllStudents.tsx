@@ -80,7 +80,7 @@ const AllStudents = () => {
     // get the anount of the values to calc the progress
     const getAmuntValues = async (studentId: number) => {
         try {
-            const responseFromDB = await studentStatusService.checkStudentStatus(studentId);
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId,'תשפד');
             const numbersOfValues = responseFromDB.numbersOfValues[0][0];
             return {
                 totalExpectedValues: numbersOfValues.totalExpectedValues,

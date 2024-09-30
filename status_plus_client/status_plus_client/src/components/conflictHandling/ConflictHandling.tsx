@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button, Input, Select, Spin, Table, Tag, Typography } from 'antd';
-import { ColumnsType } from 'antd/es/table';
+import { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 
 import { studentStatusService } from "../../services/studentStatusService";
 import { ConflictData } from "../../models/ConflictData";
@@ -9,10 +9,11 @@ import { ProcessedConflictData } from "../../models/ProcessedConflictData";
 import { EmployeeChoice } from "../../models/EmployeeChoice";
 import { ConflictChoice } from "../../models/ConflictChoice";
 import Message from "../Message";
+import { BaseUser } from "../../models/BaseUser";
+import { MySingletonService } from "../../services/MySingletonService";
 
 const { Title } = Typography;
 const { Option } = Select;
-
 
 const ConflictHandling = () => {
     const { studentId } = useParams<{ studentId: string }>();
@@ -24,32 +25,52 @@ const ConflictHandling = () => {
     const [conflictsList, setConflictsList] = useState<ConflictData[]>([]);
     const [columns, setColumns] = useState<ColumnsType<ProcessedConflictData>>([]);
     const [tableData, setTableData] = useState<ProcessedConflictData[]>([]);
-    const [studentDetails, setstudentDetails] = useState<{ id: number, studentName: string }>();
+    const [studentDetails, setStudentDetails] = useState<{ id: number, studentName: string }>();
+    const [user, setUser] = useState<BaseUser | null>(null); // Store logged-in employee
+    const userPermission = useMemo(() => MySingletonService.getInstance().getBaseUser().permission, []);
+
+    // Pagination State
+    const [pagination, setPagination] = useState<TablePaginationConfig>({
+        current: 1,
+        pageSize: 10,  // Default page size
+        total: 0,
+        showSizeChanger: true,
+        pageSizeOptions: ['10', '20', '50'], // Available page sizes
+    });
+
+    // Full dataset for conflicts, not paginated
+    const [fullData, setFullData] = useState<ProcessedConflictData[]>([]);
 
     useEffect(() => {
         getConflictsList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
+
+    useEffect(() => {
+        // Paginate table data based on pagination settings
+        paginateData();
+    }, [pagination.current, pagination.pageSize, fullData]);
 
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
-    // get the conflicts list
+
+    // Fetch conflicts list and process data
     const getConflictsList = async () => {
         setLoading(true);
         const employeeNumber = Number(studentId);
         try {
             const studentConflictsResponse = await studentStatusService.getConflictsList(employeeNumber);
             setConflictsList(studentConflictsResponse.conflictsList[0]);
-            setstudentDetails(studentConflictsResponse.conflictsList[1][0].studentDetails);
+            setStudentDetails(studentConflictsResponse.conflictsList[1][0].studentDetails);
             processConflictsData(studentConflictsResponse.conflictsList[0]);
         } catch (error) {
             addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
             console.error('Error fetching student status:', error);
         }
         setLoading(false);
-    }
-    // map the data to the table
+    };
+
+    // Process raw conflict data and set pagination total
     const processConflictsData = (rawData: ConflictData[]) => {
         const uniqueValues = Array.from(new Set(rawData.map(item => item.valueDescription)));
         const uniqueEmployees = Array.from(new Set(rawData.map(item => item.employeeName)));
@@ -75,29 +96,34 @@ const ConflictHandling = () => {
                     </div>
                 ),
             })),
-            {
-                title: 'בחירת משתמש',
-                dataIndex: 'choice',
-                key: 'choice',
-                render: (text: string, record: ProcessedConflictData) => (
-                    <div>
-                        <Select value={text} onChange={(value) => handleUserChoiceChange(record, value)} placeholder="בחר בחוזקה או חולשה" style={{ minWidth: '100px' }} direction="rtl">
-                            <Option value="חוזקה">חוזקה</Option>
-                            <Option value="חולשה">חולשה</Option>
-                        </Select>
-                    </div>
-                ),
-            },
-
-            {
-                title: 'הערה משתמש',
-                dataIndex: 'comment',
-                key: 'comment',
-                render: (text: string, record: ProcessedConflictData) => (
-                    <Input value={text} onChange={(e) => handleUserCommentChange(record, e.target.value)} />
-                ),
-            },
         ];
+
+        // Conditionally add user choice and comment columns if user has permission 2
+        if (userPermission === 2) {
+            columns.push(
+                {
+                    title: 'בחירת משתמש',
+                    dataIndex: 'choice',
+                    key: 'choice',
+                    render: (text: string, record: ProcessedConflictData) => (
+                        <div>
+                            <Select value={text} onChange={(value) => handleUserChoiceChange(record, value)} placeholder="בחר בחוזקה או חולשה" style={{ minWidth: '100px' }} direction="rtl">
+                                <Option value="חוזקה">חוזקה</Option>
+                                <Option value="חולשה">חולשה</Option>
+                            </Select>
+                        </div>
+                    ),
+                },
+                {
+                    title: 'הערה משתמש',
+                    dataIndex: 'comment',
+                    key: 'comment',
+                    render: (text: string, record: ProcessedConflictData) => (
+                        <Input value={text} onChange={(e) => handleUserCommentChange(record, e.target.value)} />
+                    ),
+                }
+            );
+        }
 
         const data: ProcessedConflictData[] = uniqueValues.map(value => {
             const rowData: ProcessedConflictData = {
@@ -119,10 +145,23 @@ const ConflictHandling = () => {
             });
             return rowData;
         });
+
         setColumns(columns);
-        setTableData(data);
+        setFullData(data);  // Store full data for pagination
+        setPagination(prev => ({
+            ...prev,
+            total: data.length, // Set total number of records
+        }));
     };
-    // when choose strength or weakness
+
+    // Paginate data based on current pagination settings
+    const paginateData = () => {
+        const { current, pageSize } = pagination;
+        const paginatedData = fullData.slice((current! - 1) * pageSize!, current! * pageSize!);
+        setTableData(paginatedData);
+    };
+
+    // Handle user choice changes
     const handleUserChoiceChange = (record: ProcessedConflictData, value: string) => {
         setTableData(prevTableData =>
             prevTableData.map(item => {
@@ -133,7 +172,8 @@ const ConflictHandling = () => {
             })
         );
     };
-    //when insert comments
+
+    // Handle user comment changes
     const handleUserCommentChange = (record: ProcessedConflictData, value: string) => {
         setTableData(prevTableData =>
             prevTableData.map(item => {
@@ -144,7 +184,8 @@ const ConflictHandling = () => {
             })
         );
     };
-    // save data
+
+    // Save the data
     const handleSave = async () => {
         const isDataValid = tableData.every(item => item.choice && item.comment);
         if (isDataValid) {
@@ -166,12 +207,14 @@ const ConflictHandling = () => {
             addMessage('יש למלא את שני השדות - בחירת משתמש והערה', 'error');
         }
     };
-    // find the educator id
+
+    // Find the educator's employee id
     const findEmployeeIdByJobId = (conflictsList: any[]): number | undefined => {
         const employee = conflictsList.find(conflict => conflict.jobId === 10);
         return employee ? employee.employeeId : undefined;
     };
-    // map data to save
+
+    // Map the processed conflict data to the ConflictChoice model for saving
     const mapProcessedConflictDataToConflictChoice = (data: ProcessedConflictData[]): ConflictChoice[] => {
         const studentID = Number(studentId);
         const employeeId = findEmployeeIdByJobId(conflictsList);
@@ -185,9 +228,27 @@ const ConflictHandling = () => {
             employeeId: employeeId!,
         }));
     };
-    // navigate to the privious component
+
+    // Handle pagination change
+    const handleTableChange = (pagination: TablePaginationConfig) => {
+        setPagination(pagination);  // Update pagination state
+    };
+
+    // Navigate back to the previous component
     const navigateBack = () => {
         navigate(from);
+    };
+    const paginationLocale = {
+        items_per_page: 'פריטים / עמוד',
+        jump_to: 'עבור אל',
+        jump_to_confirm: 'אישור',
+        page: 'עמוד',
+        prev_page: 'העמוד הקודם',
+        next_page: 'העמוד הבא',
+        prev_5: '5 עמודים אחורה',
+        next_5: '5 עמודים קדימה',
+        prev_3: '3 עמודים אחורה',
+        next_3: '3 עמודים קדימה',
     };
     return (
         <>
@@ -204,14 +265,22 @@ const ConflictHandling = () => {
                         חזרה
                     </Button>
                 </div>
-                <Table
-                    columns={columns}
-                    dataSource={tableData}
-                    pagination={false}
-                    bordered
-                    style={{ direction: 'rtl' }}
-                />
-                <Button onClick={handleSave}>שמור</Button>
+                {/* Wrap the table in a container with 80% width */}
+                <div style={{ width: '80%', margin: '0 auto' }}>
+                    <Table
+                        columns={columns}
+                        dataSource={tableData}
+                        pagination={{ ...pagination, locale: paginationLocale }}  // Apply pagination settings
+                        bordered
+                        onChange={handleTableChange} // Handle pagination changes
+                        style={{ direction: 'rtl' }}
+                    />
+                </div>
+                <div>
+                    {userPermission === 2 && (
+                        <Button onClick={handleSave}>שמור</Button>
+                    )}
+                </div>
             </div>
         </>
     );

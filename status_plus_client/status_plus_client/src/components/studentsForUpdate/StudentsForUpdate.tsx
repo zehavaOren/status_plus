@@ -17,7 +17,8 @@ const StudentsForUpdate = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { identityNumber } = useParams<{ identityNumber: string }>();
-    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]); const [loading, setLoading] = useState(false);
+    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
+    const [loading, setLoading] = useState(false);
     const [students, setStudents] = useState<Student[]>([]);
     const [searchText, setSearchText] = useState('');
     const [hasCheckedConflicts, setHasCheckedConflicts] = useState(false); // Flag to ensure the modal shows only once
@@ -73,6 +74,7 @@ const StudentsForUpdate = () => {
             addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
         }
     }
+    // if there is stidets with conflicts
     const showConflictModal = () => {
         Modal.confirm({
             title: 'יש לך תלמידים עם קונפליקטים',
@@ -103,7 +105,7 @@ const StudentsForUpdate = () => {
     // check if all employees fill the status
     const checkStudentStatus = async (studentId: number) => {
         try {
-            const responseFromDB = await studentStatusService.checkStudentStatus(studentId);
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, 'תשפד');
             const numbersOfValues = responseFromDB.numbersOfValues[0][0];
             if (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) {
                 return true;

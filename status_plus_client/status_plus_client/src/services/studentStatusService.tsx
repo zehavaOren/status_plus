@@ -154,11 +154,29 @@ export const studentStatusService = {
         return results;
     },
 
-    checkStudentStatus: async (studentId: number) => {
+    checkStudentStatus: async (studentId: number, year: string) => {
         try {
-            const response = await fetch(`${BASE_URL}/checkStudentStatus/${studentId}/`);
+            const response = await fetch(`${BASE_URL}/checkStudentStatus/${studentId}/${year}`);
             if (!response.ok) {
                 throw new Error('Error getting data');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    },
+
+    upsertStudentStatusReady: async (studentId: string, year: string) => {
+        try {
+            const response = await fetch(`${BASE_URL}/upsertStudentStatusReady/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ studentId, year })
+            });
+            if (!response.ok) {
+                throw new Error(`Error fetching value`);
             }
             return await response.json();
         } catch (error: any) {
