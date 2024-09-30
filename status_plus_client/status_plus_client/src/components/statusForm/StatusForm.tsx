@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Button, Checkbox, Col, Form, Input, Row, Card, Steps, message as AntMessage } from "antd";
+import { Button, Checkbox, Col, Form, Input, Row, Card, Steps, Spin } from "antd";
 import './StatusForm.css';
 import { studentStatusService } from "../../services/studentStatusService";
 import { ValueSelected } from "../../models/ValueSelected";
@@ -27,11 +27,12 @@ const StatusForm = () => {
     const [form] = Form.useForm();
     const [isFormChanged, setIsFormChanged] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [studentName, setStudentName] = useState("");
+    // const [studentName, setStudentName] = useState("");
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
 
     useEffect(() => {
         getData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
     useEffect(() => {
@@ -49,7 +50,7 @@ const StatusForm = () => {
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
-
+    // get the datat from the server
     const getData = async () => {
         const user = await MySingletonService.getInstance().getBaseUser();
         if (user) {
@@ -62,7 +63,7 @@ const StatusForm = () => {
                 setCategories(categories.categories[0]);
                 setValues(valuesRes.valuesList[0]);
                 setFormValues(studentValuesRes.valuesList[0]);
-                setStudentName(studentValuesRes.valuesList[1][0].name);
+                // setStudentName(studentValuesRes.valuesList[1][0].name);
             } catch (error) {
                 addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
             } finally {
@@ -73,22 +74,20 @@ const StatusForm = () => {
             addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
         }
     };
-
+    // when form change
     const onValuesChange = () => {
         setIsFormChanged(true);
     };
-
     // Get the corresponding `isFinalChoice` from `formValues`
     const getIsFinalChoice = (valueId: number) => {
         const selectedValue = formValues.find(v => v.valueId === valueId);
         return selectedValue ? selectedValue.isFinalChoice : false;
     };
-
     // Handle the validation manually
     const handleStrengthWeaknessChange = (valueId: number) => {
         const strength = form.getFieldValue(`strength_${valueId}`);
         const weakness = form.getFieldValue(`weakness_${valueId}`);
-    
+
         // Clear all existing errors first
         form.setFields([
             {
@@ -100,7 +99,7 @@ const StatusForm = () => {
                 errors: [],
             },
         ]);
-    
+
         // If both strength and weakness are selected, set a single validation error
         if (strength && weakness) {
             form.setFields([
@@ -111,7 +110,7 @@ const StatusForm = () => {
             ]);
         }
     };
-    
+    // save the data
     const onFinish = useCallback(async (values: { [key: string]: any }) => {
         if (isSaving) return;
         setIsSaving(true);
@@ -213,6 +212,7 @@ const StatusForm = () => {
         }
 
         setIsSaving(false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, formValues, studentId]);
 
     // Updated renderCategoryValues to use getIsFinalChoice to check if value is final
@@ -260,26 +260,37 @@ const StatusForm = () => {
             <p>אין ערכים זמינים עבור הקטגוריה הזו.</p>
         );
     };
-
+    // move to other category
     const handleStepChange = (current: number) => {
         setCurrentStep(current);
     };
-
+    // save form
     const handleSaveAll = () => {
-        form.submit();  // This will trigger the onFinish method automatically
+        form.submit();
     };
-
+    // navigate to the privious component
+    const navigateBack = () => {
+        navigate(from);
+    };
     return (
         <div>
-           <Message messages={messages} duration={5000} />
+            <Message messages={messages} duration={5000} />
             <div className="steps-container">
+                {loading && (
+                    <div className="loading-overlay">
+                        <Spin size="large" />
+                    </div>
+                )}
+
                 <Steps current={currentStep} onChange={handleStepChange}>
                     {categories.map((category) => (
                         <Step key={category.categoryId} title={category.categoryDesc} />
                     ))}
                 </Steps>
             </div>
-
+            <Button onClick={navigateBack} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
+                חזרה
+            </Button>
             <Card className="card-container">
                 <Form form={form} layout="vertical" onValuesChange={onValuesChange} onFinish={onFinish}>
                     <h2>{categories[currentStep]?.categoryDesc}</h2>
@@ -299,7 +310,6 @@ const StatusForm = () => {
                 </Form>
             </Card>
 
-            {/* Save button at the bottom to save all categories */}
             <div style={{ textAlign: 'center', marginTop: '24px' }}>
                 <Button type="primary" onClick={handleSaveAll} loading={isSaving}>
                     שמור הכל
