@@ -25,6 +25,7 @@ const ConflictHandling = () => {
     const [tableData, setTableData] = useState<ProcessedConflictData[]>([]);
     const [studentDetails, setStudentDetails] = useState<{ id: number, studentName: string }>();
     const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
+    const [fullData, setFullData] = useState<ProcessedConflictData[]>([]);
 
     // Pagination State
     const [pagination, setPagination] = useState<TablePaginationConfig>({
@@ -34,9 +35,6 @@ const ConflictHandling = () => {
         showSizeChanger: true,
         pageSizeOptions: ['10', '20', '50'], // Available page sizes
     });
-
-    // Full dataset for conflicts, not paginated
-    const [fullData, setFullData] = useState<ProcessedConflictData[]>([]);
 
     useEffect(() => {
         getConflictsList();
@@ -54,6 +52,9 @@ const ConflictHandling = () => {
     };
     // Determine the back navigation route
     const from = useMemo(() => {
+        if (location.state?.from) {
+            return location.state.from;
+        }
         if (employeeDet.permission === 1 || employeeDet.permission === 2) {
             return `/students-for-update/${employeeDet.identityNumber}`;
         } else if (employeeDet.permission === 3) {

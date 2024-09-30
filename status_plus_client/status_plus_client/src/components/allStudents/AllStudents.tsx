@@ -20,7 +20,7 @@ const AllStudents = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
-    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]); 
+    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [loading, setLoading] = useState(false);
     const [students, setStudents] = useState<Student[]>([]);
     const [searchText, setSearchText] = useState('');
@@ -33,7 +33,7 @@ const AllStudents = () => {
 
     useEffect(() => {
         getStudents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     useEffect(() => {
         setCurrentPage(1);
@@ -80,7 +80,7 @@ const AllStudents = () => {
     // get the anount of the values to calc the progress
     const getAmuntValues = async (studentId: number) => {
         try {
-            const responseFromDB = await studentStatusService.checkStudentStatus(studentId,'תשפד');
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, 'תשפד');
             const numbersOfValues = responseFromDB.numbersOfValues[0][0];
             return {
                 totalExpectedValues: numbersOfValues.totalExpectedValues,
@@ -92,7 +92,8 @@ const AllStudents = () => {
     }
     //see student statuses
     const onViewingStudentStatusClick = (student_id: string) => {
-        navigate(`statuses-list/${student_id}`);
+        debugger
+        navigate(`statuses-list/${student_id}`, { state: { from: location.pathname } });
     }
     //search
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -32,14 +32,17 @@ const StudentStatusTable = () => {
 
     useEffect(() => {
         fetchStudentStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
-     // Determine the back navigation route
-     const from = useMemo(() => {
+    // Determine the back navigation route
+    const from = useMemo(() => {
+        if (location.state?.from) {
+            return location.state.from;
+        }
         if (employeeDet.permission === 1 || employeeDet.permission === 2) {
             return `/students-for-update/${employeeDet.identityNumber}`;
         } else if (employeeDet.permission === 3) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Image, Pagination } from 'antd';
 import { ColumnType } from 'antd/es/table';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { StudentsStatus } from "../../models/StudentStatus";
 import view from '../../assets/view.png';
@@ -11,17 +11,18 @@ import Message from '../Message';
 
 const StudentsStatuses = () => {
 
-    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]); 
+    const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [loading, setLoading] = useState(false);
     const [studentsStatuses, setStudentsStatuses] = useState<StudentsStatus[]>([]);
     const [searchText, setSearchText] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
     useEffect(() => {
         getStudentsStatuses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const addMessage = (message: string, type: any) => {
@@ -42,7 +43,9 @@ const StudentsStatuses = () => {
     };
     //see student statuses
     const onViewingStudentStatusClick = (student_id: string) => {
-        navigate(`statuses-list/${student_id}`);
+        debugger
+        navigate(`statuses-list/${student_id}`, { state: { from: location.pathname } });
+        // navigate(`statuses-list/${student_id}`, { state: { from: location.pathname } });
     }
     //search
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,7 +124,7 @@ const StudentsStatuses = () => {
             width: 150,
         }
     ];
-    
+
     return (
         <>
             <Message messages={messages} duration={5000} />

@@ -56,6 +56,9 @@ const PaginatedStatusForm = () => {
     };
     // Determine the back navigation route
     const from = useMemo(() => {
+        if (location.state?.from) {
+            return location.state.from;
+        }
         if (employeeDet.permission === 1 || employeeDet.permission === 2) {
             return `/students-for-update/${employeeDet.identityNumber}`;
         } else if (employeeDet.permission === 3) {
