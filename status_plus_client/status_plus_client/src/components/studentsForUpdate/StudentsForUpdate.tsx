@@ -68,10 +68,27 @@ const StudentsForUpdate = () => {
     const onViewStatusClick = async (student_id: string) => {
         const isStatusFinish = await checkStudentStatus(Number(student_id));
         if (isStatusFinish) {
-            navigate(`/menu/student-status/${student_id}`, { state: { from: location.pathname } });
+            const conflictsList = await getConflictsList(student_id);
+            if (conflictsList.length === 0) {
+                navigate(`/menu/student-status/${student_id}`, { state: { from: location.pathname } });
+            }
+            else {
+                addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
+            }
         }
         else {
             addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
+        }
+    }
+    // get the conflicts list
+    const getConflictsList = async (studentId: string) => {
+        const employeeNumber = Number(studentId);
+        try {
+            const studentConflictsResponse = await studentStatusService.getConflictsList(employeeNumber);
+            const conflictsList = studentConflictsResponse.conflictsList[0];
+            return conflictsList;
+        } catch (error) {
+            console.error('Error fetching student status:', error);
         }
     }
     // if there is stidets with conflicts
