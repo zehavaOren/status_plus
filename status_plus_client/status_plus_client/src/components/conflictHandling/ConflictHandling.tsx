@@ -9,7 +9,6 @@ import { ProcessedConflictData } from "../../models/ProcessedConflictData";
 import { EmployeeChoice } from "../../models/EmployeeChoice";
 import { ConflictChoice } from "../../models/ConflictChoice";
 import Message from "../Message";
-import { BaseUser } from "../../models/BaseUser";
 import { MySingletonService } from "../../services/MySingletonService";
 
 const { Title } = Typography;
@@ -26,7 +25,6 @@ const ConflictHandling = () => {
     const [columns, setColumns] = useState<ColumnsType<ProcessedConflictData>>([]);
     const [tableData, setTableData] = useState<ProcessedConflictData[]>([]);
     const [studentDetails, setStudentDetails] = useState<{ id: number, studentName: string }>();
-    const [user, setUser] = useState<BaseUser | null>(null); // Store logged-in employee
     const userPermission = useMemo(() => MySingletonService.getInstance().getBaseUser().permission, []);
 
     // Pagination State
@@ -43,17 +41,18 @@ const ConflictHandling = () => {
 
     useEffect(() => {
         getConflictsList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
     useEffect(() => {
         // Paginate table data based on pagination settings
         paginateData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pagination.current, pagination.pageSize, fullData]);
 
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
-
     // Fetch conflicts list and process data
     const getConflictsList = async () => {
         setLoading(true);
@@ -69,7 +68,6 @@ const ConflictHandling = () => {
         }
         setLoading(false);
     };
-
     // Process raw conflict data and set pagination total
     const processConflictsData = (rawData: ConflictData[]) => {
         const uniqueValues = Array.from(new Set(rawData.map(item => item.valueDescription)));
@@ -153,14 +151,12 @@ const ConflictHandling = () => {
             total: data.length, // Set total number of records
         }));
     };
-
     // Paginate data based on current pagination settings
     const paginateData = () => {
         const { current, pageSize } = pagination;
         const paginatedData = fullData.slice((current! - 1) * pageSize!, current! * pageSize!);
         setTableData(paginatedData);
     };
-
     // Handle user choice changes
     const handleUserChoiceChange = (record: ProcessedConflictData, value: string) => {
         setTableData(prevTableData =>
@@ -172,7 +168,6 @@ const ConflictHandling = () => {
             })
         );
     };
-
     // Handle user comment changes
     const handleUserCommentChange = (record: ProcessedConflictData, value: string) => {
         setTableData(prevTableData =>
@@ -184,7 +179,6 @@ const ConflictHandling = () => {
             })
         );
     };
-
     // Save the data
     const handleSave = async () => {
         const isDataValid = tableData.every(item => item.choice && item.comment);
@@ -207,13 +201,11 @@ const ConflictHandling = () => {
             addMessage('יש למלא את שני השדות - בחירת משתמש והערה', 'error');
         }
     };
-
     // Find the educator's employee id
     const findEmployeeIdByJobId = (conflictsList: any[]): number | undefined => {
         const employee = conflictsList.find(conflict => conflict.jobId === 10);
         return employee ? employee.employeeId : undefined;
     };
-
     // Map the processed conflict data to the ConflictChoice model for saving
     const mapProcessedConflictDataToConflictChoice = (data: ProcessedConflictData[]): ConflictChoice[] => {
         const studentID = Number(studentId);
@@ -228,12 +220,10 @@ const ConflictHandling = () => {
             employeeId: employeeId!,
         }));
     };
-
     // Handle pagination change
     const handleTableChange = (pagination: TablePaginationConfig) => {
         setPagination(pagination);  // Update pagination state
     };
-
     // Navigate back to the previous component
     const navigateBack = () => {
         navigate(from);

@@ -5,7 +5,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { studentStatusService } from '../../services/studentStatusService';
 import Message from '../Message';
-import { MySingletonService } from '../../services/MySingletonService';
 
 const StudentConflictsList = () => {
 
@@ -43,12 +42,6 @@ const StudentConflictsList = () => {
         const isStatusFinish = await checkStudentStatus(Number(student.studentId));
         if (isStatusFinish) {
             navigate(`/menu/conflicts-list/${student.studentId}`, { state: { from: location.pathname } });
-            // const userPermission = MySingletonService.getInstance().getBaseUser().permission;
-            // if (userPermission === 2) {
-            //     navigate(`/menu/conflicts-list/${student.studentId}`, { state: { from: location.pathname } });
-            // } else {
-            //     addMessage('אין לך הרשאה לפתור קונפליקטים בסטטוס', 'error');
-            // }
         }
         else {
             addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות לפתור קונפליקטים", "error");
