@@ -19,5 +19,6 @@ router.get('/getConflictList/:studentId/', studentStatusController.getConflictLi
 router.post('/upsertConflictResolution', studentStatusController.upsertConflictResolution);
 router.get('/checkStudentStatus/:studentId/:year', studentStatusController.checkStudentStatus);
 router.post('/upsertStudentStatusReady/', studentStatusController.upsertStudentStatusReady);
+router.get('/getHistoryStudentStatuses/:studentId', studentStatusController.getHistoryStudentStatuses);
 
 module.exports = router;

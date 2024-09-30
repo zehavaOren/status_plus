@@ -1,4 +1,6 @@
 const dbService = require('../services/dbService');
+const fs = require('fs');
+const path = require('path');
 
 const getAllStdents = async (req, res) => {
     try {
@@ -100,7 +102,25 @@ const importStudents = async (req, res) => {
         console.error('Error occurred:', err);
         res.status(500).json({ error: 'An error occurred while processing the request' });
     }
-}
+};
+
+const uploadStudentPDF = async (req, res) => {
+    const { studentId, base64PDF, year } = req.body;
+
+    try {
+        // Save the base64 PDF string into the database
+        const statusFileSaved = await dbService.executeStoredProcedure('sp_insert_student_status_file', {
+            studentId,
+            statusFile: base64PDF,
+            year,
+        });
+
+        res.status(200).json({ message: 'PDF uploaded and saved successfully', statusFileSaved });
+    } catch (error) {
+        console.error('Error saving PDF:', error);
+        res.status(500).json({ error: 'Failed to save PDF' });
+    }
+};
 
 module.exports = {
     getAllStdents,
@@ -109,5 +129,6 @@ module.exports = {
     upsertStudentDetails,
     upsertEmployeesForStudent,
     deleteStudent,
-    importStudents
+    importStudents,
+    uploadStudentPDF
 };

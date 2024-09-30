@@ -159,6 +159,17 @@ const upsertStudentStatusReady = async (req, res) => {
         console.error(err);
         res.status(500).json({ error: 'An error occurred while processing the request' });
     }
+};
+
+const getHistoryStudentStatuses = async (req, res) => {
+    const studentId = req.params.studentId;
+    try {
+        const statuses = await dbService.executeStoredProcedure('sp_stpl_insert_student_status_file', { studentId: studentId });
+        res.status(200).json({ statuses });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
 }
 
 module.exports = {
@@ -174,5 +185,6 @@ module.exports = {
     getConflictList,
     upsertConflictResolution,
     checkStudentStatus,
-    upsertStudentStatusReady
+    upsertStudentStatusReady,
+    getHistoryStudentStatuses
 };
