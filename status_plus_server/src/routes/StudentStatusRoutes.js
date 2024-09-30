@@ -17,6 +17,7 @@ router.get('/getStudentStatus/:studentId', studentStatusController.getStudentSta
 router.get('/getStudetsConflicts/:employeeId/', studentStatusController.getStudetsConflicts);
 router.get('/getConflictList/:studentId/', studentStatusController.getConflictList);
 router.post('/upsertConflictResolution', studentStatusController.upsertConflictResolution);
-router.get('/checkStudentStatus/:studentId/', studentStatusController.checkStudentStatus);
+router.get('/checkStudentStatus/:studentId/:year', studentStatusController.checkStudentStatus);
+router.post('/upsertStudentStatusReady/', studentStatusController.upsertStudentStatusReady);
 
 module.exports = router;

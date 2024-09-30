@@ -78,7 +78,7 @@ const upsertStudentStatus = async (req, res) => {
     const weakness = req.body.weakness;
     const notes = req.body.notes;
     const year = req.body.year;
-    const isFinalChoice= req.body.isFinalChoice;
+    const isFinalChoice = req.body.isFinalChoice;
     try {
         const studentStatusSave = await dbService.executeStoredProcedure('sp_stpl_upsert_student_status', { studentId, employeeId, valueId, strength, weakness, notes, year, isFinalChoice });
         res.status(200).json({ studentStatusSave });
@@ -136,18 +136,30 @@ const upsertConflictResolution = async (req, res) => {
         console.error(err);
         res.status(500).json({ error: 'An error occurred while processing the request' });
     }
-}
+};
 
 const checkStudentStatus = async (req, res) => {
     const studentId = req.params.studentId;
+    const year = req.params.year;
     try {
-        const numbersOfValues = await dbService.executeStoredProcedure('sp_stpl_check_student_status', { studentId: studentId });
+        const numbersOfValues = await dbService.executeStoredProcedure('sp_stpl_check_student_status', { studentId: studentId, year: year });
         res.status(200).json({ numbersOfValues });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'An error occurred while processing the request' });
     }
 };
+
+const upsertStudentStatusReady = async (req, res) => {
+    const studentId = req.body.studentId;
+    try {
+        const studentStatusReady = await dbService.executeStoredProcedure('sp_stpl_upsert_student_status_ready', { studentId, year });
+        res.status(200).json({ studentStatusReady });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+}
 
 module.exports = {
     getStudentsStatuses,
@@ -161,5 +173,6 @@ module.exports = {
     getStudetsConflicts,
     getConflictList,
     upsertConflictResolution,
-    checkStudentStatus
+    checkStudentStatus,
+    upsertStudentStatusReady
 };
