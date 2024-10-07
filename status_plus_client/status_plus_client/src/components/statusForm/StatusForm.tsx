@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Button, Checkbox, Col, Form, Input, Row, Card, Steps, message as AntMessage } from "antd";
+import { Button, Checkbox, Col, Form, Input, Row, Card, Steps, message as AntMessage, Spin } from "antd";
 import './StatusForm.css';
 import { studentStatusService } from "../../services/studentStatusService";
 import { ValueSelected } from "../../models/ValueSelected";
@@ -15,7 +15,7 @@ const { Step } = Steps;
 
 const StatusForm = () => {
     const { studentId } = useParams<{ studentId: string }>();
-    const navigate = useNavigate();
+    const navigate = useNavigate();  // For back button navigation
     const location = useLocation();
     const from = location.state?.from || '/menu';
     const [user, setUser] = useState<BaseUser>();
@@ -23,7 +23,7 @@ const StatusForm = () => {
     const [values, setValues] = useState<Value[]>([]);
     const [formValues, setFormValues] = useState<ValueSelected[]>([]);
     const [loading, setLoading] = useState(false);
-    const [currentStep, setCurrentStep] = useState(0);  // Tracks current category index
+    const [currentStep, setCurrentStep] = useState(0);
     const [form] = Form.useForm();
     const [isFormChanged, setIsFormChanged] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -78,18 +78,15 @@ const StatusForm = () => {
         setIsFormChanged(true);
     };
 
-    // Get the corresponding `isFinalChoice` from `formValues`
     const getIsFinalChoice = (valueId: number) => {
         const selectedValue = formValues.find(v => v.valueId === valueId);
         return selectedValue ? selectedValue.isFinalChoice : false;
     };
 
-    // Handle the validation manually
     const handleStrengthWeaknessChange = (valueId: number) => {
         const strength = form.getFieldValue(`strength_${valueId}`);
         const weakness = form.getFieldValue(`weakness_${valueId}`);
-    
-        // Clear all existing errors first
+
         form.setFields([
             {
                 name: `strength_${valueId}`,
@@ -100,8 +97,7 @@ const StatusForm = () => {
                 errors: [],
             },
         ]);
-    
-        // If both strength and weakness are selected, set a single validation error
+
         if (strength && weakness) {
             form.setFields([
                 {
@@ -111,7 +107,7 @@ const StatusForm = () => {
             ]);
         }
     };
-    
+
     const onFinish = useCallback(async (values: { [key: string]: any }) => {
         if (isSaving) return;
         setIsSaving(true);
@@ -125,21 +121,19 @@ const StatusForm = () => {
         const changedValues: ValueSelected[] = [];
         const groupedValues: { [key: number]: Partial<ValueSelected> } = {};
 
-        // Validate that strength and weakness are not both selected
         let hasValidationError = false;
 
         Object.keys(values).forEach(key => {
             const [type, id] = key.split('_');
             const valueId = parseInt(id);
 
-            // Skip processing if the valueId is not valid
             if (!groupedValues[valueId]) {
                 groupedValues[valueId] = {
                     studentId,
                     employeeId,
                     valueId,
                     year,
-                    isFinalChoice: false // Ensure isFinalChoice is set
+                    isFinalChoice: false
                 };
             }
 
@@ -153,7 +147,6 @@ const StatusForm = () => {
                 groupedValues[valueId].weakness = values[key];
             }
 
-            // Check for validation errors: both strength and weakness are selected
             if (groupedValues[valueId].strength && groupedValues[valueId].weakness) {
                 hasValidationError = true;
                 form.setFields([
@@ -171,25 +164,20 @@ const StatusForm = () => {
             return;
         }
 
-        // Now check which values have actually changed and filter out undefined ones
         Object.values(groupedValues).forEach(updatedValue => {
             const originalValue = formValues.find(v => v.valueId === updatedValue.valueId);
             let isChanged = false;
 
-            // Check if notes are different or not empty
             if (updatedValue.notes !== undefined && updatedValue.notes !== (originalValue?.notes ?? '')) {
                 isChanged = true;
             }
-            // Check if strength has changed
             if (updatedValue.strength !== undefined && updatedValue.strength !== (originalValue?.strength ?? false)) {
                 isChanged = true;
             }
-            // Check if weakness has changed
             if (updatedValue.weakness !== undefined && updatedValue.weakness !== (originalValue?.weakness ?? false)) {
                 isChanged = true;
             }
 
-            // Only add values that have actually changed
             if (isChanged) {
                 changedValues.push(updatedValue as ValueSelected);
             }
@@ -215,7 +203,6 @@ const StatusForm = () => {
         setIsSaving(false);
     }, [user, formValues, studentId]);
 
-    // Updated renderCategoryValues to use getIsFinalChoice to check if value is final
     const renderCategoryValues = (categoryId: number) => {
         const categoryValues = values.filter(value => value.categoryId === categoryId);
 
@@ -266,12 +253,26 @@ const StatusForm = () => {
     };
 
     const handleSaveAll = () => {
-        form.submit();  // This will trigger the onFinish method automatically
+        form.submit();
+    };
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Handle back navigation to the previous page
+    const handleBack = () => {
+        navigate(-1);
     };
 
     return (
         <div>
-           <Message messages={messages} duration={5000} />
+            <Message messages={messages} duration={5000} />
+            {loading && (
+                <div className="loading-overlay">
+                    <Spin size="large" />
+                </div>
+            )}
             <div className="steps-container">
                 <Steps current={currentStep} onChange={handleStepChange}>
                     {categories.map((category) => (
@@ -299,12 +300,39 @@ const StatusForm = () => {
                 </Form>
             </Card>
 
-            {/* Save button at the bottom to save all categories */}
             <div style={{ textAlign: 'center', marginTop: '24px' }}>
                 <Button type="primary" onClick={handleSaveAll} loading={isSaving}>
                     שמור הכל
                 </Button>
             </div>
+
+            {/* Back button */}
+            <Button
+                type="default"
+                onClick={handleBack}
+                style={{
+                    position: 'fixed',
+                    bottom: '80px',
+                    right: '20px',
+                    zIndex: 1000
+                }}
+            >
+                חזור
+            </Button>
+
+            {/* Scroll to top button */}
+            <Button
+                type="primary"
+                onClick={scrollToTop}
+                style={{
+                    position: 'fixed',
+                    bottom: '20px',
+                    right: '20px',
+                    zIndex: 1000
+                }}
+            >
+                לראש הדף
+            </Button>
         </div>
     );
 };
