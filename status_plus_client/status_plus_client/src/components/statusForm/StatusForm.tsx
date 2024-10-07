@@ -58,10 +58,16 @@ const StatusForm = () => {
                 const categories = await studentStatusService.getCategoriesByEmployee(user.identityNumber);
                 const valuesRes = await studentStatusService.getValues(user.identityNumber);
                 const studentValuesRes = await studentStatusService.getValuesByStudentId({ studentId: studentId!, employeeId: user.identityNumber, year: 'תשפד' });
-                setCategories(categories.categories[0]);
-                setValues(valuesRes.valuesList[0]);
-                setFormValues(studentValuesRes.valuesList[0]);
-                setStudentName(studentValuesRes.valuesList[1][0].name);
+                if(categories.categories[0].length===0){
+                    addMessage('אין קטגוריות עבורך', 'error');
+                }
+                else{
+                    setCategories(categories.categories[0]);
+                    setValues(valuesRes.valuesList[0]);
+                    setFormValues(studentValuesRes.valuesList[0]);
+                    setStudentName(studentValuesRes.valuesList[1][0].name);
+                }
+               
             } catch (error) {
                 addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
             } finally {
