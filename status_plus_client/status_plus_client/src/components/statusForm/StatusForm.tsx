@@ -15,9 +15,7 @@ const { Step } = Steps;
 
 const StatusForm = () => {
     const { studentId } = useParams<{ studentId: string }>();
-    const navigate = useNavigate();  // For back button navigation
-    const location = useLocation();
-    const from = location.state?.from || '/menu';
+    const navigate = useNavigate();
     const [user, setUser] = useState<BaseUser>();
     const [categories, setCategories] = useState<Category[]>([]);
     const [values, setValues] = useState<Value[]>([]);
@@ -25,13 +23,13 @@ const StatusForm = () => {
     const [loading, setLoading] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
     const [form] = Form.useForm();
-    const [isFormChanged, setIsFormChanged] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [studentName, setStudentName] = useState("");
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
 
     useEffect(() => {
         getData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
     useEffect(() => {
@@ -49,7 +47,7 @@ const StatusForm = () => {
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
-
+    // get form data
     const getData = async () => {
         const user = await MySingletonService.getInstance().getBaseUser();
         if (user) {
@@ -73,16 +71,12 @@ const StatusForm = () => {
             addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
         }
     };
-
-    const onValuesChange = () => {
-        setIsFormChanged(true);
-    };
-
+    // disable values
     const getIsFinalChoice = (valueId: number) => {
         const selectedValue = formValues.find(v => v.valueId === valueId);
         return selectedValue ? selectedValue.isFinalChoice : false;
     };
-
+    // check strength and weakness choose too
     const handleStrengthWeaknessChange = (valueId: number) => {
         const strength = form.getFieldValue(`strength_${valueId}`);
         const weakness = form.getFieldValue(`weakness_${valueId}`);
@@ -107,10 +101,11 @@ const StatusForm = () => {
             ]);
         }
     };
-
-    const onFinish = useCallback(async (values: { [key: string]: any }) => {
+    // save the form
+    const onFinish = useCallback(async (currentFormValues: any) => {
         if (isSaving) return;
         setIsSaving(true);
+
         if (!user) {
             console.error('User context is not available');
             return;
@@ -119,69 +114,57 @@ const StatusForm = () => {
         const employeeId = user.identityNumber;
         const year = "תשפד";
         const changedValues: ValueSelected[] = [];
-        const groupedValues: { [key: number]: Partial<ValueSelected> } = {};
-
         let hasValidationError = false;
 
-        Object.keys(values).forEach(key => {
-            const [type, id] = key.split('_');
-            const valueId = parseInt(id);
+        // Process all values from all categories
+        values.forEach((value) => {
+            const strength = currentFormValues[`strength_${value.valueId}`];
+            const weakness = currentFormValues[`weakness_${value.valueId}`];
+            const notes = currentFormValues[`notes_${value.valueId}`];
 
-            if (!groupedValues[valueId]) {
-                groupedValues[valueId] = {
-                    studentId,
-                    employeeId,
-                    valueId,
-                    year,
-                    isFinalChoice: false
-                };
-            }
-
-            if (type === 'notes' && values[key] && values[key].trim() !== "") {
-                groupedValues[valueId].notes = values[key];
-            }
-            if (type === 'strength' && values[key] !== undefined) {
-                groupedValues[valueId].strength = values[key];
-            }
-            if (type === 'weakness' && values[key] !== undefined) {
-                groupedValues[valueId].weakness = values[key];
-            }
-
-            if (groupedValues[valueId].strength && groupedValues[valueId].weakness) {
+            // Validate strength and weakness combination
+            if (strength && weakness) {
+                form.setFields([{
+                    name: `strength_${value.valueId}`,
+                    errors: ['אין אפשרות לבחור עבור ערך חוזקה חולשה ביחד']
+                }]);
                 hasValidationError = true;
-                form.setFields([
-                    {
-                        name: `strength_${valueId}`,
-                        errors: ['אין אפשרות לבחור עבור ערך חוזקה חולשה ביחד'],
-                    }
-                ]);
+                return;
             }
-        });
 
-        if (hasValidationError) {
-            addMessage('אופס, יש ערך שנבחרו לו חוזקה וחולשה ביחד', 'error');
-            setIsSaving(false);
-            return;
-        }
-
-        Object.values(groupedValues).forEach(updatedValue => {
-            const originalValue = formValues.find(v => v.valueId === updatedValue.valueId);
+            const originalValue = formValues.find(v => v.valueId === value.valueId);
             let isChanged = false;
 
-            if (updatedValue.notes !== undefined && updatedValue.notes !== (originalValue?.notes ?? '')) {
+            // Check if there are any changes
+            if (notes !== undefined && notes !== (originalValue?.notes ?? '')) {
                 isChanged = true;
             }
-            if (updatedValue.strength !== undefined && updatedValue.strength !== (originalValue?.strength ?? false)) {
+            if (strength !== undefined && strength !== (originalValue?.strength ?? false)) {
                 isChanged = true;
             }
-            if (updatedValue.weakness !== undefined && updatedValue.weakness !== (originalValue?.weakness ?? false)) {
+            if (weakness !== undefined && weakness !== (originalValue?.weakness ?? false)) {
                 isChanged = true;
             }
 
             if (isChanged) {
-                changedValues.push(updatedValue as ValueSelected);
+                changedValues.push({
+                    studentId: studentId!,
+                    employeeId,
+                    valueId: value.valueId,
+                    year,
+                    strength: strength || false,
+                    weakness: weakness || false,
+                    notes: notes || '',
+                    isFinalChoice: originalValue?.isFinalChoice || false
+                });
             }
         });
+
+        if (hasValidationError) {
+            addMessage('אופס, יש ערך שנבחרו לו חוזקה חולשה ביחד', 'error');
+            setIsSaving(false);
+            return;
+        }
 
         if (changedValues.length > 0) {
             try {
@@ -201,8 +184,9 @@ const StatusForm = () => {
         }
 
         setIsSaving(false);
-    }, [user, formValues, studentId]);
-
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, formValues, values, studentId, isSaving]);
+    // get hidden values
     const renderCategoryValues = (categoryId: number) => {
         const categoryValues = values.filter(value => value.categoryId === categoryId);
 
@@ -247,19 +231,43 @@ const StatusForm = () => {
             <p>אין ערכים זמינים עבור הקטגוריה הזו.</p>
         );
     };
+    // save all the form
+    const handleSaveAll = () => {
+        const allValues = form.getFieldsValue(true);
+        onFinish(allValues);
+    };
+    // render categories with the values
+    const renderAllCategoryValues = () => {
+        return categories.map((category) => {
+            const categoryValues = values.filter(value => value.categoryId === category.categoryId);
 
+            return (
+                <div key={category.categoryId} style={{ display: 'none' }}>
+                    {categoryValues.map(value => (
+                        <div key={`value_${value.valueId}`}>
+                            <Form.Item name={`strength_${value.valueId}`} valuePropName="checked">
+                                <Checkbox disabled={getIsFinalChoice(value.valueId)} />
+                            </Form.Item>
+                            <Form.Item name={`weakness_${value.valueId}`} valuePropName="checked">
+                                <Checkbox disabled={getIsFinalChoice(value.valueId)} />
+                            </Form.Item>
+                            <Form.Item name={`notes_${value.valueId}`}>
+                                <TextArea disabled={getIsFinalChoice(value.valueId)} />
+                            </Form.Item>
+                        </div>
+                    ))}
+                </div>
+            );
+        });
+    };
+    // move categories
     const handleStepChange = (current: number) => {
         setCurrentStep(current);
     };
-
-    const handleSaveAll = () => {
-        form.submit();
-    };
-
+    // scrolling
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-
     // Handle back navigation to the previous page
     const handleBack = () => {
         navigate(-1);
@@ -273,18 +281,35 @@ const StatusForm = () => {
                     <Spin size="large" />
                 </div>
             )}
+
+            {/* Display student's name */}
+            <h1 style={{ textAlign: 'center', margin: '20px 0' }}>טופס סטטוס התלמיד: {studentName}</h1>
+
             <div className="steps-container">
                 <Steps current={currentStep} onChange={handleStepChange}>
                     {categories.map((category) => (
-                        <Step key={category.categoryId} title={category.categoryDesc} />
+                        <Step
+                            key={category.categoryId}
+                            title={
+                                <span title={category.categoryDesc}>
+                                    {category.categoryDesc}
+                                </span>
+                            }
+                        />
                     ))}
                 </Steps>
             </div>
 
+
             <Card className="card-container">
-                <Form form={form} layout="vertical" onValuesChange={onValuesChange} onFinish={onFinish}>
+                <Form form={form} layout="vertical" onFinish={onFinish}>
+                    {/* Hidden form fields for all categories */}
+                    {renderAllCategoryValues()}
+
+                    {/* Visible form fields for current category */}
                     <h2>{categories[currentStep]?.categoryDesc}</h2>
                     {categories[currentStep] && renderCategoryValues(categories[currentStep].categoryId)}
+
                     <div style={{ marginTop: '24px', textAlign: 'center' }}>
                         {currentStep > 0 && (
                             <Button onClick={() => setCurrentStep(currentStep - 1)} style={{ marginRight: '10px' }}>
