@@ -55,7 +55,7 @@ const upsertStudentDetails = async (req, res) => {
 };
 
 const upsertEmployeesForStudent = async (req, res) => {
-    const { student_id, employee_id, year, job_id } = req.body;
+    const { student_id, employee_id, year, job_id } = req.body;    
     try {
         const employeesForStudentSave = await dbService.executeStoredProcedure('sp_stpl_upsert_employee_for_student_details',
             { student_id: student_id, employee_id: employee_id, year: year, job_id: job_id });
