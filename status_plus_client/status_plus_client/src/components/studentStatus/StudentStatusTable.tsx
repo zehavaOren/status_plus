@@ -204,8 +204,7 @@ const StudentStatusTable = () => {
                 icon={<DownloadOutlined />}
                 type="primary"
                 onClick={generatePDF}
-                style={{ marginBottom: '20px', backgroundColor: '#52c41a', color: '#fff' }}
-            >
+                style={{ marginBottom: '20px', backgroundColor: '#52c41a', color: '#fff' }}>
                 הורד כ-PDF
             </Button>
             {/* רשימת אנשי הצוות */}
