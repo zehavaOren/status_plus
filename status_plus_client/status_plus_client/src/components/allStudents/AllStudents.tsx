@@ -11,7 +11,7 @@ import { studentService } from '../../services/studentService';
 import edit from '../../assets/edit.png';
 import Message from '../Message';
 import './AllStudents.css';
-import { DeleteOutlined, UploadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import { studentStatusService } from '../../services/studentStatusService';
 
 
@@ -331,52 +331,48 @@ const AllStudents = () => {
             ),
         },
         {
-            title: 'עדכון פרטי התלמיד',
-            key: 'updateStudent',
-            render: (text, record) => (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Image
-                        src={edit}
-                        alt="עדכון פרטי התלמיד"
-                        preview={false}
-                        style={{ cursor: 'pointer', width: '20px', height: '20px' }}
+            title: 'עריכה',
+            key: 'edit',
+            render: (text: any, record: any) => (
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <Button
+                        icon={<EditOutlined />}
                         onClick={() => onUpdateStudentClick(record)}
                     />
                 </div>
             ),
-            width: 150,
+            width: 100,
         },
         {
             title: 'מחיקה',
             key: 'delete',
             render: (text: any, record: any) => (
-                <Popconfirm
-                    title="האם אתה בטוח שברצונך למחוק את איש הצוות?"
-                    onConfirm={() => handleDelete(record.studentId)}
-                    okText="אישור"
-                    cancelText="ביטול"
-                >
-                    <Button icon={<DeleteOutlined />} danger />
-                </Popconfirm>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <Popconfirm
+                        title="האם אתה בטוח שברצונך למחוק את איש הצוות?"
+                        onConfirm={() => handleDelete(record.studentId)}
+                        okText="אישור"
+                        cancelText="ביטול"
+                    >
+                        <Button icon={<DeleteOutlined />} danger />
+                    </Popconfirm>
+                </div>
             ),
             width: 100,
         },
         {
-            title: 'צפייה בסטטוס התלמיד',
-            key: 'viewStatus',
-            render: (text, record) => (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Image
-                        src={view}
-                        alt="צפייה סטטוס התלמיד"
-                        preview={false}
-                        style={{ cursor: 'pointer', width: '20px', height: '20px' }}
+            title: 'צפיה בסטטוס התלמיד',
+            key: 'see',
+            render: (text: any, record: any) => (
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <Button
+                        icon={<EyeOutlined />}
                         onClick={() => onViewingStudentStatusClick(record.studentId)}
                     />
                 </div>
             ),
-            width: 150,
-        }
+            width: 100,
+        },
     ];
 
     return (

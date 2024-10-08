@@ -1,4 +1,4 @@
-import { Image } from 'antd';
+import { Button, Image } from 'antd';
 import edit from '../../assets/edit.png';
 import Table, { ColumnType } from 'antd/es/table';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { studentStatusService } from '../../services/studentStatusService';
 import Message from '../Message';
 import { MySingletonService } from '../../services/MySingletonService';
+import { EditOutlined } from '@ant-design/icons';
 
 const StudentConflictsList = () => {
 
@@ -117,19 +118,16 @@ const StudentConflictsList = () => {
         },
         {
             title: 'טיפול בקונפליקט',
-            key: 'updateStudent',
+            key: 'conflict',
             render: (text: any, record: any) => (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Image
-                        src={edit}
-                        alt="עדכון פרטי התלמיד"
-                        preview={false}
-                        style={{ cursor: 'pointer', width: '20px', height: '20px' }}
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <Button
+                        icon={<EditOutlined />}
                         onClick={() => onConflictHandlingClick(record)}
                     />
                 </div>
             ),
-            width: 150,
+            width: 100,
         },
     ];
     return (<>

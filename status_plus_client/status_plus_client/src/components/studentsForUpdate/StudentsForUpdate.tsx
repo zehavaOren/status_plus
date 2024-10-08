@@ -11,6 +11,7 @@ import './studentsForUpdate.css'
 import Message from '../Message';
 import { MySingletonService } from '../../services/MySingletonService';
 import { studentStatusService } from '../../services/studentStatusService';
+import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 
 const StudentsForUpdate = () => {
 
@@ -212,54 +213,46 @@ const StudentsForUpdate = () => {
                 onFilter: (value: any, record: any) => record.grade?.indexOf(value as string) === 0,
             },
             {
-                title: 'עדכון סטטוס התלמיד',
+                title: 'עדכון סטטוס תלמיד',
                 key: 'updateStatus',
                 render: (text: any, record: any) => (
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                        <Image
-                            src={edit}
-                            alt="עדכון סטטוס התלמיד"
-                            preview={false}
-                            style={{ cursor: 'pointer', width: '20px', height: '20px' }}
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        <Button
+                            icon={<EditOutlined />}
                             onClick={() => onUpdateStatusClick(record.studentId)}
                         />
                     </div>
                 ),
-                width: 150,
+                width: 100,
             },
             {
-                title: 'צפייה בסטטוס התלמיד',
-                key: 'viewStatus',
+                title: 'צפיה בסטטוס התלמיד',
+                key: 'see',
                 render: (text: any, record: any) => (
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                        <Image
-                            src={view}
-                            alt="צפייה בסטטוס התלמיד"
-                            preview={false}
-                            style={{ cursor: 'pointer', width: '20px', height: '20px' }}
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        <Button
+                            icon={<EyeOutlined />}
                             onClick={() => onViewStatusClick(record.studentId)}
                         />
                     </div>
                 ),
-                width: 150,
-            }
+                width: 100,
+            },
         ];
         if (userPermission !== 1) {
             baseColumns.push({
-                title: 'עדכון פרטי תלמיד',
-                key: 'updateStudent',
-                render: (text, record) => (
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                        <Image
-                            src={edit}
-                            alt="Update student information"
-                            preview={false}
-                            style={{ cursor: 'pointer', width: '20px', height: '20px' }}
-                            onClick={() => onUpdateStudentClick(record)}
-                        />
-                    </div>
-                ),
-                width: 150,
+               
+                    title: 'עדכון פרטי תלמיד',
+                    key: 'updateStudent',
+                    render: (text: any, record: any) => (
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            <Button
+                                icon={<EditOutlined />}
+                                onClick={() => onUpdateStudentClick(record)}
+                            />
+                        </div>
+                    ),
+                    width: 100,
             });
         }
 

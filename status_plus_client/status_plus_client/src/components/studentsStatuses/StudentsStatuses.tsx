@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Image, Pagination, Upload, Button, message as AntMessage } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import { ColumnType } from 'antd/es/table';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -147,22 +147,36 @@ const StudentsStatuses = () => {
             key: 'city',
             sorter: (a: StudentsStatus, b: StudentsStatus) => a.city.localeCompare(b.city),
         },
+        // {
+        //     title: 'צפייה בסטטוס התלמיד',
+        //     key: 'viewStatus',
+        //     render: (text, record) => (
+        //         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        //             <Image
+        //                 src={view}
+        //                 alt="עדכון סטטוס התלמיד"
+        //                 preview={false}
+        //                 style={{ cursor: 'pointer', width: '20px', height: '20px' }}
+        //                 onClick={() => onViewingStudentStatusClick(record.studentId)}
+        //             />
+        //         </div>
+        //     ),
+        //     width: 150,
+        // },
         {
-            title: 'צפייה בסטטוס התלמיד',
-            key: 'viewStatus',
-            render: (text, record) => (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Image
-                        src={view}
-                        alt="עדכון סטטוס התלמיד"
-                        preview={false}
-                        style={{ cursor: 'pointer', width: '20px', height: '20px' }}
+            title: 'צפיה בסטטוס התלמיד',
+            key: 'see',
+            render: (text: any, record: any) => (
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <Button
+                        icon={<EyeOutlined />}
                         onClick={() => onViewingStudentStatusClick(record.studentId)}
                     />
                 </div>
             ),
             width: 150,
-        },
+        }
+        
         // {
         //     title: 'העלה PDF',
         //     key: 'uploadPDF',
