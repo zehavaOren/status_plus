@@ -100,7 +100,7 @@ const Menu: React.FC = () => {
   const generateMenuItems = (user: BaseUser) => [
     // const menuItems = [
     { key: 'employee-management', label: 'ניהול עובדים', path: `/menu/${user!.identityNumber}/employee-management`, permissions: [3] },
-    { key: 'student-conflicts-list', label: 'טיפול בקונפליטים', path: `/menu/student-conflicts-list/${user!.identityNumber}`, permissions: [1, 2] },
+    { key: 'student-conflicts-list', label: 'טיפול בקונפליטים', path: `/menu/student-conflicts-list/${user!.identityNumber}`, permissions: [1, 2, 3] },
     { key: 'all-students', label: 'כל התלמידים', path: 'all-students', permissions: [3] },
 
     { key: 'students-for-update', label: 'תלמידים לעדכון סטטוס תלמיד', path: `/menu/students-for-update/${user!.identityNumber}`, permissions: [1, 2] },

@@ -60,39 +60,49 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
 
     useEffect(() => {
         if (studentDetails) {
+            debugger
+            // Populate the form with student details
             form.setFieldsValue({
                 ...studentDetails,
                 birthDate: studentDetails.birthDate ? moment(studentDetails.birthDate) : null,
+                morningTeacher: studentDetails.morningTeacher || undefined,
+                afternoonTeacher: studentDetails.afternoonTeacher || undefined, // Ensure this is populated
+                occupationalTherapist: studentDetails.occupationalTherapist || undefined,
+                communicationTherapist: studentDetails.communicationTherapist || undefined,
             });
+            // Check if the selected grade has associated classes and update the class dropdown
             if (studentDetails.gradeId) {
                 handleGradeChange(studentDetails.gradeId);
                 if (studentDetails.classId) {
-                    handleClassChange(studentDetails.classId);
+                    form.setFieldsValue({
+                        classId: studentDetails.classId,
+                    });
                 }
             }
-            setIsFormChanged(false);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentDetails, form]);
 
-    useEffect(() => {
-        if (studentDetails) {
-            //   const morningTeacher = educators.find((edu) => edu.employee_id === studentDetails.employeeId && studentDetails.jobId===10 || 11);
-            //   const afternoonTeacher = educators.find((edu) => edu.employee_id === studentDetails.employeeId && studentDetails.jobId===10 || 11);
+    // Ensure form correctly updates morning and afternoon teachers after educators are fetched
+    // useEffect(() => {
+    //     if (studentDetails) {
+    //         // Fetch educators after student details are populated
+    //         form.setFieldsValue({
+    //             // Convert studentDetails.morningTeacher to string for comparison
+    //             morningTeacher: jobForEmployee.find(job => job.job_id === 10 && job.employee_id === String(studentDetails.morningTeacher))?.employee_id || undefined,
+    //             // Convert studentDetails.afternoonTeacher to string for comparison
+    //             afternoonTeacher: jobForEmployee.find(job => job.job_id === 11 && job.employee_id === String(studentDetails.afternoonTeacher))?.employee_id || undefined,
+    //         });
+    //     }
+    // }, [jobForEmployee, studentDetails, form]);
 
-            form.setFieldsValue({
-                ...studentDetails,
-                // morningTeacher: morningTeacher ? morningTeacher : null,
-                // afternoonTeacher: afternoonTeacher ? afternoonTeacher : null,
-            });
-        }
-    }, [studentDetails, educators, form]);
+
 
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
-     // Determine the back navigation route
-     const from = useMemo(() => {
+    // Determine the back navigation route
+    const from = useMemo(() => {
         if (location.state?.from) {
             return location.state.from;
         }
@@ -104,30 +114,37 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
             return location.state?.from || '/menu';
         }
     }, [employeeDet, location.state?.from]);
+    // get correct year
+    const getYearForSystem = (): string => {
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+        const year = currentMonth > 10 ? currentYear + 1 : currentYear;
+        return year.toString();
+    };
     // get the student details and init the form
     const fetchStudentDetails = async (studentId: string, isShowError?: boolean) => {
         setLoading(true);
         try {
-            if (studentId) {
-                const responseFromDB = await studentService.getStudentDeatils(studentId);
-                const studentDetails = responseFromDB.studentDetails[0][0]; // first result set (student details)
-                setStudentDetails({
-                    ...studentDetails,
-                    birthDate: studentDetails.birthDate ? moment(studentDetails.birthDate) : null,
-                });
-
-                // Handle the list of all employees
-                const employees = responseFromDB.studentDetails[1].map((e: { employeeId: any; }) => e.employeeId);
-                setEmployeesForStudent(employees);
-            }
+            const responseFromDB = await studentService.getStudentDeatils(studentId);
+            const studentDetails = responseFromDB.studentDetails[0][0];
+            await fetchEducators(studentDetails.gradeId, studentDetails.classId);
+            setStudentDetails({
+                ...studentDetails,
+                birthDate: studentDetails.birthDate ? moment(studentDetails.birthDate) : null,
+            });
+            const employees = responseFromDB.studentDetails[1].map((e: { employeeId: any }) => e.employeeId);
+            setEmployeesForStudent(employees);
         } catch (error) {
             if (!isShowError) {
-                addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
+                addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
             }
         } finally {
             setLoading(false);
         }
     };
+    const moratBokerEducators = educators.filter((educator) => educator.job_id === 10);
+    const moratTzaherEducators = educators.filter((educator) => educator.job_id === 11);
     // get the list of the cities
     const getCitiesList = async () => {
         try {
@@ -218,48 +235,57 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         setGrade(selectedGrade?.gradeId);
         if (selectedGrade && selectedGrade.classId !== null) {
             const classes = gradeList
-                .filter(grade => grade.gradeId === selectedGrade.gradeId)
+                .filter(grade => grade.gradeId === selectedGrade.gradeId && grade.classId !== null)
                 .map(grade => grade.classId);
+
             setSelectedGradeClasses(classes);
         } else {
             setSelectedGradeClasses([]);
         }
+
+        // Fetch the educators based on the selected grade
         if (selectedGrade) {
-            fetchEducators(value, null);
+            fetchEducators(selectedGrade.gradeId, null);
         }
     };
     // funcionality when class change to put the correct employee according to the coose value
-    const handleClassChange = (value: number) => {
+    const handleClassChange = async (value: number) => {
         const selectedClass = gradeList.find(grade => grade.classId === value);
-        const classid = selectedClass?.classId;
-        fetchEducators(grade! || studentDetails?.gradeId!, classid!);
-    }
+        const classId = selectedClass?.classId;
+        await fetchEducators(grade! || studentDetails?.gradeId!, classId!);
+        debugger
+        form.setFieldsValue({
+            classId: value,
+            morningTeacher: undefined,
+            afternoonTeacher: undefined,
+            occupationalTherapist: undefined,
+            communicationTherapist: undefined,
+        });
+    };
     // choose the educators acoording to the grade and class that choos
     const fetchEducators = async (gradeId: number, classId: number | null) => {
         const educatorsFromService = await getEmployeesByGrade(gradeId, classId);
-        const educatorIds = educatorsFromService.map((e: { employee_id: any; }) => e.employee_id);
-        const filteredEducators = jobForEmployee.filter(job =>
-            (job.job_id === 10 || job.job_id === 11 || job.job_id === 23) && educatorIds.includes(job.employee_id)
-        );
-        const occupationalTherapist = jobForEmployee.filter(job =>
-            (job.job_id === 19) && educatorIds.includes(job.employee_id)
-        );
-        const communicationTherapist = jobForEmployee.filter(job =>
-            (job.job_id === 18) && educatorIds.includes(job.employee_id)
-        );
+        const educatorIds = educatorsFromService.map((e: { employee_id: any }) => e.employee_id);
 
-        setEducators(filteredEducators);
-        const morningTeacher = filteredEducators.find((edu) => employeesForStudent.includes(edu.employee_id) && (edu.job_id === 10 || edu.job_id === 11));
-        const afternoonTeacher = filteredEducators.find((edu) => employeesForStudent.includes(edu.employee_id) && edu.job_id === 23);
-        const occupationalTherapists = occupationalTherapist.find((edu) => employeesForStudent.includes(edu.employee_id) && edu.job_id === 19);
-        const communicationTherapists = communicationTherapist.find((edu) => employeesForStudent.includes(edu.employee_id) && edu.job_id === 18);
-
+        const morningTeacher = jobForEmployee.find(
+            job => job.job_id === 10 && educatorIds.includes(job.employee_id) && job.employee_id === String(studentDetails?.morningTeacher)
+        );
+        const afternoonTeacher = jobForEmployee.find(
+            job => job.job_id === 11 && educatorIds.includes(job.employee_id) && job.employee_id === String(studentDetails?.afternoonTeacher)
+        );
+        const occupationalTherapist = jobForEmployee.find(
+            job => job.job_id === 19 && educatorIds.includes(job.employee_id) && job.employee_id === String(studentDetails?.occupationalTherapist)
+        );
+        const communicationTherapist = jobForEmployee.find(
+            job => job.job_id === 18 && educatorIds.includes(job.employee_id) && job.employee_id === String(studentDetails?.communicationTherapist)
+        );
+        debugger
+        // Set the form with the new teacher names
         form.setFieldsValue({
-            ...studentDetails,
-            morningTeacher: morningTeacher ? morningTeacher.employee_id : undefined,
-            afternoonTeacher: afternoonTeacher ? afternoonTeacher.employee_id : undefined,
-            occupationalTherapist: occupationalTherapists ? occupationalTherapists.name : undefined,
-            communicationTherapist: communicationTherapists ? communicationTherapists.name : undefined,
+            morningTeacher: morningTeacher?.employee_id || undefined,
+            afternoonTeacher: afternoonTeacher?.employee_id || undefined,
+            occupationalTherapist: occupationalTherapist?.employee_id || undefined,
+            communicationTherapist: communicationTherapist?.employee_id || undefined,
         });
     };
     // whne finish fill the form
@@ -284,30 +310,29 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
             'gradeId': values.gradeId,
             'classId': values.classId
         }
-        const fullYear = 'תשפ"ד'
-        const cleanedYear = fullYear.replace(/"/g, '');
+        const fullYear = await getYearForSystem();
         const employeesForStudent = [{
             'student_id': values.studentId,
             'employee_id': values.morningTeacher.toString(),
-            'year': cleanedYear,
+            'year': fullYear,
             'job_id': 10
         },
         {
             'student_id': values.studentId,
             'employee_id': values.communicationTherapist.toString(),
-            'year': cleanedYear,
+            'year': fullYear,
             'job_id': 18
         },
         {
             'student_id': values.studentId,
             'employee_id': values.afternoonTeacher.toString(),
-            'year': cleanedYear,
+            'year': fullYear,
             'job_id': 11
         },
         {
             'student_id': values.studentId,
             'employee_id': values.occupationalTherapist.toString(),
-            'year': cleanedYear,
+            'year': fullYear,
             'job_id': 19
         }
         ];
@@ -316,7 +341,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
             const perfectJob = {
                 'student_id': values.studentId,
                 'employee_id': job.employee,
-                'year': cleanedYear,
+                'year': fullYear,
                 'job_id': job.job
             }
             employeesForStudent.push(perfectJob);
@@ -509,9 +534,9 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                             </Row>
                             <Row gutter={16}>
                                 <Col span={6}>
-                                    <Form.Item label="מורה בוקר" name="morningTeacher" rules={[{ required: true, message: 'חובה לבחור מורת בוקר' }]}>
+                                    <Form.Item label="מורת בוקר" name="morningTeacher" rules={[{ required: true, message: 'חובה לבחור מורת בוקר' }]}>
                                         <Select>
-                                            {educators.map(educator => (
+                                            {moratBokerEducators.map((educator) => (
                                                 <Option key={educator.employee_id} value={educator.employee_id}>
                                                     {educator.name}
                                                 </Option>
@@ -520,7 +545,11 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                     </Form.Item>
                                 </Col>
                                 <Col span={6}>
-                                    <Form.Item label="קלינאית תקשורת" name="communicationTherapist" rules={[{ required: true, message: 'חובה לבחור קלינאית תקשורת' }]}>
+                                    <Form.Item
+                                        label="קלינאית תקשורת"
+                                        name="communicationTherapist"
+                                        rules={[{ required: true, message: 'חובה לבחור קלינאית תקשורת' }]}
+                                    >
                                         <Select>
                                             {languageTeachers.map(languageTeacher => (
                                                 <Option key={languageTeacher.employee_id} value={languageTeacher.employee_id}>
@@ -529,17 +558,19 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                             ))}
                                         </Select>
                                     </Form.Item>
+
                                 </Col>
                                 <Col span={6}>
-                                    <Form.Item label="מורה צהריים" name="afternoonTeacher" rules={[{ required: true, message: 'חובה לבחור מורת צהרים' }]}>
+                                    <Form.Item label="מורת צהריים" name="afternoonTeacher" rules={[{ required: true, message: 'חובה לבחור מורת צהרים' }]}>
                                         <Select>
-                                            {educators.map(educator => (
+                                            {moratTzaherEducators.map((educator) => (
                                                 <Option key={educator.employee_id} value={educator.employee_id}>
                                                     {educator.name}
                                                 </Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
+
                                 </Col>
                                 <Col span={6}>
                                     <Form.Item label="מרפאה בעיסוק" name="occupationalTherapist" rules={[{ required: true, message: 'חובה לבחור מרפאה בעיסוק' }]}>

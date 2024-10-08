@@ -118,6 +118,17 @@ export const studentStatusService = {
         }
     },
 
+    getAllStdentsConflicts: async () => {
+        try {
+            const response = await fetch(`${BASE_URL}/getAllStudetsConflicts/`);
+            if (!response.ok) {
+                throw new Error('Error fetching employees');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    },
     getConflictsList: async (studentId: number) => {
         try {
             const response = await fetch(`${BASE_URL}/getConflictList/${studentId}/`);

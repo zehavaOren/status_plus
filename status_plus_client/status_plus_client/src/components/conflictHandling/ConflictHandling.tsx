@@ -38,6 +38,7 @@ const ConflictHandling = () => {
 
     useEffect(() => {
         getConflictsList();
+        getYearForSystem();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
@@ -63,6 +64,14 @@ const ConflictHandling = () => {
             return location.state?.from || '/menu';
         }
     }, [employeeDet, location.state?.from]);
+    // get correct year
+    const getYearForSystem = () => {
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+        const year = currentMonth > 10 ? currentYear + 1 : currentYear;
+        return year.toString();
+    };
     // Fetch conflicts list and process data
     const getConflictsList = async () => {
         setLoading(true);
@@ -200,6 +209,11 @@ const ConflictHandling = () => {
                 if (allSuccessful) {
                     addMessage('כל השינויים נשמרו בהצלחה', 'success');
                     const emp = await findEmployeeIdByJobId(conflictsList);
+                    const statusReady = await checkStudentStatus(Number(studentId!));
+                    if (statusReady) {
+                        const year = await getYearForSystem();
+                        await updateReadyStatus(Number(studentId), year);
+                    }
                     navigate(`/menu/student-conflicts-list/${emp}`);
                 } else {
                     addMessage('חלק מהשינויים לא נשמרו בהצלחה', 'warning');
@@ -214,7 +228,8 @@ const ConflictHandling = () => {
     // check if all employees fill the status
     const checkStudentStatus = async (studentId: number) => {
         try {
-            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, 'תשפד');
+            const year = await getYearForSystem();
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, year);
             const numbersOfValues = responseFromDB.numbersOfValues[0][0];
             if (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) {
                 return true;
@@ -226,19 +241,31 @@ const ConflictHandling = () => {
             addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
         }
     }
+    // update all values to final
+    const updateReadyStatus = async (studentId: number, year: string) => {
+        try {
+            const studentReadyRes = await studentStatusService.upsertStudentStatusReady(String(studentId), year);
+            if (studentReadyRes[0].studentStatusReady) {
+                console.log("status updated");
+            }
+        } catch (error) {
+            console.error('Error fetching student status:', error);
+        }
+    }
     // Find the educator's employee id
     const findEmployeeIdByJobId = (conflictsList: any[]): number | undefined => {
         const employee = conflictsList.find(conflict => conflict.jobId === 10);
         return employee ? employee.employeeId : undefined;
     };
     // Map the processed conflict data to the ConflictChoice model for saving
-    const mapProcessedConflictDataToConflictChoice = (data: ProcessedConflictData[]): ConflictChoice[] => {
+    const mapProcessedConflictDataToConflictChoice = async (data: ProcessedConflictData[]): Promise<ConflictChoice[]> => {
         const studentID = Number(studentId);
         const employeeId = findEmployeeIdByJobId(conflictsList);
+        const correctYear= await getYearForSystem();
         return data.map(item => ({
             valueId: item.key,
             studentId: studentID!,
-            year: 'תשפד',
+            year: correctYear,
             strength: item.choice === 'חוזקה' ? true : false,
             weakness: item.choice === 'חולשה' ? true : false,
             notes: item.comment,

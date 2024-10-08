@@ -2,9 +2,10 @@ import { Image } from 'antd';
 import edit from '../../assets/edit.png';
 import Table, { ColumnType } from 'antd/es/table';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { studentStatusService } from '../../services/studentStatusService';
 import Message from '../Message';
+import { MySingletonService } from '../../services/MySingletonService';
 
 const StudentConflictsList = () => {
 
@@ -14,21 +15,50 @@ const StudentConflictsList = () => {
     const [loading, setLoading] = useState(false);
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [studentsConflictsList, setStudentsConflictsList] = useState();
+    const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
 
     useEffect(() => {
-        getStudentsConflictsList();
+        getData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [employeeId]);
     // message managment
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
+    // get correct year
+    const getYearForSystem = () => {
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+        const year = currentMonth > 10 ? currentYear + 1 : currentYear;
+        return year.toString();
+    };
+    const getData = () => {
+        if (employeeDet.permission === 3) {
+            getAllStudentsConflictsList();
+        }
+        else {
+            getStudentsConflictsList();
+        }
+    }
     // get students conflicts list
     const getStudentsConflictsList = async () => {
         setLoading(true);
         const employeeNumber = Number(employeeId);
         try {
             const studentConflictsResponse = await studentStatusService.getStdentsConflicts(employeeNumber);
+            setStudentsConflictsList(studentConflictsResponse.studentConflicts[0]);
+        } catch (error) {
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
+            console.error('Error fetching student status:', error);
+        }
+        setLoading(false);
+    }
+    // get students conflicts list
+    const getAllStudentsConflictsList = async () => {
+        setLoading(true);
+        try {
+            const studentConflictsResponse = await studentStatusService.getAllStdentsConflicts();
             setStudentsConflictsList(studentConflictsResponse.studentConflicts[0]);
         } catch (error) {
             addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
@@ -49,7 +79,8 @@ const StudentConflictsList = () => {
     // check if all employees fill the status
     const checkStudentStatus = async (studentId: number) => {
         try {
-            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, 'תשפד');
+            const year = await getYearForSystem();
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, year);
             const numbersOfValues = responseFromDB.numbersOfValues[0][0];
             if (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) {
                 return true;

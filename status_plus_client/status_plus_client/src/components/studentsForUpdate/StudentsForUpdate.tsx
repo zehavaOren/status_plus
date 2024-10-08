@@ -39,6 +39,14 @@ const StudentsForUpdate = () => {
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
+    // get correct year
+    const getYearForSystem = () => {
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+        const year = currentMonth > 10 ? currentYear + 1 : currentYear;
+        return year.toString();
+    };
     // get the students of the employee how enter
     const getStudentsForUpdate = async (identityNumber: string) => {
         setLoading(true);
@@ -122,7 +130,8 @@ const StudentsForUpdate = () => {
     // check if all employees fill the status
     const checkStudentStatus = async (studentId: number) => {
         try {
-            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, 'תשפד');
+            const year = await getYearForSystem();
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, year);
             const numbersOfValues = responseFromDB.numbersOfValues[0][0];
             if (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) {
                 return true;

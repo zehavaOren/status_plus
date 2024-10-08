@@ -23,7 +23,6 @@ const PaginatedStatusForm = () => {
     const [formValues, setFormValues] = useState<ValueSelected[]>([]);
     const [loading, setLoading] = useState(false);
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]); const [currentPage, setCurrentPage] = useState(1);
-    // const [pageSize, setPageSize] = useState(1);
     const [form] = Form.useForm();
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isFormChanged, setIsFormChanged] = useState(false);
@@ -36,6 +35,7 @@ const PaginatedStatusForm = () => {
 
     useEffect(() => {
         getData();
+        getYearForSystem();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
     // allow choose few inputs
@@ -53,6 +53,14 @@ const PaginatedStatusForm = () => {
     // client message
     const addMessage = (message: string, type: any) => {
         setMessages([{ message, type, id: Date.now() }]);
+    };
+    // get correct year
+    const getYearForSystem = () => {
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+        const year = currentMonth > 10 ? currentYear + 1 : currentYear;
+        return year.toString();
     };
     // Determine the back navigation route
     const from = useMemo(() => {
@@ -82,9 +90,10 @@ const PaginatedStatusForm = () => {
         await getBaseUser();
         setLoading(true);
         try {
+            const year = await getYearForSystem();
             const categories = await studentStatusService.getCategoriesByEmployee(user!.identityNumber);
             const valuesRes = await studentStatusService.getValues(user!.identityNumber);
-            const studentValuesRes = await studentStatusService.getValuesByStudentId({ studentId: studentId!, employeeId: user!.identityNumber, year: 'תשפד' });
+            const studentValuesRes = await studentStatusService.getValuesByStudentId({ studentId: studentId!, employeeId: user!.identityNumber, year: year });
             setCategories(categories.categories[0]);
             setValues(valuesRes.valuesList[0]);
             setFormValues(studentValuesRes.valuesList[0]);
@@ -109,7 +118,7 @@ const PaginatedStatusForm = () => {
             return;
         }
         const employeeId = user.identityNumber;
-        const year = "תשפד";
+        const year = await getYearForSystem();
         const changedValues: ValueSelected[] = [];
         const groupedValues: { [key: number]: Partial<ValueSelected> } = {};
 

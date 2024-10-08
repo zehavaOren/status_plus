@@ -20,6 +20,7 @@ const StudentsList = () => {
 
     useEffect(() => {
         getStatusesList(student_id || '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [student_id]);
 
     const addMessage = (message: string, type: any) => {
@@ -105,7 +106,7 @@ const StudentsList = () => {
             key: 'viewStatus',
             render: (text, record) => (
                 <Button onClick={() => handleDownload(record.statusFile, record.year)}>
-                    Download PDF
+                    הורדת הסטטוס
                 </Button>
             ),
             width: 150,

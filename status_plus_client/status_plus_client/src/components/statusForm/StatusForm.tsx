@@ -48,6 +48,14 @@ const StatusForm = () => {
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
+    // get correct year
+    const getYearForSystem = () => {
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+        const year = currentMonth > 10 ? currentYear + 1 : currentYear;
+        return year.toString();
+    };
     // get form data
     const getData = async () => {
         const user = await MySingletonService.getInstance().getBaseUser();
@@ -57,17 +65,18 @@ const StatusForm = () => {
             try {
                 const categories = await studentStatusService.getCategoriesByEmployee(user.identityNumber);
                 const valuesRes = await studentStatusService.getValues(user.identityNumber);
-                const studentValuesRes = await studentStatusService.getValuesByStudentId({ studentId: studentId!, employeeId: user.identityNumber, year: 'תשפד' });
-                if(categories.categories[0].length===0){
+                const year = await getYearForSystem();
+                const studentValuesRes = await studentStatusService.getValuesByStudentId({ studentId: studentId!, employeeId: user.identityNumber, year: year });
+                if (categories.categories[0].length === 0) {
                     addMessage('אין קטגוריות עבורך', 'error');
                 }
-                else{
+                else {
                     setCategories(categories.categories[0]);
                     setValues(valuesRes.valuesList[0]);
                     setFormValues(studentValuesRes.valuesList[0]);
                     setStudentName(studentValuesRes.valuesList[1][0].name);
                 }
-               
+
             } catch (error) {
                 addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
             } finally {
@@ -77,6 +86,7 @@ const StatusForm = () => {
         } else {
             addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
         }
+        setLoading(false);
     };
     // disable values
     const getIsFinalChoice = (valueId: number) => {
@@ -119,7 +129,7 @@ const StatusForm = () => {
         }
 
         const employeeId = user.identityNumber;
-        const year = "תשפד";
+        const year = await getYearForSystem();
         const changedValues: ValueSelected[] = [];
         let hasValidationError = false;
 
@@ -266,6 +276,7 @@ const StatusForm = () => {
                 </div>
             );
         });
+    
     };
     // move categories
     const handleStepChange = (current: number) => {

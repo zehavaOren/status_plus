@@ -21,7 +21,6 @@ interface CategoryData {
 const StudentStatusTable = () => {
     const { studentId } = useParams<{ studentId: string }>();
     const [loading, setLoading] = useState(false);
-    // const [studentDet, setStudentDet] = useState<{ studentName: string, year: string }>();
     const [employeeDetails, setEmployeeDetails] = useState<{ employeeName: string, jobId: number, jobDesc: string }[]>([]);
     const [studentStatus, setStudentStatus] = useState<StudentStatusValue[]>([]);
     const contentRef = useRef<HTMLDivElement>(null);
