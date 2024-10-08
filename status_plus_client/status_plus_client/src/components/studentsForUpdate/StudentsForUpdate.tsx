@@ -241,18 +241,18 @@ const StudentsForUpdate = () => {
         ];
         if (userPermission !== 1) {
             baseColumns.push({
-               
-                    title: 'עדכון פרטי תלמיד',
-                    key: 'updateStudent',
-                    render: (text: any, record: any) => (
-                        <div style={{ display: 'flex', justifyContent: 'center' }}>
-                            <Button
-                                icon={<EditOutlined />}
-                                onClick={() => onUpdateStudentClick(record)}
-                            />
-                        </div>
-                    ),
-                    width: 100,
+
+                title: 'עדכון פרטי תלמיד',
+                key: 'updateStudent',
+                render: (text: any, record: any) => (
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        <Button
+                            icon={<EditOutlined />}
+                            onClick={() => onUpdateStudentClick(record)}
+                        />
+                    </div>
+                ),
+                width: 100,
             });
         }
 

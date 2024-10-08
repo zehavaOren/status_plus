@@ -36,11 +36,12 @@ const StudentStatus = () => {
     };
     // Determine the back navigation route
     const from = useMemo(() => {
+        debugger
         if (location.state?.from) {
             return location.state.from;
         }
         if (employeeDet.permission === 1 || employeeDet.permission === 2) {
-            return `/students-for-update/${employeeDet.identityNumber}`;
+            return `menu/students-for-update/${employeeDet.identityNumber}`;
         } else if (employeeDet.permission === 3) {
             return '/all-students';
         } else {
@@ -131,7 +132,7 @@ const StudentStatus = () => {
     }
     // navigate to the privious component
     const navigateBack = () => {
-        navigate(from);
+        navigate(location.state?.from || `/menu/students-for-update/${employeeDet.identityNumber}`);
     };
     // navigate to the second status vision
     const changeVision = () => {

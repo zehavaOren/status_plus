@@ -187,7 +187,7 @@ const StudentStatusTable = () => {
     };
     // navigate back
     const navigateBack = () => {
-        navigate(from);
+        navigate(location.state?.from || '/menu/students-for-update');
     };
     return (
         <div>
