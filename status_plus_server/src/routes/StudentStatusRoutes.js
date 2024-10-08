@@ -15,6 +15,7 @@ router.get('/getStatusValuesByEmployeeAndStudent/:studentId/:employeeId/:year/',
 router.post('/upsertStudentStatus/', studentStatusController.upsertStudentStatus);
 router.get('/getStudentStatus/:studentId', studentStatusController.getStudentStatus);
 router.get('/getStudetsConflicts/:employeeId/', studentStatusController.getStudetsConflicts);
+router.get('/getAllStudetsConflicts/', studentStatusController.getAllStudetsConflicts);
 router.get('/getConflictList/:studentId/', studentStatusController.getConflictList);
 router.post('/upsertConflictResolution', studentStatusController.upsertConflictResolution);
 router.get('/checkStudentStatus/:studentId/:year', studentStatusController.checkStudentStatus);

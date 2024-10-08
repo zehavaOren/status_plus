@@ -110,6 +110,16 @@ const getStudetsConflicts = async (req, res) => {
     }
 };
 
+const getAllStudetsConflicts = async (req, res) => {
+    try {
+        const studentConflicts = await dbService.executeStoredProcedure('sp_stpl_get_all_students_with_conflicts');
+        res.status(200).json({ studentConflicts });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
+
 const getConflictList = async (req, res) => {
     const studentId = req.params.studentId;
     try {
@@ -182,6 +192,7 @@ module.exports = {
     upsertStudentStatus,
     getStudentStatus,
     getStudetsConflicts,
+    getAllStudetsConflicts,
     getConflictList,
     upsertConflictResolution,
     checkStudentStatus,
