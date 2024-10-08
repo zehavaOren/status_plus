@@ -21,6 +21,7 @@ import { BaseUser } from '../../models/BaseUser';
 import EmployeeManagement from '../employeeManagement/EmployeeManagement';
 import EmployeeForm from '../employeeForm/EmployeeForm';
 import UploadYearComponent from '../uploadYearComponent/UploadYearComponent';
+import DataManagementComponent from '../dataManagementComponent/DataManagementComponent';
 
 const { Header, Content } = Layout;
 
@@ -110,6 +111,7 @@ const Menu: React.FC = () => {
     // { key: 'another-component3', label: 'נוספת קומפוננטה', path: '/menu/another-component3' },
     { key: 'students-statuses', label: 'סטטוס כל התלמידים', path: 'students-statuses', permissions: [1, 2, 3] },
     { key: 'upload-year', label: 'העלאת שנה', path: 'upload-year', permissions: [3] },
+    { key: 'data-management', label: 'ניהול נתונים', path: 'data-management', permissions: [3] },
 
     // { key: 'status-form', label: 'טופס סטטוס תלמיד', path: 'status-form', permissions: [1, 2, 3] },
     // { key: 'student-status', label: 'סטטוס תלמיד', path: 'student-status', permissions: [1, 2, 3] },
@@ -199,6 +201,7 @@ const Menu: React.FC = () => {
             <Route path="employee-form/:employeeId/" element={<EmployeeForm />} />
             <Route path="employee-form/" element={<EmployeeForm />} />
             <Route path="upload-year/" element={<UploadYearComponent />} />
+            <Route path="data-management/" element={<DataManagementComponent  />} />
 
             {/* <Route path="another-component" element={<AnotherComponent />} /> */}
           </Routes>
