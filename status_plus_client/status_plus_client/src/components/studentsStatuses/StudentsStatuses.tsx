@@ -26,7 +26,7 @@ const StudentsStatuses = () => {
 
     useEffect(() => {
         getStudentsStatuses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const addMessage = (message: string, type: any) => {
@@ -53,39 +53,33 @@ const StudentsStatuses = () => {
             setLoading(false);
         }
     };
-    const fileToBase64 = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-
-            reader.onload = () => {
-                const result = reader.result as string; // Ensure result is a string (data URL)
-                const base64String = result.split(',')[1]; // Extract base64 part
-                resolve(base64String);
-            };
-
-            reader.onerror = error => reject(error);
-
-            reader.readAsDataURL(file); // Read file as base64 encoded data URL
-        });
-    };
     // Handle file upload
     const handleUpload = async (file: any, studentId: string) => {
+        const year = await getYearForSystem();
+        uploadStudentPDFFile(studentId, file, year)
+    };
+    // Function to upload a PDF file after converting it to Base64
+    const uploadStudentPDFFile = async (studentId: string, file: File, year: string) => {
         try {
-            setUploading(true);
-            // Convert the PDF to base64
-            const base64PDF = await fileToBase64(file);
-            const year = await getYearForSystem();
-            // Upload the base64 PDF via the service
-            await studentService.uploadStudentPDF(studentId, base64PDF, year);
-            AntMessage.success('ה-PDF הועלה ונשמר בהצלחה');
+            // Step 1: Read the file and convert it to Base64
+            const reader = new FileReader();
+            reader.readAsDataURL(file); // Read file as Data URL (Base64 encoded string)
+
+            reader.onloadend = async () => {
+                const base64PDF = reader.result; // Get Base64-encoded string
+
+                // Step 2: Upload the Base64 PDF to the server
+                await studentService.uploadStudentPDF(studentId, base64PDF, year);
+                console.log('PDF uploaded successfully.');
+            };
+
+            reader.onerror = (error) => {
+                console.error('Error reading file:', error);
+            };
         } catch (error) {
             console.error('Error uploading PDF:', error);
-            AntMessage.error('שגיאה בהעלאת ה-PDF');
-        } finally {
-            setUploading(false);
         }
     };
-    // Handle viewing student status
     // Handle viewing student status
     const onViewingStudentStatusClick = (student_id: string) => {
         navigate(`/menu/statuses-list/${student_id}`, { state: { from: location.pathname } });
@@ -147,22 +141,6 @@ const StudentsStatuses = () => {
             key: 'city',
             sorter: (a: StudentsStatus, b: StudentsStatus) => a.city.localeCompare(b.city),
         },
-        // {
-        //     title: 'צפייה בסטטוס התלמיד',
-        //     key: 'viewStatus',
-        //     render: (text, record) => (
-        //         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        //             <Image
-        //                 src={view}
-        //                 alt="עדכון סטטוס התלמיד"
-        //                 preview={false}
-        //                 style={{ cursor: 'pointer', width: '20px', height: '20px' }}
-        //                 onClick={() => onViewingStudentStatusClick(record.studentId)}
-        //             />
-        //         </div>
-        //     ),
-        //     width: 150,
-        // },
         {
             title: 'צפיה בסטטוס התלמיד',
             key: 'see',
@@ -175,25 +153,25 @@ const StudentsStatuses = () => {
                 </div>
             ),
             width: 150,
-        }
-        
-        // {
-        //     title: 'העלה PDF',
-        //     key: 'uploadPDF',
-        //     render: (text, record) => (
-        //         <Upload
-        //             accept=".pdf"
-        //             showUploadList={false}
-        //             beforeUpload={(file) => {
-        //                 handleUpload(file, record.studentId); // Replace with actual student ID
-        //                 return false;
-        //             }}
-        //         >
-        //             <Button icon={<UploadOutlined />} loading={uploading}>Upload PDF</Button>
-        //         </Upload>
-        //     ),
-        //     width: 150,
-        // },
+        },
+
+        {
+            title: 'העלה PDF',
+            key: 'uploadPDF',
+            render: (text, record) => (
+                <Upload
+                    accept=".pdf"
+                    showUploadList={false}
+                    beforeUpload={(file) => {
+                        handleUpload(file, record.studentId);
+                        return false;
+                    }}
+                >
+                    <Button icon={<UploadOutlined />} loading={uploading}>Upload PDF</Button>
+                </Upload>
+            ),
+            width: 150,
+        },
     ];
 
     return (
@@ -202,6 +180,7 @@ const StudentsStatuses = () => {
             <div className="header">
                 <h1 className="title">סטטוסי תלמידי בית הספר</h1>
             </div>
+            <br />
             <div className="container">
                 <div className="inner-container">
                     <div className="search-container">

@@ -136,6 +136,7 @@ const StudentConflictsList = () => {
             <div className="header">
                 <h1 className="title">תלמידים עם קונפליקטים</h1>
             </div>
+            <br />
             <div className="container">
                 <div className="inner-container">
                     <Table

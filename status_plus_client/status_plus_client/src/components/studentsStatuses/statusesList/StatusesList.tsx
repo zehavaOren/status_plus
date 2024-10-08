@@ -20,7 +20,7 @@ const StudentsList = () => {
 
     useEffect(() => {
         getStatusesList(student_id || '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [student_id]);
 
     const addMessage = (message: string, type: any) => {
@@ -54,46 +54,33 @@ const StudentsList = () => {
         }
     };
 
-    // Clean the base64 string (remove data URI prefix if it exists)
-    const cleanBase64 = (base64: string) => {
-        return base64.includes(',') ? base64.split(',')[1] : base64;
-    };
-
-    // Convert base64 to a Blob and download as a PDF
     const handleDownload = (base64File: string, year: string) => {
+        const fileName = `סטטוס ${studentName}-${year}.pdf`
         try {
-            const cleanedBase64 = cleanBase64(base64File); // Clean base64 content
-
-            // Debugging the base64 string
-            console.log("Base64 string:", cleanedBase64.slice(0, 100)); // Only log the first 100 characters for debugging
-
-            const byteCharacters = atob(cleanedBase64); // Decode base64 into binary string
-
-            // Convert binary string to array of bytes
-            const byteNumbers = Array.from(byteCharacters, char => char.charCodeAt(0));
+            const cleanedBase64File = base64File.replace(/^data:application\/pdf;base64,/, '');
+            let formattedBase64File = cleanedBase64File;
+            while (formattedBase64File.length % 4 !== 0) {
+                formattedBase64File += '=';
+            }
+            const byteCharacters = atob(formattedBase64File);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
             const byteArray = new Uint8Array(byteNumbers);
-
-            // Debugging the length of byteArray
-            console.log("Decoded byte length:", byteArray.length);
-
-            // Create a Blob from the byte array
             const blob = new Blob([byteArray], { type: 'application/pdf' });
-
-            // Trigger file download
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.href = url;
-            link.download = `StudentStatus_${studentName}_${year}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url); // Clean up the URL object
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
         } catch (error) {
-            addMessage("Error processing file download", "error");
-            console.error("File download error:", error);
+            console.error('Error downloading the PDF:', error);
         }
     };
-
     const columns: ColumnType<StatusesList>[] = [
         {
             title: 'שנה',
@@ -126,6 +113,7 @@ const StudentsList = () => {
                     חזרה
                 </Button>
             </div>
+            <br />
             <div className="container">
                 <Table
                     columns={columns}
