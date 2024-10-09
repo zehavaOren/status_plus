@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Table, Button, Input, Image, Modal } from 'antd';
+import { Table, Button, Input, Modal } from 'antd';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ColumnType } from 'antd/es/table';
 
 import { Student } from '../../models/Student';
 import { studentService } from '../../services/studentService';
-import edit from '../../assets/edit.png';
-import view from '../../assets/view.png';
 import './studentsForUpdate.css'
 import Message from '../Message';
 import { MySingletonService } from '../../services/MySingletonService';
