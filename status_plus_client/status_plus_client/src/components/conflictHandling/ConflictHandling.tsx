@@ -26,14 +26,15 @@ const ConflictHandling = () => {
     const [studentDetails, setStudentDetails] = useState<{ id: number, studentName: string }>();
     const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
     const [fullData, setFullData] = useState<ProcessedConflictData[]>([]);
+    const [isDataValid, setIsDataValid] = useState(false);
 
     // Pagination State
     const [pagination, setPagination] = useState<TablePaginationConfig>({
         current: 1,
-        pageSize: 10,  // Default page size
+        pageSize: 10,
         total: 0,
         showSizeChanger: true,
-        pageSizeOptions: ['10', '20', '50'], // Available page sizes
+        pageSizeOptions: ['10', '20', '50'],
     });
 
     useEffect(() => {
@@ -43,11 +44,13 @@ const ConflictHandling = () => {
     }, [studentId]);
 
     useEffect(() => {
-        // Paginate table data based on pagination settings
         paginateData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pagination.current, pagination.pageSize, fullData]);
 
+    useEffect(() => {
+        checkDataCompletion();
+    }, [fullData]);
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
@@ -94,6 +97,11 @@ const ConflictHandling = () => {
 
         const columns: ColumnsType<ProcessedConflictData> = [
             {
+                title: 'קטגוריה',
+                dataIndex: 'categoryDesc',
+                key: 'categoryDesc',
+            },
+            {
                 title: 'ערך',
                 dataIndex: 'value',
                 key: 'value',
@@ -106,7 +114,7 @@ const ConflictHandling = () => {
                     <div>
                         <div>בחירה:
                             <Tag color={text?.choice === 'Strength' ? 'green' : text?.choice === 'Weakness' ? 'red' : 'default'}>
-                                {text?.choice === 'Strength' ? 'חוזקה' : text?.choice === 'Weakness' ? 'חולשה' : 'Unknown'}
+                                {text?.choice === 'Strength' ? 'חוזקה' : text?.choice === 'Weakness' ? 'חולשה' : 'אין בחירה'}
                             </Tag>
                         </div>
                         <div>הערה: {text?.note}</div>
@@ -115,7 +123,6 @@ const ConflictHandling = () => {
             })),
         ];
 
-        // Conditionally add user choice and comment columns if user has permission 2
         if (employeeDet.permission === 2) {
             columns.push(
                 {
@@ -146,6 +153,7 @@ const ConflictHandling = () => {
             const rowData: ProcessedConflictData = {
                 key: rawData.find(item => item.valueDescription === value)?.valueId || 0,
                 value: value,
+                categoryDesc: rawData.find(item => item.valueDescription === value)?.categoryDesc || '',
                 choice: "",
                 comment: ""
             };
@@ -176,10 +184,15 @@ const ConflictHandling = () => {
         const paginatedData = fullData.slice((current! - 1) * pageSize!, current! * pageSize!);
         setTableData(paginatedData);
     };
+
+    const checkDataCompletion = () => {
+        const allDataFilled = fullData.every(item => item.choice && item.comment);
+        setIsDataValid(allDataFilled);
+    };
     // Handle user choice changes
     const handleUserChoiceChange = (record: ProcessedConflictData, value: string) => {
-        setTableData(prevTableData =>
-            prevTableData.map(item => {
+        setFullData(prevData =>
+            prevData.map(item => {
                 if (item.key === record.key) {
                     return { ...item, choice: value };
                 }
@@ -189,8 +202,8 @@ const ConflictHandling = () => {
     };
     // Handle user comment changes
     const handleUserCommentChange = (record: ProcessedConflictData, value: string) => {
-        setTableData(prevTableData =>
-            prevTableData.map(item => {
+        setFullData(prevData =>
+            prevData.map(item => {
                 if (item.key === record.key) {
                     return { ...item, comment: value };
                 }
@@ -200,9 +213,8 @@ const ConflictHandling = () => {
     };
     // Save the data
     const handleSave = async () => {
-        const isDataValid = tableData.every(item => item.choice && item.comment);
         if (isDataValid) {
-            const dataToSend = await mapProcessedConflictDataToConflictChoice(tableData);
+            const dataToSend = await mapProcessedConflictDataToConflictChoice(fullData);
             try {
                 const saveRes = await studentStatusService.upsertConflictResolution(dataToSend);
                 const allSuccessful = saveRes.every(res => res.status === 'success');
@@ -222,7 +234,7 @@ const ConflictHandling = () => {
                 addMessage('שגיאה בשמירת השינויים', 'error');
             }
         } else {
-            addMessage('יש למלא את שני השדות - בחירת משתמש והערה', 'error');
+            addMessage('יש למלא את כל השדות - בחירת משתמש והערה', 'error');
         }
     };
     // check if all employees fill the status
@@ -231,7 +243,7 @@ const ConflictHandling = () => {
             const year = await getYearForSystem();
             const responseFromDB = await studentStatusService.checkStudentStatus(studentId, year);
             const numbersOfValues = responseFromDB.numbersOfValues[0][0];
-            if (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) {
+            if ((numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) || numbersOfValues.totalDistinctExpectedValues === numbersOfValues.totalFinalChoiceValues) {
                 return true;
             }
             else {
@@ -261,7 +273,7 @@ const ConflictHandling = () => {
     const mapProcessedConflictDataToConflictChoice = async (data: ProcessedConflictData[]): Promise<ConflictChoice[]> => {
         const studentID = Number(studentId);
         const employeeId = findEmployeeIdByJobId(conflictsList);
-        const correctYear= await getYearForSystem();
+        const correctYear = await getYearForSystem();
         return data.map(item => ({
             valueId: item.key,
             studentId: studentID!,
@@ -274,7 +286,7 @@ const ConflictHandling = () => {
     };
     // Handle pagination change
     const handleTableChange = (pagination: TablePaginationConfig) => {
-        setPagination(pagination);  // Update pagination state
+        setPagination(pagination);
     };
     // Navigate back to the previous component
     const navigateBack = () => {
@@ -320,8 +332,7 @@ const ConflictHandling = () => {
                 </div>
                 <div>
                     {employeeDet.permission === 2 && (
-                        <Button onClick={handleSave}>שמור</Button>
-                    )}
+                        <Button onClick={handleSave} disabled={!isDataValid}>שמור</Button>)}
                 </div>
             </div>
         </>

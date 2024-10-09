@@ -27,7 +27,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [loading, setLoading] = useState(false);
     const [studentDetails, setStudentDetails] = useState<StudentForm | null>(null);
-    const [citiesList, setCitiesList] = useState<{ city_id: number, city_description: string }[]>([]);
+    const [citiesList, setCitiesList] = useState<{ cityId: number, cityDesc: string }[]>([]);
     const [jobForEmployee, setJobForEmployee] = useState<JobForEmployee[]>([]);
     const [educators, setEducators] = useState<JobForEmployee[]>([]);
     const [occupationalClinics, setOccupationalClinics] = useState<JobForEmployee[]>([]);
@@ -60,7 +60,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
 
     useEffect(() => {
         if (studentDetails) {
-            debugger
             // Populate the form with student details
             form.setFieldsValue({
                 ...studentDetails,
@@ -183,7 +182,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     // get the list of the grades
     const getGradesList = async () => {
         try {
-            const responseFromDB = await commonService.getGrades();
+            const responseFromDB = await commonService.getGradesAndClasses();
             const grades = await responseFromDB.gradesAndClasses[0];
             const perfectGrades = await addUniqueIdsToGrades(grades);
             setGradeList(perfectGrades);
@@ -253,7 +252,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         const selectedClass = gradeList.find(grade => grade.classId === value);
         const classId = selectedClass?.classId;
         await fetchEducators(grade! || studentDetails?.gradeId!, classId!);
-        debugger
         form.setFieldsValue({
             classId: value,
             morningTeacher: undefined,
@@ -279,7 +277,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         const communicationTherapist = jobForEmployee.find(
             job => job.job_id === 18 && educatorIds.includes(job.employee_id) && job.employee_id === String(studentDetails?.communicationTherapist)
         );
-        debugger
         // Set the form with the new teacher names
         form.setFieldsValue({
             morningTeacher: morningTeacher?.employee_id || undefined,
@@ -498,8 +495,8 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                     <Form.Item label="עיר" name="cityId" rules={[{ required: true, message: 'חובה לבחור עיר' }]}>
                                         <Select>
                                             {citiesList.map(city => (
-                                                <Option key={city.city_id} value={city.city_id}>
-                                                    {city.city_description}
+                                                <Option key={city.cityId} value={city.cityId}>
+                                                    {city.cityDesc}
                                                 </Option>
                                             ))}
                                         </Select>

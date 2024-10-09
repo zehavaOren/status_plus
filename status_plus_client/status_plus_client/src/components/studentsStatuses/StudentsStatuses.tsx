@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Image, Pagination, Upload, Button, message as AntMessage } from 'antd';
-import { EyeOutlined, UploadOutlined } from '@ant-design/icons';
+import { Table, Input, Pagination, Button } from 'antd';
+import { EyeOutlined } from '@ant-design/icons';
 import { ColumnType } from 'antd/es/table';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { StudentsStatus } from "../../models/StudentStatus";
-import view from '../../assets/view.png';
 import { studentStatusService } from '../../services/studentStatusService';
 import './StudentsStatuses.css';
 import Message from '../Message';
@@ -154,24 +153,23 @@ const StudentsStatuses = () => {
             ),
             width: 150,
         },
-
-        {
-            title: 'העלה PDF',
-            key: 'uploadPDF',
-            render: (text, record) => (
-                <Upload
-                    accept=".pdf"
-                    showUploadList={false}
-                    beforeUpload={(file) => {
-                        handleUpload(file, record.studentId);
-                        return false;
-                    }}
-                >
-                    <Button icon={<UploadOutlined />} loading={uploading}>Upload PDF</Button>
-                </Upload>
-            ),
-            width: 150,
-        },
+        // {
+        //     title: 'העלה PDF',
+        //     key: 'uploadPDF',
+        //     render: (text, record) => (
+        //         <Upload
+        //             accept=".pdf"
+        //             showUploadList={false}
+        //             beforeUpload={(file) => {
+        //                 handleUpload(file, record.studentId);
+        //                 return false;
+        //             }}
+        //         >
+        //             <Button icon={<UploadOutlined />} loading={uploading}>Upload PDF</Button>
+        //         </Upload>
+        //     ),
+        //     width: 150,
+        // },
     ];
 
     return (

@@ -1,23 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Input, Pagination, Table, Image, Button, Upload, Progress, Popconfirm } from 'antd';
+import { Input, Pagination, Table, Button, Upload, Progress, Popconfirm } from 'antd';
 import { ColumnType } from 'antd/es/table';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { DeleteOutlined, EditOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 
-import view from '../../assets/view.png';
 import { Student } from '../../models/Student';
 import { studentService } from '../../services/studentService';
-import edit from '../../assets/edit.png';
 import Message from '../Message';
-import './AllStudents.css';
-import { DeleteOutlined, EditOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import { studentStatusService } from '../../services/studentStatusService';
-
-
+import './AllStudents.css';
+import { commonService } from '../../services/commonService';
 
 const AllStudents = () => {
-
     const navigate = useNavigate();
     const location = useLocation();
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
@@ -27,12 +23,17 @@ const AllStudents = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [gradeFilter, setGradeFilter] = useState<string | null>(null);
+    const [cities, setCities] = useState<{ cityId: number; cityDesc: string }[]>([]);
+    const [grades, setGrades] = useState<{ gradeId: number; gradeDesc: string }[]>([]);
 
     useEffect(() => {
         getStudents();
         getYearForSystem();
+        getCitiesList();
+        getGradesList();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
     useEffect(() => {
         setCurrentPage(1);
     }, [searchText, gradeFilter]);
@@ -40,15 +41,14 @@ const AllStudents = () => {
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
-    // get correct year
+    // get year data
     const getYearForSystem = () => {
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth() + 1;
-        const year = currentMonth > 10 ? currentYear + 1 : currentYear;
-        return year.toString();
+        return currentMonth > 10 ? (currentYear + 1).toString() : currentYear.toString();
     };
-    // get the studnets list
+    // get all students
     const getStudents = async () => {
         setLoading(true);
         try {
@@ -57,21 +57,57 @@ const AllStudents = () => {
             const studentsWithStatus = await addStatusToStudents(allStudents);
             setStudents(studentsWithStatus);
         } catch (error) {
-            addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
+            addMessage('Error retrieving students', 'error');
         } finally {
             setLoading(false);
         }
     };
-    // calc ths status Progress
+    // get the list of the cities
+    const getCitiesList = async () => {
+        try {
+            const responseFromDB = await commonService.getCities();
+            setCities(responseFromDB.citiesList[0]);
+        } catch (error) {
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
+        } finally {
+            setLoading(false);
+        }
+    }
+    // get the list of the grades
+    const getGradesList = async () => {
+        try {
+            const responseFromDB = await commonService.getGrade();
+            const grades = await responseFromDB.gradesList[0];
+            setGrades(grades);
+        } catch (error) {
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
+        } finally {
+            setLoading(false);
+        }
+    }
+    // clac the status progress
     const addStatusToStudents = async (students: Student[]): Promise<Student[]> => {
         const updatedStudents = await Promise.all(
             students.map(async (student) => {
-                const status = await getAmuntValues(Number(student.studentId));
+                const status = await getAmountValues(Number(student.studentId));
                 if (status) {
-                    const { totalExpectedValues, totalFilledValues } = status;
-                    const statusPercentage = totalExpectedValues
+                    const {
+                        totalExpectedValues,
+                        totalFilledValues,
+                        totalDistinctExpectedValues,
+                        totalFinalChoiceValues,
+                    } = status;
+
+                    const statusPercentage1 = totalExpectedValues
                         ? Math.round((totalFilledValues / totalExpectedValues) * 100)
                         : 0;
+
+                    const statusPercentage2 = totalDistinctExpectedValues
+                        ? Math.round((totalFinalChoiceValues / totalDistinctExpectedValues) * 100)
+                        : 0;
+
+                    const statusPercentage = Math.max(statusPercentage1, statusPercentage2);
+
                     return {
                         ...student,
                         statusPercentage,
@@ -83,30 +119,75 @@ const AllStudents = () => {
 
         return updatedStudents;
     };
-    // get the anount of the values to calc the progress
-    const getAmuntValues = async (studentId: number) => {
+    // clac the status progress
+    const getAmountValues = async (studentId: number) => {
         try {
-            const year = await getYearForSystem();
+            const year = getYearForSystem();
             const responseFromDB = await studentStatusService.checkStudentStatus(studentId, year);
             const numbersOfValues = responseFromDB.numbersOfValues[0][0];
             return {
                 totalExpectedValues: numbersOfValues.totalExpectedValues,
-                totalFilledValues: numbersOfValues.totalFilledValues
+                totalFilledValues: numbersOfValues.totalFilledValues,
+                totalDistinctExpectedValues: numbersOfValues.totalDistinctExpectedValues,
+                totalFinalChoiceValues: numbersOfValues.totalFinalChoiceValues
             };
-
+        } catch (error) {
+            addMessage('Error retrieving student status', 'error');
+        }
+    };
+    // when try to see student status
+    const onViewingStudentStatusClick = async (student_id: string) => {
+        debugger
+        const isStatusFinish = await checkStudentStatus(Number(student_id));
+        if (isStatusFinish) {
+            const conflictsList = await getConflictsList(student_id);
+            if (conflictsList.length === 0) {
+                navigate(`/menu/student-status/${student_id}`, { state: { from: location.pathname } });
+            }
+            else {
+                addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
+            }
+        }
+        else {
+            addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
+        }
+    };
+    // check if all employees fill the status
+    const checkStudentStatus = async (studentId: number) => {
+        try {
+            const year = await getYearForSystem();
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, year);
+            const numbersOfValues = responseFromDB.numbersOfValues[0][0];
+            if (numbersOfValues.totalFilledValues === 0) {
+                return false;
+            }
+            if ((numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues)
+                || (numbersOfValues.totalDistinctExpectedValues === numbersOfValues.totalFinalChoiceValues) ) {
+                return true;
+            }
+            else {
+                return false;
+            }
         } catch (error) {
             addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
         }
     }
-    //see student statuses
-    const onViewingStudentStatusClick = (student_id: string) => {
-        navigate(`statuses-list/${student_id}`);
+    // get the conflicts list
+    const getConflictsList = async (studentId: string) => {
+        const employeeNumber = Number(studentId);
+        try {
+            const studentConflictsResponse = await studentStatusService.getConflictsList(employeeNumber);
+            const conflictsList = studentConflictsResponse.conflictsList[0];
+            return conflictsList;
+        } catch (error) {
+            console.error('Error fetching student status:', error);
+        }
     }
-    //search
+    // serach option
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(e.target.value);
     };
-    // filter and sort data before pagination
+    // get the true data
     const getFilteredAndSortedData = () => {
         let filteredStudents = students;
         if (searchText) {
@@ -121,7 +202,7 @@ const AllStudents = () => {
         }
         return filteredStudents;
     };
-    // sort and filter before paging
+    // when table change
     const handleTableChange = (pagination: any, filters: any, sorter: any) => {
         if (filters.grade && filters.grade.length > 0) {
             setGradeFilter(filters.grade[0]);
@@ -147,30 +228,30 @@ const AllStudents = () => {
         setStudents(sortedStudents);
         setCurrentPage(1);
     };
+
     const filteredAndSortedData = getFilteredAndSortedData();
     const paginatedStudents = filteredAndSortedData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-    // paging
+    // when move to other page
     const handlePageChange = (page: number, pageSize: number) => {
         setCurrentPage(page);
         setPageSize(pageSize);
     };
-    // navigate to student form
+    // on edit syudet details
     const onUpdateStudentClick = (student: Student) => {
         navigate(`/menu/student-details/${student.studentId}`, { state: { from: location.pathname } });
-    }
-    // delete student
+    };
+    // when try delete student
     const handleDelete = async (studentId: string) => {
-        const year = await getYearForSystem();
+        const year = getYearForSystem();
         const deleteStudentRes = await studentService.deleteStudent(studentId, year);
         if (deleteStudentRes.studentDelete[0][0].status === 1) {
-            addMessage('התלמיד נמחק בהצלחה', 'success');
+            addMessage('Student deleted successfully', 'success');
         } else {
-            addMessage('מחיקת התלמיד נכשלה', 'error');
+            addMessage('Failed to delete student', 'error');
         }
         getStudents();
-        // setIsModalVisible(false);
     };
-    // add new student
+    // when click in add student button
     const addNewStudent = () => {
         navigate(`/menu/student-details/`, { state: { from: location.pathname } });
     };
@@ -201,8 +282,18 @@ const AllStudents = () => {
                 const mappedStudent: { [key: string]: any } = {};
                 for (const [hebrewKey, value] of Object.entries(student)) {
                     const englishKey = columnMapping[hebrewKey] || hebrewKey;
-                    mappedStudent[englishKey] = value;
+                    debugger
+                    if (englishKey === 'city') {
+                        const city = cities.find((c) => c.cityDesc === value);
+                        mappedStudent[englishKey] = city ? city.cityId : null;
+                    } else if (englishKey === 'grade') {
+                        const grade = grades.find((g) => g.gradeDesc === value);
+                        mappedStudent[englishKey] = grade ? grade.gradeId : null;
+                    } else {
+                        mappedStudent[englishKey] = value;
+                    }
                 }
+
                 return mappedStudent;
             });
             const resImport = await studentService.importStudents(mappedStudents);
@@ -212,8 +303,9 @@ const AllStudents = () => {
                     failStudents.push(res);
                 }
             })
-            addMessage(`התלמידים יובאו בהצלחה`, 'success');
+            addMessage('התלמידים יובאו בהצלחה', 'success');
             exportExcelFile(failStudents);
+            getStudents();
         };
 
         reader.readAsBinaryString(file);
@@ -264,7 +356,7 @@ const AllStudents = () => {
         }
 
     }
-
+    // table columns
     const columns: ColumnType<Student>[] = [
         {
             title: 'תעודת זהות',
@@ -278,14 +370,12 @@ const AllStudents = () => {
             dataIndex: 'firstName',
             key: 'firstName',
             sorter: (a: Student, b: Student) => a.firstName.localeCompare(b.firstName),
-
         },
         {
             title: 'שם משפחה',
             dataIndex: 'lastName',
             key: 'lastName',
             sorter: (a: Student, b: Student) => a.lastName.localeCompare(b.lastName),
-
         },
         {
             title: 'טלפון',
@@ -297,14 +387,12 @@ const AllStudents = () => {
             dataIndex: 'address',
             key: 'address',
             sorter: (a: Student, b: Student) => a.address.localeCompare(b.address),
-
         },
         {
             title: 'עיר',
             dataIndex: 'city',
             key: 'city',
             sorter: (a: Student, b: Student) => a.city.localeCompare(b.city),
-
         },
         {
             title: 'כיתה',
@@ -325,7 +413,6 @@ const AllStudents = () => {
                     type="circle"
                     percent={record.statusPercentage || 0}
                     width={40}
-                    // size="small"
                     status={record.statusPercentage === 100 ? 'success' : 'active'}
                 />
             ),
@@ -349,10 +436,10 @@ const AllStudents = () => {
             render: (text: any, record: any) => (
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                     <Popconfirm
-                        title="האם אתה בטוח שברצונך למחוק את איש הצוות?"
+                        title="האם אתה בטוח שאתה רוצה למחוק את התלמיד?"
                         onConfirm={() => handleDelete(record.studentId)}
-                        okText="אישור"
-                        cancelText="ביטול"
+                        okText="כן"
+                        cancelText="לא"
                     >
                         <Button icon={<DeleteOutlined />} danger />
                     </Popconfirm>
@@ -386,8 +473,7 @@ const AllStudents = () => {
                     beforeUpload={(file) => {
                         handleFileChange(file);
                         return false;
-                    }}
-                >
+                    }}>
                     <Button icon={<UploadOutlined />} className='ant-btn ant-btn-primary import-students-button'>ייבוא תלמידים</Button>
                 </Upload>
                 <Button type="primary" className="add-student-button" onClick={addNewStudent}>הוסף תלמיד חדש</Button>
@@ -444,26 +530,8 @@ const AllStudents = () => {
                     />
                 </div>
             </div>
-            {/* <Modal
-                title="אישור מחיקת תלמיד"
-                open={isModalVisible}
-                onOk={handleDelete}
-                onCancel={handleCancel}
-                okText="אישור"
-                cancelText="ביטול"
-                style={{ textAlign: 'center' }}
-                footer={[
-                    <Button key="cancel" onClick={handleCancel}>
-                        ביטול
-                    </Button>,
-                    <Button key="delete" type="primary" onClick={handleDelete}>
-                        אישור
-                    </Button>,
-                ]}
-            >
-                <p>?האם אתה בטוח שברצונך למחוק את התלמיד</p>
-            </Modal> */}
         </>
-    )
-}
+    );
+};
+
 export default AllStudents;

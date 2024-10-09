@@ -27,9 +27,9 @@ export const commonService = {
         }
     },
 
-    getGrades: async () => {
+    getGradesAndClasses: async () => {
         try {
-            const response = await fetch(`${BASE_URL}/getGrades`);
+            const response = await fetch(`${BASE_URL}/getGradesAndClasses`);
             if (!response.ok) {
                 throw new Error('Error fetching employees');
             }
@@ -54,6 +54,18 @@ export const commonService = {
     getPermission: async () => {
         try {
             const response = await fetch(`${BASE_URL}/getPermission`);
+            if (!response.ok) {
+                throw new Error('Error fetching employees');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    },
+
+    getGrade: async () => {
+        try {
+            const response = await fetch(`${BASE_URL}/getGrade`);
             if (!response.ok) {
                 throw new Error('Error fetching employees');
             }

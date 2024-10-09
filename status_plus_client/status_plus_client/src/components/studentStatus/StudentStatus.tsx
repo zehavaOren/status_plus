@@ -34,21 +34,22 @@ const StudentStatus = () => {
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
-    // Determine the back navigation route
+    // navigate
+    // Ensure consistent absolute path when navigating back
     const from = useMemo(() => {
-        debugger
         if (location.state?.from) {
             return location.state.from;
         }
         if (employeeDet.permission === 1 || employeeDet.permission === 2) {
-            return `menu/students-for-update/${employeeDet.identityNumber}`;
+            return `/menu/students-for-update/${employeeDet.identityNumber}`;
         } else if (employeeDet.permission === 3) {
-            return '/all-students';
+            return `/menu/all-students`;
         } else {
-            return location.state?.from || '/menu';
+            return '/menu';
         }
     }, [employeeDet, location.state?.from]);
-    // get status data
+
+    // get data
     const fetchStudentStatus = async () => {
         setLoading(true);
         try {
@@ -63,7 +64,7 @@ const StudentStatus = () => {
         }
         setLoading(false);
     };
-    // status columns
+    // columns
     const columns = [
         {
             title: 'ערך',
@@ -88,6 +89,7 @@ const StudentStatus = () => {
             key: 'note',
         },
     ];
+    // map data
     const groupedStatus = studentStatus.reduce((acc, curr) => {
         if (!acc[curr.categoryDesc]) {
             acc[curr.categoryDesc] = [];
@@ -95,12 +97,12 @@ const StudentStatus = () => {
         acc[curr.categoryDesc].push(curr);
         return acc;
     }, {} as { [key: string]: StudentStatusValue[] });
-    // arrage the categories and the values
+    // on open row
     const expandedRowRender = (category: string) => {
         const data = groupedStatus[category];
         return <Table columns={columns} dataSource={data} pagination={false} />;
     };
-    // category columns
+    // columns
     const categoryColumns = [
         {
             title: 'רשימת קטגוריות',
@@ -108,9 +110,9 @@ const StudentStatus = () => {
             key: 'category',
         },
     ];
-    // all the category
+    // map data
     const categoryData = Object.keys(groupedStatus).map(category => ({ key: category, category }));
-    // when clicking category
+    // open category
     const onExpand = (expanded: boolean, record: { key: string }) => {
         setExpandedKeys(keys =>
             expanded
@@ -118,27 +120,20 @@ const StudentStatus = () => {
                 : keys.filter(k => k !== record.key)
         );
     };
-    // open all tabsto print the page to pdf
+    // open all categories
     const openAllCategories = () => {
-        // Automatically expand all rows by setting expanded keys to all categories
-        const allKeys = Object.keys(studentStatus.reduce((acc: { [key: string]: StudentStatusValue[] }, curr: StudentStatusValue) => {
-            if (!acc[curr.categoryDesc]) {
-                acc[curr.categoryDesc] = [];
-            }
-            acc[curr.categoryDesc].push(curr);
-            return acc;
-        }, {}));
+        const allKeys = Object.keys(groupedStatus);
         setExpandedKeys(allKeys);
     }
-    // navigate to the privious component
+    // navigate to privious component
     const navigateBack = () => {
-        navigate(location.state?.from || `/menu/students-for-update/${employeeDet.identityNumber}`);
+        navigate(from);
     };
-    // navigate to the second status vision
+    // navigate to table status
     const changeVision = () => {
         navigate(`/menu/student-status-table/${studentId}`, { state: { from: location.pathname } });
     }
-    // PDF Generation Function
+    // generate pdf
     const generatePDF = async () => {
         if (!contentRef.current) {
             addMessage("אופס, שגיאה בהורדת PDF", "error");
@@ -149,18 +144,17 @@ const StudentStatus = () => {
             await openAllCategories();
             const input = contentRef.current;
             const pdf = new jsPDF('p', 'pt', 'a4');
-            const canvas = await html2canvas(input, { scale: 1 }); // Lower scale if necessary
+            const canvas = await html2canvas(input, { scale: 1 });
             const imgData = canvas.toDataURL('image/png');
-            const imgWidth = 595.28; // A4 page width in points
-            const imgHeight = (canvas.height * imgWidth) / canvas.width; // Maintain aspect ratio
-            const pageHeight = 841.89; // A4 page height in points
+            const imgWidth = 595.28;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            const pageHeight = 841.89;
             let heightLeft = imgHeight;
             let position = 0;
 
             pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
             heightLeft -= pageHeight;
 
-            // Add pages if content exceeds one page
             while (heightLeft > 0) {
                 position = heightLeft - imgHeight;
                 pdf.addPage();
@@ -168,7 +162,7 @@ const StudentStatus = () => {
                 heightLeft -= pageHeight;
             }
 
-            pdf.save('student_status.pdf');
+            pdf.save(`Student_Status_${studentDet?.studentName}_${studentDet?.year}.pdf`);
         } catch (error) {
             console.error('Error generating PDF:', error);
             addMessage('שגיאה ביצירת PDF', 'error');
@@ -177,61 +171,69 @@ const StudentStatus = () => {
     };
 
     return (
-        <div >
-            <div>
-                <Message messages={messages} duration={5000} />
-                {loading && (
-                    <div className="loading-overlay">
-                        <Spin size="large" />
+        <div>
+            <Message messages={messages} duration={5000} />
+            {loading && (
+                <div className="loading-overlay">
+                    <Spin size="large" />
+                </div>
+            )}
+
+            <div className='container'>
+                <div style={{ marginBottom: '-10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '425px' }}>
+                        <Button onClick={navigateBack} style={{ backgroundColor: '#d6e7f6' }}>
+                            חזרה
+                        </Button>
+                        <Button
+                            icon={<DownloadOutlined />}
+                            type="primary"
+                            onClick={generatePDF}
+                            style={{ backgroundColor: '#52c41a', color: '#fff' }}
+                        >
+                            הורד כ-PDF
+                        </Button>
+                        <Button onClick={changeVision} style={{ marginRight: '60px' }}>שנה תצוגה</Button>
                     </div>
-                )}
-                <div className='container'>
-                    <Title level={2}>סטטוס {studentDet?.studentName} {studentDet?.year}</Title>
-                    <Button onClick={navigateBack} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
-                        חזרה
-                    </Button>
-                    <Button
-                        icon={<DownloadOutlined />}
-                        type="primary"
-                        onClick={generatePDF}
-                        style={{ marginBottom: '20px', backgroundColor: '#52c41a', color: '#fff', marginLeft: '20px' }}
-                    >
-                        הורד כ-PDF
-                    </Button>
-                    <Button onClick={changeVision} style={{ marginRight: '60px' }}>שנה תצוגה</Button>
                 </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '1px' }} ref={contentRef}>
-                <Card
-                    style={{ borderRadius: '10px', width: '100%', maxWidth: '1200px', direction: 'rtl', backgroundColor: '#b4d3ef' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        {/* רשימת אנשי הצוות */}
-                        <div style={{ width: '25%', marginLeft: '20px' }}>
-                            <Title level={4}>אנשי צוות ממלאים</Title>
-                            <List
-                                dataSource={employeeDetails}
-                                renderItem={item => (
-                                    <List.Item>
-                                        <div>{item.employeeName} - {item.jobDesc}</div>
-                                    </List.Item>
-                                )} />
-                        </div>
-                        {/* טבלת סטטוס התלמיד */}
-                        <div style={{ width: '70%' }}>
-                            <div id="studentStatusTable" dir='rtl'>
-                                <Table
-                                    columns={categoryColumns}
-                                    expandable={{
-                                        expandedRowRender: record => expandedRowRender(record.category),
-                                        onExpand: onExpand,
-                                        expandedRowKeys: expandedKeys,
-                                    }}
-                                    dataSource={categoryData}
-                                    pagination={false} />
+
+            <div ref={contentRef}>
+                <Title level={2} style={{ textAlign: 'center' }}>
+                    סטטוס התלמיד {studentDet?.studentName}
+                </Title>
+                <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '1px' }} >
+                    <Card
+                        style={{ borderRadius: '10px', width: '100%', maxWidth: '1200px', direction: 'rtl', backgroundColor: '#b4d3ef' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            {/* רשימת אנשי הצוות */}
+                            <div style={{ width: '25%', marginLeft: '20px' }}>
+                                <Title level={4}>אנשי צוות ממלאים</Title>
+                                <List
+                                    dataSource={employeeDetails}
+                                    renderItem={item => (
+                                        <List.Item>
+                                            <div>{item.employeeName} - {item.jobDesc}</div>
+                                        </List.Item>
+                                    )} />
+                            </div>
+
+                            <div style={{ width: '70%' }}>
+                                <div id="studentStatusTable" dir='rtl'>
+                                    <Table
+                                        columns={categoryColumns}
+                                        expandable={{
+                                            expandedRowRender: record => expandedRowRender(record.category),
+                                            onExpand: onExpand,
+                                            expandedRowKeys: expandedKeys,
+                                        }}
+                                        dataSource={categoryData}
+                                        pagination={false} />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </Card>
+                    </Card>
+                </div>
             </div>
         </div>
     );

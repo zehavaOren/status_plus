@@ -82,7 +82,7 @@ const StudentConflictsList = () => {
             const year = await getYearForSystem();
             const responseFromDB = await studentStatusService.checkStudentStatus(studentId, year);
             const numbersOfValues = responseFromDB.numbersOfValues[0][0];
-            if (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) {
+            if ((numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) || numbersOfValues.totalDistinctExpectedValues === numbersOfValues.totalFinalChoiceValues) {
                 return true;
             }
             else {
