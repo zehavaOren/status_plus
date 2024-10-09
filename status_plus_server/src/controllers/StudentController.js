@@ -79,7 +79,7 @@ const deleteStudent = async (req, res) => {
 };
 
 const importStudents = async (req, res) => {
-    const { studentId, lastName, firstName, phone1, phone2, birthDate, address, city, grade, clas } = req.body;
+    const { studentId, lastName, firstName, phone1, phone2, birthDate, address, city, grade, clas } = req.body;    
     try {
         const studentsFileImported = await dbService.executeStoredProcedure('sp_stpl_import_student',
             {

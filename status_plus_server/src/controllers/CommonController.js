@@ -50,10 +50,20 @@ const getPermission = async (req, res) => {
     }
 };
 
+const getGrade = async (req, res) => {
+    try {
+        const gradesList = await dbService.executeStoredProcedure('sp_stpl_get_grade');
+        res.status(200).json({ gradesList });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+}
 module.exports = {
     getCities,
     getJobForEmployee,
     getGradesAndClasses,
     getJobs,
-    getPermission
+    getPermission,
+    getGrade
 };
