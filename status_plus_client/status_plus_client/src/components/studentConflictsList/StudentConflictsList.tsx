@@ -1,5 +1,4 @@
-import { Button, Image } from 'antd';
-import edit from '../../assets/edit.png';
+import { Button } from 'antd';
 import Table, { ColumnType } from 'antd/es/table';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
