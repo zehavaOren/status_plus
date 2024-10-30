@@ -50,7 +50,9 @@ const ConflictHandling = () => {
 
     useEffect(() => {
         checkDataCompletion();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [fullData]);
+    // messages
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
@@ -78,11 +80,11 @@ const ConflictHandling = () => {
     // Fetch conflicts list and process data
     const getConflictsList = async () => {
         setLoading(true);
-        const employeeNumber = Number(studentId);
+        const student_id = Number(studentId);
         try {
-            const studentConflictsResponse = await studentStatusService.getConflictsList(employeeNumber);
+            const studentConflictsResponse = await studentStatusService.getConflictsList(student_id);
             setConflictsList(studentConflictsResponse.conflictsList[0]);
-            setStudentDetails(studentConflictsResponse.conflictsList[1][0].studentDetails);
+            setStudentDetails(studentConflictsResponse.conflictsList[1][0]);
             processConflictsData(studentConflictsResponse.conflictsList[0]);
         } catch (error) {
             addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
@@ -184,9 +186,9 @@ const ConflictHandling = () => {
         const paginatedData = fullData.slice((current! - 1) * pageSize!, current! * pageSize!);
         setTableData(paginatedData);
     };
-
+    // check if all values full
     const checkDataCompletion = () => {
-        const allDataFilled = fullData.every(item => item.choice && item.comment);
+        const allDataFilled = fullData.every(item => item.choice);
         setIsDataValid(allDataFilled);
     };
     // Handle user choice changes
@@ -221,12 +223,15 @@ const ConflictHandling = () => {
                 if (allSuccessful) {
                     addMessage('כל השינויים נשמרו בהצלחה', 'success');
                     const emp = await findEmployeeIdByJobId(conflictsList);
-                    const statusReady = await checkStudentStatus(Number(studentId!));
-                    if (statusReady) {
-                        const year = await getYearForSystem();
-                        await updateReadyStatus(Number(studentId), year);
+                    const isDeleteDuplicateRows = await removeDuplicateValuesForStudent(String(emp));
+                    if (isDeleteDuplicateRows) {
+                        const statusReady = await checkStudentStatus(Number(studentId!));
+                        if (statusReady) {
+                            const year = await getYearForSystem();
+                            await updateReadyStatus(Number(studentId), year);
+                        }
+                        navigate(`/menu/student-conflicts-list/${emp}`);
                     }
-                    navigate(`/menu/student-conflicts-list/${emp}`);
                 } else {
                     addMessage('חלק מהשינויים לא נשמרו בהצלחה', 'warning');
                 }
@@ -271,19 +276,36 @@ const ConflictHandling = () => {
     };
     // Map the processed conflict data to the ConflictChoice model for saving
     const mapProcessedConflictDataToConflictChoice = async (data: ProcessedConflictData[]): Promise<ConflictChoice[]> => {
-        const studentID = Number(studentId);
+        const studentID = studentId!.toString();
         const employeeId = findEmployeeIdByJobId(conflictsList);
         const correctYear = await getYearForSystem();
+
         return data.map(item => ({
             valueId: item.key,
-            studentId: studentID!,
+            studentId: studentID,
             year: correctYear,
-            strength: item.choice === 'חוזקה' ? true : false,
-            weakness: item.choice === 'חולשה' ? true : false,
+            strength: item.choice === 'חוזקה' ? 1 : 0,
+            weakness: item.choice === 'חולשה' ? 1 : 0,
             notes: item.comment,
-            employeeId: employeeId!,
+            employeeId: String(employeeId!),
         }));
     };
+    // remove duplicate values to prepare correct status
+    const removeDuplicateValuesForStudent = async (emp: string) => {
+        try {
+            const year = await getYearForSystem();
+            const responseFromDB = await studentStatusService.removeDuplicateValuesForStudent(studentId!, year, emp);
+            const successRemoving = responseFromDB.removingDuplicateRows[0][0];
+            if (successRemoving.status === 1) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        } catch (error) {
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
+        }
+    }
     // Handle pagination change
     const handleTableChange = (pagination: TablePaginationConfig) => {
         setPagination(pagination);

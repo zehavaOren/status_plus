@@ -20,7 +20,7 @@ const StudentsForUpdate = () => {
     const [loading, setLoading] = useState(false);
     const [students, setStudents] = useState<Student[]>([]);
     const [searchText, setSearchText] = useState('');
-    const [hasCheckedConflicts, setHasCheckedConflicts] = useState(false); // Flag to ensure the modal shows only once
+    const [hasCheckedConflicts, setHasCheckedConflicts] = useState(false);
     const hasInitialized = useRef(false);
     const userPermission = useMemo(() => MySingletonService.getInstance().getBaseUser().permission, []);
 
@@ -74,24 +74,46 @@ const StudentsForUpdate = () => {
     // open the status of the student
     const onViewStatusClick = async (student_id: string) => {
         const isStatusFinish = await checkStudentStatus(Number(student_id));
-        if (isStatusFinish) {
+        const numbersOfValues = isStatusFinish.numbersOfValues[0][0];
+        if ((numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) || numbersOfValues.totalDistinctExpectedValues === numbersOfValues.totalFinalChoiceValues) {
             const conflictsList = await getConflictsList(student_id);
             if (conflictsList.length === 0) {
-                navigate(`/menu/student-status/${student_id}`, { state: { from: location.pathname } });
+                navigate(`/menu/status-options/${student_id}`, { state: { from: location.pathname } });
             }
             else {
                 addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
             }
         }
+
         else {
-            addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
+            if (userPermission === 1) {
+                addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
+            }
+            else {
+                const employees = isStatusFinish.numbersOfValues[1];
+                printError(employees);
+            }
         }
+    }
+    // print the list of employees who not fill thw status
+    const printError = (employees: any[]) => {
+        const incompleteEmployees = employees
+            .filter(employee => employee.totalValuesFilled !== employee.totalValuesToFill)
+            .map(employee => employee.employeeName);  // Extract employee names
+
+        if (incompleteEmployees.length > 0) {
+            const employeeNamesList = incompleteEmployees.join(', ');
+            addMessage(`סטטוס התלמיד עדיין לא מוכן, ישנם אנשי צוות שעדיין לא מילאו: ${employeeNamesList}`, "error");
+        } else {
+            addMessage("Student status is not ready yet, cannot be displayed", "error");
+        }
+
     }
     // get the conflicts list
     const getConflictsList = async (studentId: string) => {
-        const employeeNumber = Number(studentId);
+        const student_id = Number(studentId);
         try {
-            const studentConflictsResponse = await studentStatusService.getConflictsList(employeeNumber);
+            const studentConflictsResponse = await studentStatusService.getConflictsList(student_id);
             const conflictsList = studentConflictsResponse.conflictsList[0];
             return conflictsList;
         } catch (error) {
@@ -131,13 +153,7 @@ const StudentsForUpdate = () => {
         try {
             const year = await getYearForSystem();
             const responseFromDB = await studentStatusService.checkStudentStatus(studentId, year);
-            const numbersOfValues = responseFromDB.numbersOfValues[0][0];
-            if ((numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) || numbersOfValues.totalDistinctExpectedValues === numbersOfValues.totalFinalChoiceValues) {
-                return true;
-            }
-            else {
-                return false;
-            }
+            return responseFromDB;
         } catch (error) {
             addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
         }

@@ -12,8 +12,8 @@ import StudentsList from '../studentsStatuses/statusesList/StatusesList';
 import StudentDetailsForm from '../studentDetailsForm/StudentDetailsForm';
 import AllStudents from '../allStudents/AllStudents';
 import StatusForm from '../statusForm/StatusForm';
-import StudentStatus from '../studentStatus/StudentStatus';
-import StudentStatusTable from '../studentStatus/StudentStatusTable';
+import StudentStatus from '../studentStatus/rowStatus/StudentStatus';
+import StudentStatusTable from '../studentStatus/tableStatus/StudentStatusTable';
 import StudentConflictsList from '../studentConflictsList/StudentConflictsList';
 import ConflictHandling from '../conflictHandling/ConflictHandling';
 import { MySingletonService } from '../../services/MySingletonService';
@@ -22,6 +22,8 @@ import EmployeeManagement from '../employeeManagement/EmployeeManagement';
 import EmployeeForm from '../employeeForm/EmployeeForm';
 import UploadYearComponent from '../uploadYearComponent/UploadYearComponent';
 import DataManagementComponent from '../dataManagementComponent/DataManagementComponent';
+import SimpleStudentStatusTable from '../studentStatus/simpleStatus/SimpleStudentStatusTable';
+import StatusOptionsDashboard from '../studentStatus/StatusOptionsDashboard';
 
 const { Header, Content } = Layout;
 
@@ -30,7 +32,7 @@ const Menu: React.FC = () => {
   const navigate = useNavigate();
   // const { state } = location;
   const [user, setUser] = useState<BaseUser | null>(null);
-  const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
+  // const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
   // const [currentPage, setCurrentPage] = useState(1);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState(false);
@@ -79,25 +81,25 @@ const Menu: React.FC = () => {
   // }, [location]);
 
   // client message
-  const addMessage = (message: string, type: any) => {
-    setMessages([{ message, type, id: Date.now() }]);
-  };
+  // const addMessage = (message: string, type: any) => {
+  //   setMessages([{ message, type, id: Date.now() }]);
+  // };
   // get user data from singelton
-  const getBaseUser = async () => {
-    try {
-      const user = await MySingletonService.getInstance().getBaseUser();
-      if (user) {
-        setUser(user);
-        setMenuItems(generateMenuItems(user));
-        setSelectedComponent(`/menu/students-for-update/${user.identityNumber}`);
-      } else {
-        addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
-    }
-  };
+  // const getBaseUser = async () => {
+  //   try {
+  //     const user = await MySingletonService.getInstance().getBaseUser();
+  //     if (user) {
+  //       setUser(user);
+  //       setMenuItems(generateMenuItems(user));
+  //       setSelectedComponent(`/menu/students-for-update/${user.identityNumber}`);
+  //     } else {
+  //       addMessage('אופס, שגיאה בקבלת הנתונים- לא נמצא עובד', 'error');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching user data:', error);
+  //     addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
+  //   }
+  // };
 
   const generateMenuItems = (user: BaseUser) => [
     // const menuItems = [
@@ -202,6 +204,8 @@ const Menu: React.FC = () => {
             <Route path="employee-form/" element={<EmployeeForm />} />
             <Route path="upload-year/" element={<UploadYearComponent />} />
             <Route path="data-management/" element={<DataManagementComponent  />} />
+            <Route path="simple-student-status/:studentId/" element={<SimpleStudentStatusTable  />} />
+            <Route path="status-options/:studentId/" element={<StatusOptionsDashboard  />} />
 
             {/* <Route path="another-component" element={<AnotherComponent />} /> */}
           </Routes>

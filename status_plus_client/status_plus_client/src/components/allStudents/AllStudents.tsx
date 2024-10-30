@@ -135,48 +135,53 @@ const AllStudents = () => {
             addMessage('Error retrieving student status', 'error');
         }
     };
-    // when try to see student status
+    // open the status of the student
     const onViewingStudentStatusClick = async (student_id: string) => {
-        debugger
         const isStatusFinish = await checkStudentStatus(Number(student_id));
-        if (isStatusFinish) {
+        const numbersOfValues = isStatusFinish.numbersOfValues[0][0];
+        if ((numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) || numbersOfValues.totalDistinctExpectedValues === numbersOfValues.totalFinalChoiceValues) {
             const conflictsList = await getConflictsList(student_id);
             if (conflictsList.length === 0) {
-                navigate(`/menu/student-status/${student_id}`, { state: { from: location.pathname } });
+                navigate(`/menu/status-options/${student_id}`, { state: { from: location.pathname } });
             }
             else {
                 addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
             }
         }
         else {
-            addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
+            const employees = isStatusFinish.numbersOfValues[1];
+            printError(employees);
         }
-    };
+    }
+    // print the list of employees who not fill thw status
+    const printError = (employees: any[]) => {
+        const incompleteEmployees = employees
+            .filter(employee => employee.totalValuesFilled !== employee.totalValuesToFill)
+            .map(employee => employee.employeeName);  // Extract employee names
+
+        if (incompleteEmployees.length > 0) {
+            const employeeNamesList = incompleteEmployees.join(', ');
+            addMessage(`סטטוס התלמיד עדיין לא מוכן, ישנם אנשי צוות שעדיין לא מילאו: ${employeeNamesList}`, "error");
+        } else {
+            addMessage("Student status is not ready yet, cannot be displayed", "error");
+        }
+
+    }
     // check if all employees fill the status
     const checkStudentStatus = async (studentId: number) => {
         try {
             const year = await getYearForSystem();
             const responseFromDB = await studentStatusService.checkStudentStatus(studentId, year);
-            const numbersOfValues = responseFromDB.numbersOfValues[0][0];
-            if (numbersOfValues.totalFilledValues === 0) {
-                return false;
-            }
-            if ((numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues)
-                || (numbersOfValues.totalDistinctExpectedValues === numbersOfValues.totalFinalChoiceValues) ) {
-                return true;
-            }
-            else {
-                return false;
-            }
+            return responseFromDB;
         } catch (error) {
             addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
         }
     }
     // get the conflicts list
     const getConflictsList = async (studentId: string) => {
-        const employeeNumber = Number(studentId);
+        const student_id = Number(studentId);
         try {
-            const studentConflictsResponse = await studentStatusService.getConflictsList(employeeNumber);
+            const studentConflictsResponse = await studentStatusService.getConflictsList(student_id);
             const conflictsList = studentConflictsResponse.conflictsList[0];
             return conflictsList;
         } catch (error) {
@@ -282,7 +287,6 @@ const AllStudents = () => {
                 const mappedStudent: { [key: string]: any } = {};
                 for (const [hebrewKey, value] of Object.entries(student)) {
                     const englishKey = columnMapping[hebrewKey] || hebrewKey;
-                    debugger
                     if (englishKey === 'city') {
                         const city = cities.find((c) => c.cityDesc === value);
                         mappedStudent[englishKey] = city ? city.cityId : null;

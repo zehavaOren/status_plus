@@ -1,9 +1,9 @@
 export interface ConflictChoice {
     valueId: number;
-    studentId: number;
+    studentId: string;
     year: string;
-    strength: boolean;
-    weakness: boolean;
+    strength: number;
+    weakness: number;
     notes: string;
-    employeeId: number;
+    employeeId: string;
 }

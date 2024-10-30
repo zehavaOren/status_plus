@@ -1,9 +1,10 @@
 export interface StudentStatusValue {
     valueId: number;
-    valueDesc:string;
+    valueDesc: string;
     categoryId: number;
     categoryDesc: string;
-    studentGrade:string;
-    employeeId:string;
-    note: string
+    studentGrade: string;
+    employeeId: string;
+    note: string;
+    isHadConflict: boolean;
 }

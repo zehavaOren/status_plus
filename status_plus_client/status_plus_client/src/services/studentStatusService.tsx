@@ -129,10 +129,10 @@ export const studentStatusService = {
             throw new Error(`Error fetching employees: ${error.message}`);
         }
     },
-    
+
     getConflictsList: async (studentId: number) => {
         try {
-            const response = await fetch(`${BASE_URL}/getConflictList/${studentId}/`);
+            const response = await fetch(`${BASE_URL}/getConflictList/${studentId}`);
             if (!response.ok) {
                 throw new Error('Error fetching employees');
             }
@@ -206,5 +206,24 @@ export const studentStatusService = {
         } catch (error: any) {
             throw new Error(`Error fetching employees: ${error.message}`);
         }
-    }
+    },
+
+    removeDuplicateValuesForStudent: async (studentId: string, year: string, employeeId: string) => {
+        try {
+            const response = await fetch(`${BASE_URL}/removeDuplicateValuesForStudent`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ studentId, year, employeeId })
+            });
+            if (!response.ok) {
+                throw new Error('Error removing duplicate values');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error removing duplicate values: ${error.message}`);
+        }
+    },
+
 }

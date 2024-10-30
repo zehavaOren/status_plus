@@ -2,21 +2,26 @@ import { useRef, useState, useEffect } from 'react';
 import { Button, Spin, Table, Tag, Tooltip, Typography, Row, Col } from 'antd';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { DownloadOutlined } from '@ant-design/icons';
+import jsPDF from 'jspdf';
 
-import Message from '../Message';
-import { studentStatusService } from '../../services/studentStatusService';
+import Message from '../../Message';
+import { studentStatusService } from '../../../services/studentStatusService';
 import './StudentStatusTable.css';
-import { StudentStatusValue } from '../../models/StudentStatusValue';
+import { StudentStatusValue } from '../../../models/StudentStatusValue';
+import CategoryPieChart from './CategoryPieChart';
 
 const { Title } = Typography;
-
 interface CategoryData {
     category: string;
     strengths: StudentStatusValue[];
     weaknesses: StudentStatusValue[];
 }
+interface CategoryData2 {
+    category: string;
+    weaknesses: number;
+}
+
 
 const StudentStatusTable = () => {
     const { studentId } = useParams<{ studentId: string }>();
@@ -28,10 +33,11 @@ const StudentStatusTable = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [studentDet, setStudentDet] = useState<{ studentName: string; year: string }>();
+    const [categoryDataList, setCategoryDataList] = useState<CategoryData2[]>([]);
 
     useEffect(() => {
         fetchStudentStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const addMessage = (message: string, type: any) => {
@@ -45,10 +51,32 @@ const StudentStatusTable = () => {
             setEmployeeDetails(response.studentStatusData[0]);
             setStudentDet(response.studentStatusData[1][0]);
             setStudentStatus(response.studentStatusData[2]);
+            const processedData = processStudentStatusData(response.studentStatusData[2]);
+            setCategoryDataList(processedData.categories);
         } catch (error) {
             addMessage('Error fetching student status', 'error');
         }
         setLoading(false);
+    };
+    // prepare datat to pie off weakness
+    const processStudentStatusData = (data: any[]) => {
+        const groupedData: { [key: string]: CategoryData2 } = {};
+        let totalWeaknesses = 0;
+
+        data.forEach((item) => {
+            if (item.studentGrade === 'Weakness') {
+                totalWeaknesses++;
+                if (!groupedData[item.categoryDesc]) {
+                    groupedData[item.categoryDesc] = { category: item.categoryDesc, weaknesses: 0 };
+                }
+                groupedData[item.categoryDesc].weaknesses++;
+            }
+        });
+
+        // Convert the grouped data object into an array
+        const categories = Object.values(groupedData);
+
+        return { categories, totalWeaknesses };
     };
     // set the data
     const groupedData = studentStatus.reduce((acc, curr) => {
@@ -69,6 +97,8 @@ const StudentStatusTable = () => {
             key: index,
             strength: categoryData.strengths[index]?.valueDesc || '',
             weakness: categoryData.weaknesses[index]?.valueDesc || '',
+            strengthConflict: categoryData.strengths[index]?.isHadConflict || false,
+            weaknessConflict: categoryData.weaknesses[index]?.isHadConflict || false,
         }));
 
         const columns = [
@@ -76,9 +106,12 @@ const StudentStatusTable = () => {
                 title: 'חוזקה',
                 dataIndex: 'strength',
                 key: 'strength',
-                render: (text: string) => (
+                render: (text: string, record: any) => (
                     <Tooltip title={text}>
-                        <Tag color="green" style={{ fontSize: '16px', whiteSpace: 'normal', wordWrap: 'break-word' }}>{text}</Tag>
+                        <Tag color="green" style={{ fontSize: '16px', whiteSpace: 'normal', wordWrap: 'break-word' }}>
+                            {text}
+                            {record.strengthConflict && <span style={{ color: 'red', marginLeft: '5px' }}>★</span>} {/* Add star for conflict */}
+                        </Tag>
                     </Tooltip>
                 ),
             },
@@ -86,9 +119,12 @@ const StudentStatusTable = () => {
                 title: 'חולשה',
                 dataIndex: 'weakness',
                 key: 'weakness',
-                render: (text: string) => (
+                render: (text: string, record: any) => (
                     <Tooltip title={text}>
-                        <Tag color="red" style={{ fontSize: '16px', whiteSpace: 'normal', wordWrap: 'break-word' }}>{text}</Tag>
+                        <Tag color="red" style={{ fontSize: '16px', whiteSpace: 'normal', wordWrap: 'break-word' }}>
+                            {text}
+                            {record.weaknessConflict && <span style={{ color: 'red', marginLeft: '5px' }}>★</span>} {/* Add star for conflict */}
+                        </Tag>
                     </Tooltip>
                 ),
             },
@@ -142,7 +178,7 @@ const StudentStatusTable = () => {
                 heightLeft -= pageHeight - margin * 2;
             }
 
-            pdf.save(`Student_Status_${studentDet?.studentName}_${studentDet?.year}.pdf`);
+            pdf.save(`סטטוס התלמיד ${studentDet?.studentName}-${studentDet?.year}.pdf`);
         } catch (error) {
             addMessage('Error generating PDF', 'error');
         }
@@ -150,7 +186,7 @@ const StudentStatusTable = () => {
     };
     // navigate back- to privious component
     const navigateBack = () => {
-        navigate(location.state?.from || '/menu/students-for-update');
+        navigate(location.state?.from || `/menu/status-options/${studentId}`);
     };
 
     return (
@@ -164,7 +200,7 @@ const StudentStatusTable = () => {
 
             {/* Header section with buttons */}
             <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '1000px' }}>
+                <div style={{ display: 'flex', gap: '30px' }}>
                     <Button
                         icon={<DownloadOutlined />}
                         type="primary"
@@ -194,7 +230,7 @@ const StudentStatusTable = () => {
                         ))}
                     </Row>
                 </div>
-
+                <CategoryPieChart categories={categoryDataList} />
                 {Object.values(groupedData).map((categoryData) => (
                     <div key={categoryData.category} style={{ marginBottom: '20px' }}>
                         <Title level={4} style={{ textAlign: 'center' }}>{categoryData.category}</Title>

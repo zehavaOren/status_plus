@@ -2,6 +2,7 @@ import { Button } from 'antd';
 import Table, { ColumnType } from 'antd/es/table';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
+
 import { studentStatusService } from '../../services/studentStatusService';
 import Message from '../Message';
 import { MySingletonService } from '../../services/MySingletonService';
@@ -24,6 +25,25 @@ const StudentConflictsList = () => {
     // message managment
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
+    };
+    // navigate
+    // Ensure consistent absolute path when navigating back
+    const from = useMemo(() => {
+        if (location.state?.from) {
+            return location.state.from;
+        }
+        if (employeeDet.permission === 1 || employeeDet.permission === 2) {
+            return `/menu/students-for-update/${employeeId}`;
+        } else if (employeeDet.permission === 3) {
+            return `/menu/all-students`;
+        } else {
+            return '/menu';
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [employeeDet, location.state?.from]);
+    // navigate to privious component
+    const navigateBack = () => {
+        navigate(from);
     };
     // get correct year
     const getYearForSystem = () => {
@@ -69,25 +89,40 @@ const StudentConflictsList = () => {
     // when clicking to resolve conflict to student
     const onConflictHandlingClick = async (student: any) => {
         const isStatusFinish = await checkStudentStatus(Number(student.studentId));
-        if (isStatusFinish) {
+        const numbersOfValues = isStatusFinish.numbersOfValues[0][0];
+        if ((numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) || numbersOfValues.totalDistinctExpectedValues === numbersOfValues.totalFinalChoiceValues) {
             navigate(`/menu/conflicts-list/${student.studentId}`, { state: { from: location.pathname } });
         }
         else {
-            addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות לפתור קונפליקטים", "error");
+            if (employeeDet.permission === 1) {
+                addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
+            }
+            else {
+                const employees = isStatusFinish.numbersOfValues[1];
+                printError(employees);
+            }
         }
+    }
+    // print the list of employees who not fill thw status
+    const printError = (employees: any[]) => {
+        const incompleteEmployees = employees
+            .filter(employee => employee.totalValuesFilled !== employee.totalValuesToFill)
+            .map(employee => employee.employeeName);  // Extract employee names
+
+        if (incompleteEmployees.length > 0) {
+            const employeeNamesList = incompleteEmployees.join(', ');
+            addMessage(`סטטוס התלמיד עדיין לא מוכן, ישנם אנשי צוות שעדיין לא מילאו: ${employeeNamesList}`, "error");
+        } else {
+            addMessage("Student status is not ready yet, cannot be displayed", "error");
+        }
+
     }
     // check if all employees fill the status
     const checkStudentStatus = async (studentId: number) => {
         try {
             const year = await getYearForSystem();
             const responseFromDB = await studentStatusService.checkStudentStatus(studentId, year);
-            const numbersOfValues = responseFromDB.numbersOfValues[0][0];
-            if ((numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues) || numbersOfValues.totalDistinctExpectedValues === numbersOfValues.totalFinalChoiceValues) {
-                return true;
-            }
-            else {
-                return false;
-            }
+            return responseFromDB;
         } catch (error) {
             addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
         }
@@ -135,6 +170,9 @@ const StudentConflictsList = () => {
             <div className="header">
                 <h1 className="title">תלמידים עם קונפליקטים</h1>
             </div>
+            <Button onClick={navigateBack} style={{ backgroundColor: '#d6e7f6' }}>
+                חזרה
+            </Button>
             <br />
             <div className="container">
                 <div className="inner-container">

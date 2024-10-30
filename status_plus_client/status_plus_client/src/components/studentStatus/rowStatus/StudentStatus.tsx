@@ -4,12 +4,12 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 import './StudentStatus.css'
-import { studentStatusService } from '../../services/studentStatusService';
-import { StudentStatusValue } from '../../models/StudentStatusValue';
+import { studentStatusService } from '../../../services/studentStatusService';
+import { StudentStatusValue } from '../../../models/StudentStatusValue';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import Message from '../Message';
+import Message from '../../Message';
 import { DownloadOutlined } from '@ant-design/icons';
-import { MySingletonService } from '../../services/MySingletonService';
+import { MySingletonService } from '../../../services/MySingletonService';
 
 const { Title } = Typography;
 
@@ -40,13 +40,8 @@ const StudentStatus = () => {
         if (location.state?.from) {
             return location.state.from;
         }
-        if (employeeDet.permission === 1 || employeeDet.permission === 2) {
-            return `/menu/students-for-update/${employeeDet.identityNumber}`;
-        } else if (employeeDet.permission === 3) {
-            return `/menu/all-students`;
-        } else {
-            return '/menu';
-        }
+        return `/menu/status-options/${studentId}`;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [employeeDet, location.state?.from]);
 
     // get data
@@ -68,8 +63,14 @@ const StudentStatus = () => {
     const columns = [
         {
             title: 'ערך',
-            dataIndex: 'valueDesc',
             key: 'valueDesc',
+            dataIndex: 'valueDesc',
+            render: (text: string, record: StudentStatusValue) => (
+                <span>
+                    {text}
+                    {record.isHadConflict && <span style={{ color: 'red', marginLeft: '5px' }}>   ★</span>}
+                </span>
+            ),
         },
         {
             title: 'חוזקה',
@@ -129,10 +130,6 @@ const StudentStatus = () => {
     const navigateBack = () => {
         navigate(from);
     };
-    // navigate to table status
-    const changeVision = () => {
-        navigate(`/menu/student-status-table/${studentId}`, { state: { from: location.pathname } });
-    }
     // generate pdf
     const generatePDF = async () => {
         if (!contentRef.current) {
@@ -162,7 +159,7 @@ const StudentStatus = () => {
                 heightLeft -= pageHeight;
             }
 
-            pdf.save(`Student_Status_${studentDet?.studentName}_${studentDet?.year}.pdf`);
+            pdf.save(`סטטוס התלמיד${studentDet?.studentName}-${studentDet?.year}.pdf`);
         } catch (error) {
             console.error('Error generating PDF:', error);
             addMessage('שגיאה ביצירת PDF', 'error');
@@ -193,7 +190,6 @@ const StudentStatus = () => {
                         >
                             הורד כ-PDF
                         </Button>
-                        <Button onClick={changeVision} style={{ marginRight: '60px' }}>שנה תצוגה</Button>
                     </div>
                 </div>
             </div>
