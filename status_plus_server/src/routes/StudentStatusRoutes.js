@@ -21,5 +21,6 @@ router.post('/upsertConflictResolution', studentStatusController.upsertConflictR
 router.get('/checkStudentStatus/:studentId/:year', studentStatusController.checkStudentStatus);
 router.post('/upsertStudentStatusReady/', studentStatusController.upsertStudentStatusReady);
 router.get('/getHistoryStudentStatuses/:studentId', studentStatusController.getHistoryStudentStatuses);
+router.post('/removeDuplicateValuesForStudent', studentStatusController.removeDuplicateValuesForStudent);
 
 module.exports = router;

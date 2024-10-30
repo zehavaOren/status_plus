@@ -162,6 +162,7 @@ const checkStudentStatus = async (req, res) => {
 
 const upsertStudentStatusReady = async (req, res) => {
     const studentId = req.body.studentId;
+    const year = req.body.year;
     try {
         const studentStatusReady = await dbService.executeStoredProcedure('sp_stpl_upsert_student_status_ready', { studentId, year });
         res.status(200).json({ studentStatusReady });
@@ -180,7 +181,22 @@ const getHistoryStudentStatuses = async (req, res) => {
         console.error(err);
         res.status(500).json({ error: 'An error occurred while processing the request' });
     }
-}
+};
+
+const removeDuplicateValuesForStudent = async (req, res) => {
+    const studentId = req.body.studentId;
+    const year = req.body.year;
+    const employeeId = req.body.employeeId;
+
+    try {
+        const removingDuplicateRows = await dbService.executeStoredProcedure('sp_remove_duplicate_values_for_student', { studentId, year, employeeId });
+        res.status(200).json({ removingDuplicateRows });
+    } catch (err) {
+        console.error('Error removing duplicate values:', err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
+
 
 module.exports = {
     getStudentsStatuses,
@@ -197,5 +213,6 @@ module.exports = {
     upsertConflictResolution,
     checkStudentStatus,
     upsertStudentStatusReady,
-    getHistoryStudentStatuses
+    getHistoryStudentStatuses,
+    removeDuplicateValuesForStudent
 };
