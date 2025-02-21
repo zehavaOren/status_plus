@@ -27,6 +27,10 @@ const AllStudents = () => {
     const [grades, setGrades] = useState<{ gradeId: number; gradeDesc: string }[]>([]);
 
     useEffect(() => {
+        const savedGradeFilter = sessionStorage.getItem('gradeFilter');
+        if (savedGradeFilter) {
+            setGradeFilter(savedGradeFilter);
+        }
         getStudents();
         getYearForSystem();
         getCitiesList();
@@ -243,6 +247,9 @@ const AllStudents = () => {
     };
     // on edit syudet details
     const onUpdateStudentClick = (student: Student) => {
+        if (gradeFilter) {
+            sessionStorage.setItem('gradeFilter', gradeFilter);
+        }
         navigate(`/menu/student-details/${student.studentId}`, { state: { from: location.pathname } });
     };
     // when try delete student
