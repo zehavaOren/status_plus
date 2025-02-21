@@ -348,6 +348,12 @@ const StatusForm = () => {
             {/* Display student's name */}
             <h1 style={{ textAlign: 'center', margin: '20px 0' }}>טופס סטטוס התלמיד: {studentName}</h1>
 
+            <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                <Button type="primary" onClick={handleSaveAll} loading={isSaving}>
+                    שמור הכל
+                </Button>
+            </div>
+
             <div className="steps-container">
                 <Steps current={currentStep} onChange={handleStepChange}>
                     {categories.map((category) => (
