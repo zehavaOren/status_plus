@@ -228,6 +228,7 @@ const ConflictHandling = () => {
     };
     // Save the data
     const handleSave = async () => {
+        setLoading(true);
         const dataToSave = fullData.filter(item => item.choice);
         if (dataToSave.length > 0) {
             const dataToSend = await mapProcessedConflictDataToConflictChoice(dataToSave);
@@ -259,7 +260,9 @@ const ConflictHandling = () => {
             } catch (error) {
                 addMessage('שגיאה בשמירת השינויים', 'error');
             }
+            setLoading(false);
         } else {
+            setLoading(false);
             addMessage('אין שינויים לשמירה', 'info');
         }
     };
