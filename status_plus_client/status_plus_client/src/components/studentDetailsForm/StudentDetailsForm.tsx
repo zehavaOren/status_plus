@@ -260,7 +260,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                 student_id: values.studentId,
                 employee_id: mandatoryMorningTeacher,
                 year: fullYear,
-                job_id: jobId, 
+                job_id: jobId,
             });
         }
         const studSave = await saveStudentDetails(studentDetail);
@@ -423,7 +423,13 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                 </Col>
                                 <Col span={6}>
                                     <Form.Item label="עיר" name="cityId" rules={[{ required: true, message: 'חובה לבחור עיר' }]}>
-                                        <Select>
+                                        <Select
+                                            showSearch
+                                            placeholder="בחר עיר"
+                                            optionFilterProp="children"
+                                            filterOption={(input, option) =>
+                                                (option?.children as unknown as string).toLowerCase().includes(input.toLowerCase())
+                                            }>
                                             {citiesList.map(city => (
                                                 <Option key={city.cityId} value={city.cityId}>
                                                     {city.cityDesc}
