@@ -229,8 +229,10 @@ const StudentsForUpdate = () => {
                 key: 'grade',
                 filters: gradeFilterOptions,
                 onFilter: (value: any, record: any) => {
-                    return record.grade?.trim() === (value as string).trim();
-                },
+                    const grade = record.grade ? record.grade.trim().toLowerCase() : ''; 
+                    const filterValue = (value as string).trim().toLowerCase();
+                    return grade === filterValue;
+                },                
             },
             {
                 title: 'עדכון סטטוס תלמיד',
