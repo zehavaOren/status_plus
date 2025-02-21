@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Form, Input, Button, Card, Row, Col, Select, DatePicker, Modal, Spin } from 'antd';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import moment from 'moment';
+import { MinusCircleOutlined } from '@ant-design/icons';
 
 import './StudentDetailsForm.css';
 import { StudentForm } from '../../models/StudentForm';
@@ -29,16 +30,14 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     const [studentDetails, setStudentDetails] = useState<StudentForm | null>(null);
     const [citiesList, setCitiesList] = useState<{ cityId: number, cityDesc: string }[]>([]);
     const [jobForEmployee, setJobForEmployee] = useState<JobForEmployee[]>([]);
-    const [educators, setEducators] = useState<JobForEmployee[]>([]);
-    const [occupationalClinics, setOccupationalClinics] = useState<JobForEmployee[]>([]);
-    const [languageTeachers, setLanguageTeachers] = useState<JobForEmployee[]>([]);
     const [gradeList, setGradeList] = useState<Grade[]>([]);
     const [selectedGradeClasses, setSelectedGradeClasses] = useState<number[]>([]);
     const [grade, setGrade] = useState<number>();
     const [jobsList, setJobsList] = useState<{ jobId: number, jobDescription: string }[]>([]);
     const [jobsAndEmployees, setJobsAndEmployees] = useState<Array<{ job: number, employee: string }>>([]);
     const [isItemDisabled, setIsItemDisabled] = useState(false);
-    const [employeesForStudent, setEmployeesForStudent] = useState<string[]>([]);
+    const [employeesForStudent, setEmployeesForStudent] = useState<JobForEmployee[]>([]);
+    const [mandatoryMorningTeacher, setMandatoryMorningTeacher] = useState<string | undefined>(undefined);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isFormChanged, setIsFormChanged] = useState(false);
     const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
@@ -47,29 +46,21 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         if (studentId) {
             fetchStudentDetails(studentId);
             setIsItemDisabled(true);
-        }
-        else {
+        } else {
             setIsItemDisabled(false);
         }
         getGradesList();
         getCitiesList();
         getJobForEmployee();
         getJobsList();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
     useEffect(() => {
         if (studentDetails) {
-            // Populate the form with student details
             form.setFieldsValue({
                 ...studentDetails,
                 birthDate: studentDetails.birthDate ? moment(studentDetails.birthDate) : null,
-                morningTeacher: studentDetails.morningTeacher || undefined,
-                afternoonTeacher: studentDetails.afternoonTeacher || undefined, // Ensure this is populated
-                occupationalTherapist: studentDetails.occupationalTherapist || undefined,
-                communicationTherapist: studentDetails.communicationTherapist || undefined,
             });
-            // Check if the selected grade has associated classes and update the class dropdown
             if (studentDetails.gradeId) {
                 handleGradeChange(studentDetails.gradeId);
                 if (studentDetails.classId) {
@@ -79,28 +70,12 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                 }
             }
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentDetails, form]);
-
-    // Ensure form correctly updates morning and afternoon teachers after educators are fetched
-    // useEffect(() => {
-    //     if (studentDetails) {
-    //         // Fetch educators after student details are populated
-    //         form.setFieldsValue({
-    //             // Convert studentDetails.morningTeacher to string for comparison
-    //             morningTeacher: jobForEmployee.find(job => job.job_id === 10 && job.employee_id === String(studentDetails.morningTeacher))?.employee_id || undefined,
-    //             // Convert studentDetails.afternoonTeacher to string for comparison
-    //             afternoonTeacher: jobForEmployee.find(job => job.job_id === 11 && job.employee_id === String(studentDetails.afternoonTeacher))?.employee_id || undefined,
-    //         });
-    //     }
-    // }, [jobForEmployee, studentDetails, form]);
-
-
 
     const addMessage = (message: string, type: any) => {
         setMessages(prev => [...prev, { message, type, id: Date.now() }]);
     };
-    // Determine the back navigation route
+    // navigate
     const from = useMemo(() => {
         if (location.state?.from) {
             return location.state.from;
@@ -113,26 +88,32 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
             return location.state?.from || '/menu';
         }
     }, [employeeDet, location.state?.from]);
-    // get correct year
+    // get year
     const getYearForSystem = (): string => {
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth() + 1;
-        const year = currentMonth > 10 ? currentYear + 1 : currentYear;
+        const year = currentMonth > 11 ? currentYear + 1 : currentYear;
         return year.toString();
     };
-    // get the student details and init the form
+    // get data
     const fetchStudentDetails = async (studentId: string, isShowError?: boolean) => {
         setLoading(true);
         try {
             const responseFromDB = await studentService.getStudentDeatils(studentId);
             const studentDetails = responseFromDB.studentDetails[0][0];
-            await fetchEducators(studentDetails.gradeId, studentDetails.classId);
             setStudentDetails({
                 ...studentDetails,
                 birthDate: studentDetails.birthDate ? moment(studentDetails.birthDate) : null,
             });
-            const employees = responseFromDB.studentDetails[1].map((e: { employeeId: any }) => e.employeeId);
+
+            const employees = responseFromDB.studentDetails[1].map((employee: any) => ({
+                employee_id: employee.employeeId,
+                job_id: employee.jobId,
+                name: employee.employeeName || 'Unnamed Employee',
+                job_description: employee.jobDescription || 'Unknown Job'
+            }));
+
             setEmployeesForStudent(employees);
         } catch (error) {
             if (!isShowError) {
@@ -142,93 +123,44 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
             setLoading(false);
         }
     };
-    const moratBokerEducators = educators.filter((educator) => educator.job_id === 10);
-    const moratTzaherEducators = educators.filter((educator) => educator.job_id === 11);
-    // get the list of the cities
+    // get cities
     const getCitiesList = async () => {
         try {
             const responseFromDB = await commonService.getCities();
             setCitiesList(responseFromDB.citiesList[0]);
         } catch (error) {
-            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
-        } finally {
-            setLoading(false);
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
         }
-    }
-    // get the list of the jobs
+    };
+    // get jobs
     const getJobsList = async () => {
         try {
             const responseFromDB = await commonService.getJobs();
             setJobsList(responseFromDB.jobsList[0]);
         } catch (error) {
-            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
-        } finally {
-            setLoading(false);
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
         }
-    }
-    // get the list of the employee for students
+    };
+    // get employees and jobs
     const getJobForEmployee = async () => {
         try {
             const responseFromDB = await commonService.getJobForEmployee();
-            const jobs = await responseFromDB.jobs[0];
-            setJobForEmployee(jobs);
-            filterJobs(jobs);
+            setJobForEmployee(responseFromDB.jobs[0]);
         } catch (error) {
-            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
-        } finally {
-            setLoading(false);
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
         }
-    }
-    // get the list of the grades
+    };
+    // get classes
     const getGradesList = async () => {
         try {
             const responseFromDB = await commonService.getGradesAndClasses();
-            const grades = await responseFromDB.gradesAndClasses[0];
-            const perfectGrades = await addUniqueIdsToGrades(grades);
-            setGradeList(perfectGrades);
+            const grades: Grade[] = responseFromDB.gradesAndClasses[0];
+            setGradeList(grades.map((grade: Grade, index: number) => ({ ...grade, id: index + 1 })));
         } catch (error) {
-            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
-        } finally {
-            setLoading(false);
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
         }
-    }
-    // get the list of the employee according to the grade and class that choos
-    const getEmployeesByGrade = async (gradeId: number, classId: number | null) => {
-        const data = {
-            'gradeId': gradeId,
-            'classId': classId
-        };
-        try {
-            const responseFromDB = await employeeService.getEmployeesByGrade(data);
-            return responseFromDB.employeesDetails[0];
-        } catch (error) {
-            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
-        } finally {
-            setLoading(false);
-        }
-    }
-    // map the employee to the correct input according to his job
-    const filterJobs = async (jobs: JobForEmployee[]) => {
-        const educatorsArray = jobs.filter(job => job.job_id === 10 || job.job_id === 11 || job.job_id === 23);
-        const occupationalClinicsArray = jobs.filter(job => job.job_id === 19);
-        const languageTeachersArray = jobs.filter(job => job.job_id === 18);
-
-        setEducators(educatorsArray);
-        setOccupationalClinics(occupationalClinicsArray);
-        setLanguageTeachers(languageTeachersArray);
-
-    }
-    // add id to the grade list to add unique key
-    const addUniqueIdsToGrades = async (grades: Grade[]) => {
-        return grades.map((grade, index) => {
-            return { ...grade, id: index + 1 };
-        });
-    }
-    // map the grade list to select new id as id
-    const uniqueGrades = Array.from(
-        new Map(gradeList.map(grade => [grade.gradeId, grade])).values()
-    );
-    // funcionality when grade change to add or remove class input
+    };
+    // hen grade changed
     const handleGradeChange = (value: number) => {
         const selectedGrade = gradeList.find(grade => grade.gradeId === value);
         setGrade(selectedGrade?.gradeId);
@@ -236,66 +168,48 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
             const classes = gradeList
                 .filter(grade => grade.gradeId === selectedGrade.gradeId && grade.classId !== null)
                 .map(grade => grade.classId);
-
             setSelectedGradeClasses(classes);
         } else {
             setSelectedGradeClasses([]);
         }
-
-        // Fetch the educators based on the selected grade
-        if (selectedGrade) {
-            fetchEducators(selectedGrade.gradeId, null);
-        }
     };
-    // funcionality when class change to put the correct employee according to the coose value
+    // when class changed
     const handleClassChange = async (value: number) => {
-        const selectedClass = gradeList.find(grade => grade.classId === value);
-        const classId = selectedClass?.classId;
-        await fetchEducators(grade! || studentDetails?.gradeId!, classId!);
-        form.setFieldsValue({
-            classId: value,
-            morningTeacher: undefined,
-            afternoonTeacher: undefined,
-            occupationalTherapist: undefined,
-            communicationTherapist: undefined,
-        });
+        form.setFieldsValue({ classId: value });
     };
-    // choose the educators acoording to the grade and class that choos
-    const fetchEducators = async (gradeId: number, classId: number | null) => {
-        const educatorsFromService = await getEmployeesByGrade(gradeId, classId);
-        const educatorIds = educatorsFromService.map((e: { employee_id: any }) => e.employee_id);
-
-        const morningTeacher = jobForEmployee.find(
-            job => job.job_id === 10 && educatorIds.includes(job.employee_id) && job.employee_id === String(studentDetails?.morningTeacher)
-        );
-        const afternoonTeacher = jobForEmployee.find(
-            job => job.job_id === 11 && educatorIds.includes(job.employee_id) && job.employee_id === String(studentDetails?.afternoonTeacher)
-        );
-        const occupationalTherapist = jobForEmployee.find(
-            job => job.job_id === 19 && educatorIds.includes(job.employee_id) && job.employee_id === String(studentDetails?.occupationalTherapist)
-        );
-        const communicationTherapist = jobForEmployee.find(
-            job => job.job_id === 18 && educatorIds.includes(job.employee_id) && job.employee_id === String(studentDetails?.communicationTherapist)
-        );
-        // Set the form with the new teacher names
-        form.setFieldsValue({
-            morningTeacher: morningTeacher?.employee_id || undefined,
-            afternoonTeacher: afternoonTeacher?.employee_id || undefined,
-            occupationalTherapist: occupationalTherapist?.employee_id || undefined,
-            communicationTherapist: communicationTherapist?.employee_id || undefined,
-        });
+    // add another inputs
+    const addJobAndEmployee = () => {
+        setJobsAndEmployees([...jobsAndEmployees, { job: 0, employee: '' }]);
     };
-    // whne finish fill the form
+    // when change job
+    const handleJobChange = (index: number, value: number) => {
+        const newRolesAndEmployees = [...jobsAndEmployees];
+        newRolesAndEmployees[index].job = value;
+        newRolesAndEmployees[index].employee = '';
+        setJobsAndEmployees(newRolesAndEmployees);
+    };
+    // when employee change
+    const handleEmployeeChange = (index: number, value: string) => {
+        const newRolesAndEmployees = [...jobsAndEmployees];
+        newRolesAndEmployees[index].employee = value;
+        setJobsAndEmployees(newRolesAndEmployees);
+    };
+    // when finish to fill the form
     const handleFinish = (values: any) => {
         onSave(values);
     };
-    // when canceling the form
+    // when cancek the form
     const onCancel = () => {
         showModal();
-    }
-    // when saving the form
+    };
+    // saving the datat
     const onSave = async (values: StudentForm) => {
-        const studentDeail = {
+        if (!hasMandatoryTeacherAssigned && !mandatoryMorningTeacher) {
+            addMessage('יש לבחור מורה בוקר או רב כחובה', 'error');
+            return;
+        }
+
+        const studentDetail = {
             'studentId': values.studentId,
             'lastName': values.lastName,
             'firstName': values.firstName,
@@ -306,100 +220,76 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
             'cityId': values.cityId,
             'gradeId': values.gradeId,
             'classId': values.classId
-        }
+        };
         const fullYear = await getYearForSystem();
-        const employeesForStudent = [{
-            'student_id': values.studentId,
-            'employee_id': values.morningTeacher.toString(),
-            'year': fullYear,
-            'job_id': 10
-        },
-        {
-            'student_id': values.studentId,
-            'employee_id': values.communicationTherapist.toString(),
-            'year': fullYear,
-            'job_id': 18
-        },
-        {
-            'student_id': values.studentId,
-            'employee_id': values.afternoonTeacher.toString(),
-            'year': fullYear,
-            'job_id': 11
-        },
-        {
-            'student_id': values.studentId,
-            'employee_id': values.occupationalTherapist.toString(),
-            'year': fullYear,
-            'job_id': 19
-        }
-        ];
-        // eslint-disable-next-line array-callback-return
-        jobsAndEmployees.map(job => {
-            const perfectJob = {
-                'student_id': values.studentId,
-                'employee_id': job.employee,
-                'year': fullYear,
-                'job_id': job.job
+        const filteredJobsAndEmployees = [];
+        for (const job of jobsAndEmployees) {
+            try {
+                if (!isItemDisabled) {
+                    filteredJobsAndEmployees.push({
+                        'student_id': values.studentId,
+                        'employee_id': job.employee,
+                        'year': fullYear,
+                        'job_id': job.job
+                    });
+                }
+                else {
+                    const result = await studentService.checkExistingJob(Number(studentId!), fullYear, job.job);
+                    const checkResult = result.exitingEmployees[0][0];
+                    if (checkResult.resultJobId === -1) {
+                        addMessage("הסטטוס מוכן, לא ניתן להוסיף", "error");
+                    } else if (checkResult.resultJobId === job.job) {
+                        addMessage("כבר קיים עובד עם תפקיד זה", "error");
+                    } else {
+                        filteredJobsAndEmployees.push({
+                            'student_id': values.studentId,
+                            'employee_id': job.employee,
+                            'year': fullYear,
+                            'job_id': job.job
+                        });
+                    }
+                }
+            } catch (error) {
+                addMessage(`שגיאה בבדיקת קיום העובד`, "error");
             }
-            employeesForStudent.push(perfectJob);
-        })
-        const studSave = await saveStudentDetails(studentDeail);
-        const resEmpSave = await saveEmployeesForStudent(employeesForStudent);
+        }
+        const jobId = jobForEmployee.find(emp => emp.employee_id === mandatoryMorningTeacher)?.job_id;
+
+        if (!isItemDisabled && mandatoryMorningTeacher) {
+            filteredJobsAndEmployees.push({
+                student_id: values.studentId,
+                employee_id: mandatoryMorningTeacher,
+                year: fullYear,
+                job_id: jobId, 
+            });
+        }
+        const studSave = await saveStudentDetails(studentDetail);
+        const resEmpSave = await saveEmployeesForStudent(filteredJobsAndEmployees);
+
         if (studSave === 'success' && resEmpSave === 'success') {
             addMessage('הנתונים נשמרו בהצלחה', 'success');
             setTimeout(() => {
                 navigate(from);
             }, 1000);
-        }
-        else {
+        } else {
             addMessage('אופס- שגיאה בשמירת הנתונים', 'error');
         }
-
-    }
-    // save the students details
+    };
+    // save the form
     const saveStudentDetails = async (studentDet: any) => {
         const saveStudentRes = await studentService.upsertStudentDetails(studentDet);
-        if (saveStudentRes.studentDetailsSave[0][0].status === 1) {
-            return "success";
-        }
-        return "error";
-    }
-    // save the employees for studnet list
+        return saveStudentRes.studentDetailsSave[0][0].status === 1 ? "success" : "error";
+    };
+    // save employees for student
     const saveEmployeesForStudent = async (employeesForStudent: any[]) => {
         const employeesStudentRes = await studentService.upsertEmployeesForStudent(employeesForStudent);
-        // eslint-disable-next-line array-callback-return
-        employeesStudentRes.map(empUpsert => {
-            if (empUpsert.status !== "success") {
-                return "error";
-            }
-        })
-        return "success";
-    }
-    // add inputs for new job and employee
-    const addJobAndEmployee = () => {
-        setJobsAndEmployees([...jobsAndEmployees, { job: 0, employee: '' }]);
+        return employeesStudentRes.every(empUpsert => empUpsert.status === "success") ? "success" : "error";
     };
-    // when change the job- change the employees list
-    const handleJobChange = (index: number, value: number) => {
-        const newRolesAndEmployees = [...jobsAndEmployees];
-        newRolesAndEmployees[index].job = value;
-        setJobsAndEmployees(newRolesAndEmployees);
-    };
-    // when change the employee- change the job
-    const handleEmployeeChange = (index: number, value: string) => {
-        const newRolesAndEmployees = [...jobsAndEmployees];
-        newRolesAndEmployees[index].employee = value;
-        setJobsAndEmployees(newRolesAndEmployees);
-    };
-    // get the data of student with the written ID
-    const handleStudentIdBlur: React.FocusEventHandler<HTMLInputElement> = (event) => {
-        fetchStudentDetails(event.target.value, true);
-    };
-    // update that there is a change in the form
-    const onFieldsChange = (changedFields: any, allFields: any) => {
+    // form changed
+    const onFieldsChange = () => {
         setIsFormChanged(true);
     };
-    // show modal to confirm returning
+    // confirm returned from the form
     const showModal = () => {
         if (isFormChanged) {
             setIsModalVisible(true);
@@ -407,23 +297,65 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
             navigateBack();
         }
     };
-    // confirm returning
+    // confirm return without saving
     const handleOk = () => {
         setIsModalVisible(false);
         navigateBack();
     };
-    // cancel returning
+    // cancel form
     const handleCancel = () => {
         setIsModalVisible(false);
     };
-    // navigate to the privious component
+    // navigate back
     const navigateBack = () => {
         navigate(from);
     };
+    // show or remove the educator input
+    const hasMandatoryTeacherAssigned = useMemo(() => {
+        return employeesForStudent.some(emp => emp.job_id === 10 || emp.job_id === 24);
+    }, [employeesForStudent]);
+
+    // Function to handle removing an employee from the student's list
+    const handleRemoveEmployee = async (employeeId: string) => {
+        const jobId = jobForEmployee.find(emp => emp.employee_id === employeeId)?.job_id;
+        if (jobId === 10) {
+            addMessage("אין אפשרות להסיר מחנך/ת או רב מהתלמיד", "error");
+            return;
+        }
+        const result = await studentService.checkExistingJob(Number(studentId!), getYearForSystem(), jobId!);
+        if (result.exitingEmployees[0][0].status === 1) {
+            addMessage(result.exitingEmployees[0][0].msg, "error");
+        } else {
+            // Proceed with deletion if status = 0
+            const year = await getYearForSystem();
+            const employeeDeleted = await employeeService.deleteEmployeeForStudet(studentId!, employeeId, year);
+            if (employeeDeleted.employeeDelete[0].status === 1) {
+                addMessage("העובד הוסר מהתלמיד בהצלחה", "success");
+                fetchStudentDetails(studentId!); // Refresh the list after deletion
+            } else {
+                addMessage("שגיאה בהסרת העובד מהתלמיד", "error");
+            }
+        }
+        // if (employees === 0) {
+        //     const year = await getYearForSystem();
+        //     const employeeDeleted = await employeeService.deleteEmployeeForStudet(studentId!, employeeId, year);
+        //     if (employeeDeleted.employeeDelete[0].status === 1) {
+        //         addMessage("העובד הוסר מהתלמיד בהצלחה", "success");
+        //     }
+        //     else {
+        //         addMessage("שגיאה בהסרת העובד מהתלמיד", "error");
+        //     }
+        // }
+        // else {
+        //     addMessage(`אין אפשרות להסיר עובד שמילא סטטוס תלמיד`, "error");
+        // }
+    };
+
+
     return (
         <>
             <div style={{ direction: 'ltr' }}>
-                <Message messages={messages} duration={5000} />
+                <Message messages={messages} duration={6000} />
                 {loading && (
                     <div className="loading-overlay">
                         <Spin size="large" />
@@ -436,7 +368,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                     </Button>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '1px' }}>
-                    <Message messages={messages} duration={5000} />
                     <Card style={{ borderRadius: '10px', width: '90%', maxWidth: '1200px', direction: 'rtl', backgroundColor: '#b4d3ef' }}>
                         <Form
                             form={form}
@@ -455,7 +386,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                             value={studentId}
                                             disabled={isItemDisabled}
                                             style={{ backgroundColor: 'white' }}
-                                            onBlur={handleStudentIdBlur}
                                         />
                                     </Form.Item>
                                 </Col>
@@ -477,7 +407,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                             </Row>
                             <Row gutter={16}>
                                 <Col span={6}>
-                                    <Form.Item label="טלפון 1" name="phone1" rules={[{ required: true, message: 'חובה למלא טלפון' }]}>
+                                    <Form.Item label="טלפון 1" name="phone1">
                                         <Input />
                                     </Form.Item>
                                 </Col>
@@ -507,7 +437,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                 <Col span={6}>
                                     <Form.Item label="שכבה" name="gradeId" rules={[{ required: true, message: 'חובה לבחור שכבה' }]}>
                                         <Select placeholder="בחר שכבה" onChange={handleGradeChange}>
-                                            {uniqueGrades.map(grade => (
+                                            {gradeList.map(grade => (
                                                 <Option key={grade.id} value={grade.gradeId}>
                                                     {grade.gradeDesc}
                                                 </Option>
@@ -530,56 +460,26 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                 )}
                             </Row>
                             <Row gutter={16}>
-                                <Col span={6}>
-                                    <Form.Item label="מורת בוקר" name="morningTeacher" rules={[{ required: true, message: 'חובה לבחור מורת בוקר' }]}>
-                                        <Select>
-                                            {moratBokerEducators.map((educator) => (
-                                                <Option key={educator.employee_id} value={educator.employee_id}>
-                                                    {educator.name}
-                                                </Option>
-                                            ))}
-                                        </Select>
-                                    </Form.Item>
+                                <Col span={24}>
+                                    <h3>רשימת עובדים:</h3>
                                 </Col>
-                                <Col span={6}>
-                                    <Form.Item
-                                        label="קלינאית תקשורת"
-                                        name="communicationTherapist"
-                                        rules={[{ required: true, message: 'חובה לבחור קלינאית תקשורת' }]}
-                                    >
-                                        <Select>
-                                            {languageTeachers.map(languageTeacher => (
-                                                <Option key={languageTeacher.employee_id} value={languageTeacher.employee_id}>
-                                                    {languageTeacher.name}
-                                                </Option>
-                                            ))}
-                                        </Select>
-                                    </Form.Item>
-
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item label="מורת צהריים" name="afternoonTeacher" rules={[{ required: true, message: 'חובה לבחור מורת צהרים' }]}>
-                                        <Select>
-                                            {moratTzaherEducators.map((educator) => (
-                                                <Option key={educator.employee_id} value={educator.employee_id}>
-                                                    {educator.name}
-                                                </Option>
-                                            ))}
-                                        </Select>
-                                    </Form.Item>
-
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item label="מרפאה בעיסוק" name="occupationalTherapist" rules={[{ required: true, message: 'חובה לבחור מרפאה בעיסוק' }]}>
-                                        <Select>
-                                            {occupationalClinics.map(occupationalClinic => (
-                                                <Option key={occupationalClinic.employee_id} value={occupationalClinic.employee_id}>
-                                                    {occupationalClinic.name}
-                                                </Option>
-                                            ))}
-                                        </Select>
-                                    </Form.Item>
-                                </Col>
+                                {employeesForStudent.length > 0 ? (
+                                    employeesForStudent.map((employee, index) => (
+                                        <Col span={6} key={index}>
+                                            <Form.Item label={employee.job_description}>
+                                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                    <Input value={employee.name} disabled />
+                                                    <MinusCircleOutlined
+                                                        style={{ marginLeft: '8px', color: 'red', cursor: 'pointer' }}
+                                                        onClick={() => handleRemoveEmployee(employee.employee_id)}
+                                                    />
+                                                </div>
+                                            </Form.Item>
+                                        </Col>
+                                    ))
+                                ) : (
+                                    <p>אין נתונים להצגה</p>
+                                )}
                             </Row>
                             <div className="inner-frame">
                                 <Row gutter={16}>
@@ -596,6 +496,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                                 <Select
                                                     onChange={(value) => handleJobChange(index, value)}
                                                     value={roleAndEmployee.job}
+                                                    placeholder="בחר תפקיד"
                                                 >
                                                     {jobsList.map(job => (
                                                         <Option key={job.jobId} value={job.jobId}>
@@ -610,9 +511,10 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                                 <Select
                                                     onChange={(value) => handleEmployeeChange(index, value)}
                                                     value={roleAndEmployee.employee}
+                                                    placeholder="בחר עובד"
                                                 >
                                                     {jobForEmployee
-                                                        .filter(job => job.job_id === roleAndEmployee.job)
+                                                        .filter(emp => emp.job_id === roleAndEmployee.job)
                                                         .map(filteredEmployee => (
                                                             <Option key={filteredEmployee.employee_id} value={filteredEmployee.employee_id}>
                                                                 {filteredEmployee.name}
@@ -624,6 +526,33 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                     </Row>
                                 ))}
                             </div>
+                            {!hasMandatoryTeacherAssigned && (
+                                <div className="mandatory-teacher-section">
+                                    <Row gutter={16}>
+                                        <Col span={12}>
+                                            <Form.Item
+                                                label="מורה בוקר / רב (חובה)"
+                                                rules={[{ required: true, message: 'יש לבחור מורה בוקר או רב' }]}
+                                            >
+                                                <Select
+                                                    placeholder="בחר מורה בוקר / רב"
+                                                    onChange={(value) => setMandatoryMorningTeacher(value)}
+                                                    value={mandatoryMorningTeacher}>
+                                                    {jobForEmployee
+                                                        .filter(emp => emp.job_id === 10 || emp.job_id === 24)
+                                                        .map(emp => (
+                                                            <Option key={emp.employee_id} value={emp.employee_id}>
+                                                                {emp.name}
+                                                            </Option>
+                                                        ))}
+                                                </Select>
+                                            </Form.Item>
+                                        </Col>
+                                    </Row>
+                                </div>
+                            )}
+
+
                             <Form.Item>
                                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
                                     <Button type="primary" htmlType="submit">
@@ -651,4 +580,5 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         </>
     );
 };
+
 export default StudentDetailsForm;

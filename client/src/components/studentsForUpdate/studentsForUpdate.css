@@ -1,0 +1,67 @@
+/* StudentsForUpdate.css */
+
+.container {
+    direction: rtl;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+  }
+  
+  .inner-container {
+    width: 100%;
+    max-width: 1200px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    box-sizing: border-box;
+    background-color: white;
+  }
+  
+  .search-container {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 16px;
+  }
+  
+  .search-input {
+    width: 200px;
+    margin-right: auto;
+    margin-left: 16px;
+    border: 2px solid #0056b3; /* Thicker border */
+    border-radius: 4px;
+  }
+  
+  .table {
+    background-color: white;
+    border-radius: 8px;
+  }
+  
+  .table-row-light {
+    background-color: #d6e7f6;
+  }
+  
+  .table-row-dark {
+    background-color: white;
+  }
+  
+  .title {
+    text-align: center;
+    color: black;
+    margin-bottom: -20px;
+  }
+  
+  .icon {
+    width: 24px;
+    height: 24px;
+  }
+  .add-student-button{
+    margin-right: auto;
+    margin-left: -990px;
+    width:200px;
+    height:40px;
+  }
+  .header{
+    justify-content: space-between;
+    align-items: center;
+  }

@@ -1,0 +1,36 @@
+.fixed-row-height {
+    height: 50px;  /* Set a fixed height for each row */
+}
+.fixed-row-height td {
+    height: 50px;  /* Set a fixed height for each row */
+    vertical-align: middle;  /* Center the text vertically */
+}
+.wrapped-row td {
+    vertical-align: top;  /* Ensure text in both columns aligns at the top */
+    word-wrap: break-word;  /* Break long words to fit into the column */
+    white-space: normal;  /* Allow the text to wrap onto multiple lines */
+}
+.pdf-content {
+    background-color: #ffffff;
+    min-height: 100%;
+    padding: 40px;
+    overflow: visible;
+    max-width: calc(100% - 80px); /* Account for left and right margins */
+    margin: 0 auto;
+}
+
+/* Ensure tables don't overflow margins */
+.ant-table {
+    page-break-inside: avoid;
+    margin-bottom: 20px;
+    width: 100% !important;
+    max-width: 100%;
+}
+
+/* Ensure text content stays within margins */
+.ant-typography, 
+.ant-list,
+.ant-tag {
+    max-width: 100%;
+    word-wrap: break-word;
+}

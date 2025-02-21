@@ -1,8 +1,7 @@
 import { Employee } from "../models/Employee";
 
 const BASE_URL = 'http://localhost:4000/employee';
-// const BASE_URL = `${process.env.REACT_APP_API_BASE_URL}/employee`;
-
+// const BASE_URL = `${process.env.REACT_APP_BASE_URL}/employee`;
 
 export const employeeService = {
 
@@ -89,5 +88,21 @@ export const employeeService = {
         }
     },
 
+    deleteEmployeeForStudet: async (studentId: string, employeeId: string, year: string) => {
+        try {
+            const response = await fetch(`${BASE_URL}/deleteEmployeeForStudet/${studentId}/${employeeId}/${year}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!response.ok) {
+                throw new Error('Error deleting employee');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error deleting employee: ${error.message}`);
+        }
+    },
 }
 

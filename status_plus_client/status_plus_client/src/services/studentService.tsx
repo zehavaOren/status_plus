@@ -2,7 +2,7 @@ import { JobForEmployee } from "../models/JobForEmployee";
 import { StudentForm } from "../models/StudentForm";
 
 const BASE_URL = 'http://localhost:4000/student';
-// const BASE_URL = `${process.env.REACT_APP_API_BASE_URL}/student`;
+// const BASE_URL = `${process.env.REACT_APP_BASE_URL}/student`;
 
 export const studentService = {
 
@@ -147,6 +147,18 @@ export const studentService = {
         } catch (error) {
             console.error('Error uploading PDF:', error);
             throw new Error(`Error uploading PDF: ${error}`);
+        }
+    },
+
+    checkExistingJob: async (studentId: number, year: string, jobId: number) => {
+        try {
+            const response = await fetch(`${BASE_URL}/checkExistingJob/${studentId}/${year}/${jobId}`);
+            if (!response.ok) {
+                throw new Error('Error fetching employees');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
         }
     },
 }
