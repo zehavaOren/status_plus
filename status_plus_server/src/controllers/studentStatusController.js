@@ -79,8 +79,9 @@ const upsertStudentStatus = async (req, res) => {
     const notes = req.body.notes;
     const year = req.body.year;
     const isFinalChoice = req.body.isFinalChoice;
+    const isNotRelevant = req.body.isNotRelevant;
     try {
-        const studentStatusSave = await dbService.executeStoredProcedure('sp_stpl_upsert_student_status', { studentId, employeeId, valueId, strength, weakness, notes, year, isFinalChoice });
+        const studentStatusSave = await dbService.executeStoredProcedure('sp_stpl_upsert_student_status', { studentId, employeeId, valueId, strength, weakness, notes, year, isFinalChoice, isNotRelevant });
         res.status(200).json({ studentStatusSave });
     } catch (err) {
         console.error(err);
@@ -197,6 +198,18 @@ const removeDuplicateValuesForStudent = async (req, res) => {
     }
 };
 
+const deleteIsNotRelevantValues = async (req, res) => {
+    const studentId = req.body.studentId;
+    const year = req.body.year;
+
+    try {
+        const notRelevantValues = await dbService.executeStoredProcedure('sp_stpl_delete_is_not_relevant_values', { studentId, year });
+        res.status(200).json({ notRelevantValues });
+    } catch (err) {
+        console.error('Error removing duplicate values:', err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
 
 module.exports = {
     getStudentsStatuses,
@@ -214,5 +227,6 @@ module.exports = {
     checkStudentStatus,
     upsertStudentStatusReady,
     getHistoryStudentStatuses,
-    removeDuplicateValuesForStudent
+    removeDuplicateValuesForStudent,
+    deleteIsNotRelevantValues
 };

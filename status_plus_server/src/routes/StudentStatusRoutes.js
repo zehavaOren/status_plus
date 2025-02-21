@@ -22,5 +22,6 @@ router.get('/checkStudentStatus/:studentId/:year', studentStatusController.check
 router.post('/upsertStudentStatusReady/', studentStatusController.upsertStudentStatusReady);
 router.get('/getHistoryStudentStatuses/:studentId', studentStatusController.getHistoryStudentStatuses);
 router.post('/removeDuplicateValuesForStudent', studentStatusController.removeDuplicateValuesForStudent);
+router.post('/deleteIsNotRelevantValues', studentStatusController.deleteIsNotRelevantValues);
 
 module.exports = router;

@@ -16,6 +16,7 @@ router.post('/upsertEmployeesForStudent/', studentController.upsertEmployeesForS
 router.delete('/deleteStudent/', studentController.deleteStudent);
 router.post('/importStudents/', studentController.importStudents);
 router.post('/uploadStudentPDF/', studentController.uploadStudentPDF);
+router.get('/checkExistingJob/:studentId/:year/:jobId', studentController.checkExistingJob);
 
 module.exports = router;
 

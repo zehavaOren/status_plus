@@ -32,7 +32,7 @@ app.use('/file', fileRoutes);
 app.use('/common', commonRoutes)
 
 app.use(function(req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*'); // אפשר להגביל את המקורות המותרים
+  res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   if (req.method === 'OPTIONS') {

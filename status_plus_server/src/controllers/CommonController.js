@@ -58,7 +58,8 @@ const getGrade = async (req, res) => {
         console.error(err);
         res.status(500).json({ error: 'An error occurred while processing the request' });
     }
-}
+};
+
 module.exports = {
     getCities,
     getJobForEmployee,

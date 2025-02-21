@@ -55,7 +55,7 @@ const upsertStudentDetails = async (req, res) => {
 };
 
 const upsertEmployeesForStudent = async (req, res) => {
-    const { student_id, employee_id, year, job_id } = req.body;    
+    const { student_id, employee_id, year, job_id } = req.body;
     try {
         const employeesForStudentSave = await dbService.executeStoredProcedure('sp_stpl_upsert_employee_for_student_details',
             { student_id: student_id, employee_id: employee_id, year: year, job_id: job_id });
@@ -79,7 +79,7 @@ const deleteStudent = async (req, res) => {
 };
 
 const importStudents = async (req, res) => {
-    const { studentId, lastName, firstName, phone1, phone2, birthDate, address, city, grade, clas } = req.body;    
+    const { studentId, lastName, firstName, phone1, phone2, birthDate, address, city, grade, clas } = req.body;
     try {
         const studentsFileImported = await dbService.executeStoredProcedure('sp_stpl_import_student',
             {
@@ -122,6 +122,19 @@ const uploadStudentPDF = async (req, res) => {
     }
 };
 
+const checkExistingJob = async (req, res) => {
+    const studentId = req.params.studentId;
+    const year = req.params.year;
+    const jobId = req.params.jobId;    
+    try {
+        const exitingEmployees = await dbService.executeStoredProcedure('sp_stpl_check_existing_job', { studentId: studentId, year: year, jobId: jobId });
+        res.status(200).json({ exitingEmployees });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
+
 module.exports = {
     getAllStdents,
     getStudentsForUpdate,
@@ -130,5 +143,6 @@ module.exports = {
     upsertEmployeesForStudent,
     deleteStudent,
     importStudents,
-    uploadStudentPDF
+    uploadStudentPDF,
+    checkExistingJob
 };
