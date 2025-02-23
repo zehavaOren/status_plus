@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Button, Form, Input, Select, Spin, Modal, Card, Col, Row } from "antd";
+import { Button, Form, Input, Select, Spin, Modal, Card, Col, Row, Popconfirm } from "antd";
 
 import { Employee } from "../../models/Employee";
 import { employeeService } from "../../services/employeeService";
@@ -26,6 +26,8 @@ const EmployeeForm = () => {
     const [jobs, setJobs] = useState<Job[]>([]);
     const [permission, setPermission] = useState<Permission[]>([]);
     const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
+    const [isPopConfirmVisible, setIsPopConfirmVisible] = useState(false);
+    const [tempEmployeeId, setTempEmployeeId] = useState<string | null>(null);
 
     useEffect(() => {
         if (employeeId) {
@@ -95,9 +97,10 @@ const EmployeeForm = () => {
     };
     // Save form data
     const onFinish = async (values: Employee) => {
-        if (!employeeId) {
-            return;
-        }
+        debugger;
+        // if (!employeeId) {
+        //     return;
+        // }
         setLoading(true);
         try {
             const result = await employeeService.upsertEmployee(values);
@@ -137,9 +140,36 @@ const EmployeeForm = () => {
         navigate(from);
     };
     // get the data of student with the written ID
-    const handleemployeeIdBlur: React.FocusEventHandler<HTMLInputElement> = (event) => {
-        fetchEmployeeData(event.target.value);
+    const handleemployeeIdBlur: React.FocusEventHandler<HTMLInputElement> = async (event) => {
+        const enteredId = event.target.value.trim();
+        if (!enteredId) return;
+        setTempEmployeeId(enteredId);
+        setLoading(true);
+        const responseFromDB = await employeeService.getEmployeeById(Number(enteredId));
+        if (responseFromDB.employeeData[0][0].identityNumber) {
+            setLoading(false);
+            setIsPopConfirmVisible(true);
+        }
+        else {
+            setLoading(false);
+            setIsPopConfirmVisible(false);
+        }
     };
+
+    //function when confirm to edit exiting employee
+    const handleConfirmEditStudent = async () => {
+        if (tempEmployeeId) {
+            await fetchEmployeeData(tempEmployeeId);
+            form.setFieldsValue({ studentId: tempEmployeeId });
+        }
+        setIsPopConfirmVisible(false);
+    };
+    //fucntion when cancel edit exiting employee
+    const handleCancelEditStudent = () => {
+        form.resetFields(["identityNumber"]);
+        setIsPopConfirmVisible(false);
+    };
+
     return (
         <div>
             {loading && (
@@ -167,7 +197,21 @@ const EmployeeForm = () => {
                                     label="תעודת זהות"
                                     name="identityNumber"
                                     rules={[{ required: true, message: 'חובה למלא תעודת זהות' }]}>
-                                    <Input disabled={!!employeeId} onBlur={handleemployeeIdBlur} />
+                                    <Popconfirm
+                                        title="עובד עם תעודת זהות זו כבר קיים. האם ברצונך לערוך את פרטיו?"
+                                        open={isPopConfirmVisible}
+                                        onConfirm={handleConfirmEditStudent}
+                                        onCancel={handleCancelEditStudent}
+                                        okText="כן, ערוך"
+                                        cancelText="לא, אפס"
+                                    >
+                                        <Input
+                                            disabled={!!employeeId}
+                                            onBlur={handleemployeeIdBlur}
+                                            style={{ backgroundColor: 'white' }}
+                                        />
+                                    </Popconfirm>
+                                    {/* <Input  onBlur={handleemployeeIdBlur} /> */}
                                 </Form.Item>
                             </Col>
                             <Col span={6}>

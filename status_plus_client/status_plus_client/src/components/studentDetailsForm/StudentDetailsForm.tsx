@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Form, Input, Button, Card, Row, Col, Select, DatePicker, Modal, Spin } from 'antd';
+import { Form, Input, Button, Card, Row, Col, Select, DatePicker, Modal, Spin, Popconfirm } from 'antd';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import moment from 'moment';
 import { MinusCircleOutlined } from '@ant-design/icons';
@@ -41,6 +41,8 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isFormChanged, setIsFormChanged] = useState(false);
     const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
+    const [isPopConfirmVisible, setIsPopConfirmVisible] = useState(false);
+    const [tempStudentId, setTempStudentId] = useState<string | null>(null);
 
     useEffect(() => {
         if (studentId) {
@@ -350,6 +352,35 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         //     addMessage(`אין אפשרות להסיר עובד שמילא סטטוס תלמיד`, "error");
         // }
     };
+    // function on blur the ID input to get the exiting student data
+    const handleStudentIdBlur: React.FocusEventHandler<HTMLInputElement> = async (event) => {
+        const enteredId = event.target.value.trim();
+        if (!enteredId) return;
+        setTempStudentId(enteredId);
+        setLoading(true);
+        const responseFromDB = await studentService.getStudentDeatils(enteredId);
+        if (responseFromDB.studentDetails[0][0].studentId) {
+            setLoading(false);
+            setIsPopConfirmVisible(true);
+        }
+        else {
+            setLoading(false);
+            setIsPopConfirmVisible(false);
+        }
+    };
+    //function when confirm to edit exiting student
+    const handleConfirmEditStudent = async () => {
+        if (tempStudentId) {
+            await fetchStudentDetails(tempStudentId);
+            form.setFieldsValue({ studentId: tempStudentId });
+        }
+        setIsPopConfirmVisible(false);
+    };
+    //fucntion when cancel edit exiting student
+    const handleCancelEditStudent = () => {
+        form.resetFields(["studentId"]);
+        setIsPopConfirmVisible(false);
+    };
 
 
     return (
@@ -381,13 +412,35 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                         label="תעודת זהות"
                                         className="disabledInput"
                                         name="studentId"
+                                        rules={[{ required: true, message: 'חובה למלא תעודת זהות' }]}
+                                    >
+                                        <Popconfirm
+                                            title="תלמיד עם תעודת זהות זו כבר קיים. האם ברצונך לערוך את פרטיו?"
+                                            open={isPopConfirmVisible}
+                                            onConfirm={handleConfirmEditStudent}
+                                            onCancel={handleCancelEditStudent}
+                                            okText="כן, ערוך"
+                                            cancelText="לא, אפס"
+                                        >
+                                            <Input
+                                                onBlur={handleStudentIdBlur}
+                                                style={{ backgroundColor: 'white' }}
+                                            />
+                                        </Popconfirm>
+                                    </Form.Item>
+
+                                    {/* <Form.Item
+                                        label="תעודת זהות"
+                                        className="disabledInput"
+                                        name="studentId"
                                         rules={[{ required: true, message: 'חובה למלא תעודת זהות' }]}>
                                         <Input
                                             value={studentId}
                                             disabled={isItemDisabled}
                                             style={{ backgroundColor: 'white' }}
+                                            onBlur={handleStudentIdBlur}
                                         />
-                                    </Form.Item>
+                                    </Form.Item> */}
                                 </Col>
                                 <Col span={6}>
                                     <Form.Item label="שם משפחה" name="lastName" rules={[{ required: true, message: 'חובה למלא שם משפחה' }]}>
