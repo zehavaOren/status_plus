@@ -359,7 +359,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         setTempStudentId(enteredId);
         setLoading(true);
         const responseFromDB = await studentService.getStudentDeatils(enteredId);
-        if (responseFromDB.studentDetails[0][0].studentId) {
+        if (responseFromDB.studentDetails[0][0]) {
             setLoading(false);
             setIsPopConfirmVisible(true);
         }
@@ -373,6 +373,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         if (tempStudentId) {
             await fetchStudentDetails(tempStudentId);
             form.setFieldsValue({ studentId: tempStudentId });
+            form.validateFields(["studentId"]);
         }
         setIsPopConfirmVisible(false);
     };
@@ -425,6 +426,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                             <Input
                                                 onBlur={handleStudentIdBlur}
                                                 style={{ backgroundColor: 'white' }}
+                                                onChange={(e) => form.setFieldsValue({ studentId: e.target.value })} 
                                             />
                                         </Popconfirm>
                                     </Form.Item>

@@ -97,7 +97,6 @@ const EmployeeForm = () => {
     };
     // Save form data
     const onFinish = async (values: Employee) => {
-        debugger;
         // if (!employeeId) {
         //     return;
         // }
@@ -139,14 +138,14 @@ const EmployeeForm = () => {
     const navigateBack = () => {
         navigate(from);
     };
-    // get the data of student with the written ID
+    // get the data of employee with the written ID
     const handleemployeeIdBlur: React.FocusEventHandler<HTMLInputElement> = async (event) => {
         const enteredId = event.target.value.trim();
         if (!enteredId) return;
         setTempEmployeeId(enteredId);
         setLoading(true);
         const responseFromDB = await employeeService.getEmployeeById(Number(enteredId));
-        if (responseFromDB.employeeData[0][0].identityNumber) {
+        if (responseFromDB.employeeData[0][0]) {
             setLoading(false);
             setIsPopConfirmVisible(true);
         }
@@ -157,15 +156,17 @@ const EmployeeForm = () => {
     };
 
     //function when confirm to edit exiting employee
-    const handleConfirmEditStudent = async () => {
+    const handleConfirmEditEmployee = async () => {
         if (tempEmployeeId) {
             await fetchEmployeeData(tempEmployeeId);
-            form.setFieldsValue({ studentId: tempEmployeeId });
+            form.setFieldsValue({ identityNumber: tempEmployeeId });
+            form.validateFields(["identityNumber"]);
+            // form.setFieldsValue({ studentId: tempEmployeeId });
         }
         setIsPopConfirmVisible(false);
     };
     //fucntion when cancel edit exiting employee
-    const handleCancelEditStudent = () => {
+    const handleCancelEditEmployee = () => {
         form.resetFields(["identityNumber"]);
         setIsPopConfirmVisible(false);
     };
@@ -196,22 +197,23 @@ const EmployeeForm = () => {
                                 <Form.Item
                                     label="תעודת זהות"
                                     name="identityNumber"
-                                    rules={[{ required: true, message: 'חובה למלא תעודת זהות' }]}>
+                                    rules={[{ required: true, message: 'חובה למלא תעודת זהות' }]}
+                                >
                                     <Popconfirm
                                         title="עובד עם תעודת זהות זו כבר קיים. האם ברצונך לערוך את פרטיו?"
                                         open={isPopConfirmVisible}
-                                        onConfirm={handleConfirmEditStudent}
-                                        onCancel={handleCancelEditStudent}
+                                        onConfirm={handleConfirmEditEmployee}
+                                        onCancel={handleCancelEditEmployee}
                                         okText="כן, ערוך"
                                         cancelText="לא, אפס"
                                     >
                                         <Input
                                             disabled={!!employeeId}
                                             onBlur={handleemployeeIdBlur}
+                                            onChange={(e) => form.setFieldsValue({ identityNumber: e.target.value })} // Ensure real-time update
                                             style={{ backgroundColor: 'white' }}
                                         />
                                     </Popconfirm>
-                                    {/* <Input  onBlur={handleemployeeIdBlur} /> */}
                                 </Form.Item>
                             </Col>
                             <Col span={6}>
