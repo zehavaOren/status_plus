@@ -90,7 +90,11 @@ const StudentConflictsList = () => {
     const onConflictHandlingClick = async (student: any) => {
         const isStatusFinish = await checkStudentStatus(Number(student.studentId));
         const numbersOfValues = isStatusFinish.numbersOfValues[0][0];
-        if ((numbersOfValues.totalExpectedValues === (numbersOfValues.totalFilledValues) || (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues + numbersOfValues.totalFinalChoiceValues)) || numbersOfValues.totalDistinctExpectedValues === numbersOfValues.totalFinalChoiceValues) {
+        if ((numbersOfValues.totalExpectedValues === (numbersOfValues.totalFilledValues)
+            || (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues + numbersOfValues.totalFinalChoiceValues))
+            || numbersOfValues.totalDistinctExpectedValues === numbersOfValues.totalFinalChoiceValues
+            || numbersOfValues.totalDistinctExpectedValues == numbersOfValues.totalFinalChoiceValues + numbersOfValues.totalDistinctValuesFilled
+        ) {
             navigate(`/menu/conflicts-list/${student.studentId}`, { state: { from: location.pathname } });
         }
         else {
