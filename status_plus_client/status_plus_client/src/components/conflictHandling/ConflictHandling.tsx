@@ -128,8 +128,18 @@ const ConflictHandling = () => {
                 render: (text: EmployeeChoice) => (
                     <div>
                         <div>בחירה:
-                            <Tag color={text?.choice === 'Strength' ? 'green' : text?.choice === 'Weakness' ? 'red' : 'default'}>
-                                {text?.choice === 'Strength' ? 'חוזקה' : text?.choice === 'Weakness' ? 'חולשה' : 'אין בחירה'}
+                            <Tag
+                                color={
+                                    text?.choice === 'Strength' ? 'green' :
+                                        text?.choice === 'Weakness' ? 'red' :
+                                            text?.choice === 'isNotRelevant' ? 'yellow' :
+                                                'default'
+                                }
+                            >
+                                {text?.choice === 'Strength' ? 'חוזקה' :
+                                    text?.choice === 'Weakness' ? 'חולשה' :
+                                        text?.choice === 'isNotRelevant' ? 'לא רלוונטי' :
+                                            'אין בחירה'}
                             </Tag>
                         </div>
                         <div>הערה: {text?.note}</div>
