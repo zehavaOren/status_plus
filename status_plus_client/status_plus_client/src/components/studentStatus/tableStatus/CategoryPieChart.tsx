@@ -18,8 +18,14 @@ const CategoryPieChart: React.FC<Props> = ({ categories }) => {
             {
                 label: 'חולשות לפי קטגוריה',
                 data: categories.map(c => c.weaknesses),
-                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
-                hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
+                    '#E74C3C', '#8E44AD', '#3498DB', '#1ABC9C', '#2ECC71', '#F39C12', '#D35400'
+                ],
+                hoverBackgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
+                    '#E74C3C', '#8E44AD', '#3498DB', '#1ABC9C', '#2ECC71', '#F39C12', '#D35400'
+                ],
             },
         ],
     };
