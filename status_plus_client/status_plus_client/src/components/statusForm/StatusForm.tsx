@@ -29,6 +29,7 @@ const StatusForm = () => {
     const [studentName, setStudentName] = useState("");
     const [messages, setMessages] = useState<Array<{ message: string; type: any; id: number }>>([]);
     const [unfilledFields, setUnfilledFields] = useState<Record<string, boolean>>({});
+    const [unfilledCategories, setUnfilledCategories] = useState<Set<number>>(new Set());
 
     useEffect(() => {
         getData();
@@ -92,6 +93,15 @@ const StatusForm = () => {
                         : {};
 
                     setUnfilledFields(unfilled);
+                    const unfilledCatIds = new Set<number>();
+                    categories.categories[0].forEach((category: { categoryId: number; }) => {
+                        const categoryValues = valuesRes.valuesList[0].filter((value: { categoryId: number; }) => value.categoryId === category.categoryId);
+                        if (categoryValues.some((value: { valueId: any; }) => unfilled[`value_${value.valueId}`])) {
+                            unfilledCatIds.add(category.categoryId);
+                        }
+                    });
+
+                    setUnfilledCategories(unfilledCatIds);
                 }
 
             } catch (error) {
@@ -364,6 +374,7 @@ const StatusForm = () => {
                                     {category.categoryDesc}
                                 </span>
                             }
+                            status={unfilledCategories.has(category.categoryId) ? "error" : "process"}
                         />
                     ))}
                 </Steps>
