@@ -14,8 +14,9 @@ const getAllStdents = async (req, res) => {
 
 const getStudentsForUpdate = async (req, res) => {
     const employee_id = req.params.employeeId;
+    const year = req.params.year;
     try {
-        const studentsForUpdate = await dbService.executeStoredProcedure('sp_stpl_get_students_for_update_status', { employee_id: employee_id });
+        const studentsForUpdate = await dbService.executeStoredProcedure('sp_stpl_get_students_for_update_status', { employee_id: employee_id, year: year });
         res.status(200).json({ studentsForUpdate });
     } catch (err) {
         console.error(err);
@@ -25,8 +26,9 @@ const getStudentsForUpdate = async (req, res) => {
 
 const getStudentDetails = async (req, res) => {
     const student_id = req.params.student_id;
+    const year = req.params.year;
     try {
-        const studentDetails = await dbService.executeStoredProcedure('sp_stpl_get_student_details', { student_id: student_id });
+        const studentDetails = await dbService.executeStoredProcedure('sp_stpl_get_student_details', { student_id: student_id, year: year });
         res.status(200).json({ studentDetails });
     } catch (err) {
         console.error(err);
@@ -55,7 +57,7 @@ const upsertStudentDetails = async (req, res) => {
 };
 
 const upsertEmployeesForStudent = async (req, res) => {
-    const { student_id, employee_id, year, job_id } = req.body;
+    const { student_id, employee_id, year, job_id } = req.body;    
     try {
         const employeesForStudentSave = await dbService.executeStoredProcedure('sp_stpl_upsert_employee_for_student_details',
             { student_id: student_id, employee_id: employee_id, year: year, job_id: job_id });
@@ -125,7 +127,7 @@ const uploadStudentPDF = async (req, res) => {
 const checkExistingJob = async (req, res) => {
     const studentId = req.params.studentId;
     const year = req.params.year;
-    const jobId = req.params.jobId;    
+    const jobId = req.params.jobId;
     try {
         const exitingEmployees = await dbService.executeStoredProcedure('sp_stpl_check_existing_job', { studentId: studentId, year: year, jobId: jobId });
         res.status(200).json({ exitingEmployees });

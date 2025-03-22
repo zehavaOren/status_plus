@@ -9,8 +9,8 @@ const studentController = require('../controllers/StudentController');
 
 //get student for update by employee_id
 router.get('/getAllStudents/', studentController.getAllStdents);
-router.get('/getStudentsForUpdate/:employeeId', studentController.getStudentsForUpdate);
-router.get('/getStudentDetails/:student_id', studentController.getStudentDetails);
+router.get('/getStudentsForUpdate/:employeeId/:year', studentController.getStudentsForUpdate);
+router.get('/getStudentDetails/:student_id/:year', studentController.getStudentDetails);
 router.post('/upsertStudentDetails/', studentController.upsertStudentDetails);
 router.post('/upsertEmployeesForStudent/', studentController.upsertEmployeesForStudent);
 router.delete('/deleteStudent/', studentController.deleteStudent);
