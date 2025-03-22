@@ -102,7 +102,8 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     const fetchStudentDetails = async (studentId: string, isShowError?: boolean) => {
         setLoading(true);
         try {
-            const responseFromDB = await studentService.getStudentDeatils(studentId);
+            const year = await getYearForSystem();
+            const responseFromDB = await studentService.getStudentDeatils(studentId, year);
             const studentDetails = responseFromDB.studentDetails[0][0];
             setStudentDetails({
                 ...studentDetails,
@@ -148,6 +149,13 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         try {
             const responseFromDB = await commonService.getJobForEmployee();
             setJobForEmployee(responseFromDB.jobs[0]);
+            if (!studentId && employeeDet.permission === 2) {
+                const foundEmployee = responseFromDB.jobs[0].find((emp: { employee_id: string; }) => emp.employee_id === employeeDet.identityNumber);
+                if (foundEmployee) {
+                    setMandatoryMorningTeacher(foundEmployee.employee_id);
+                    form.setFieldsValue({ mandatoryMorningTeacher: foundEmployee.employee_id });
+                }
+            }
         } catch (error) {
             addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
         }
@@ -238,10 +246,19 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                 else {
                     const result = await studentService.checkExistingJob(Number(studentId!), fullYear, job.job);
                     const checkResult = result.exitingEmployees[0][0];
+                    debugger;
                     if (checkResult.resultJobId === -1) {
-                        addMessage("הסטטוס מוכן, לא ניתן להוסיף", "error");
+                        addMessage("הסטטוס מוכן, לא ניתן להוסיף אנשי צוות נוספים", "error");
+                        setTimeout(() => {
+                            navigate(from);
+                        }, 1000);
+                        return;
                     } else if (checkResult.resultJobId === job.job) {
                         addMessage("כבר קיים עובד עם תפקיד זה", "error");
+                        setTimeout(() => {
+                            navigate(from);
+                        }, 1000);
+                        return;
                     } else {
                         filteredJobsAndEmployees.push({
                             'student_id': values.studentId,
@@ -358,7 +375,8 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         if (!enteredId) return;
         setTempStudentId(enteredId);
         setLoading(true);
-        const responseFromDB = await studentService.getStudentDeatils(enteredId);
+        const year = await getYearForSystem();
+        const responseFromDB = await studentService.getStudentDeatils(enteredId, year);
         if (responseFromDB.studentDetails[0][0]) {
             setLoading(false);
             setIsPopConfirmVisible(true);
@@ -424,9 +442,11 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                             cancelText="לא, אפס"
                                         >
                                             <Input
+                                                value={studentId}
+                                                disabled={isItemDisabled}
                                                 onBlur={handleStudentIdBlur}
                                                 style={{ backgroundColor: 'white' }}
-                                                onChange={(e) => form.setFieldsValue({ studentId: e.target.value })} 
+                                                onChange={(e) => form.setFieldsValue({ studentId: e.target.value })}
                                             />
                                         </Popconfirm>
                                     </Form.Item>
@@ -598,7 +618,8 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                                 <Select
                                                     placeholder="בחר מורה בוקר / רב"
                                                     onChange={(value) => setMandatoryMorningTeacher(value)}
-                                                    value={mandatoryMorningTeacher}>
+                                                    value={mandatoryMorningTeacher}
+                                                    disabled={!studentId && employeeDet.permission == 2}>
                                                     {jobForEmployee
                                                         .filter(emp => emp.job_id === 10 || emp.job_id === 24)
                                                         .map(emp => (
