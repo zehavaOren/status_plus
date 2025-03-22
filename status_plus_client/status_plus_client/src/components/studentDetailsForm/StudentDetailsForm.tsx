@@ -283,7 +283,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         }
         const studSave = await saveStudentDetails(studentDetail);
         const resEmpSave = await saveEmployeesForStudent(filteredJobsAndEmployees);
-        debugger;
         if (studSave === 'success' && resEmpSave === 'success') {
             addMessage('הנתונים נשמרו בהצלחה', 'success');
             setTimeout(() => {
@@ -300,7 +299,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     };
     // save employees for student
     const saveEmployeesForStudent = async (employeesForStudent: any[]) => {
-        debugger;
         const employeesStudentRes = await studentService.upsertEmployeesForStudent(employeesForStudent);
         return employeesStudentRes.every(empUpsert => empUpsert.status === "success") ? "success" : "error";
     };
@@ -348,7 +346,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
             // Proceed with deletion if status = 0
             const year = await getYearForSystem();
             const employeeDeleted = await employeeService.deleteEmployeeForStudet(studentId!, employeeId, year);
-            if (employeeDeleted.employeeDelete[0].status === 1) {
+            if (employeeDeleted.employeeDelete[0][0].status === 1) {
                 addMessage("העובד הוסר מהתלמיד בהצלחה", "success");
                 fetchStudentDetails(studentId!); // Refresh the list after deletion
             } else {
