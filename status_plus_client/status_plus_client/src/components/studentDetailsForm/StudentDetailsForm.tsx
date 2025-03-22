@@ -246,7 +246,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                 else {
                     const result = await studentService.checkExistingJob(Number(studentId!), fullYear, job.job);
                     const checkResult = result.exitingEmployees[0][0];
-                    debugger;
                     if (checkResult.resultJobId === -1) {
                         addMessage("הסטטוס מוכן, לא ניתן להוסיף אנשי צוות נוספים", "error");
                         setTimeout(() => {
@@ -274,7 +273,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         }
         const jobId = jobForEmployee.find(emp => emp.employee_id === mandatoryMorningTeacher)?.job_id;
 
-        if (!isItemDisabled && mandatoryMorningTeacher) {
+        if (isItemDisabled && mandatoryMorningTeacher) {
             filteredJobsAndEmployees.push({
                 student_id: values.studentId,
                 employee_id: mandatoryMorningTeacher,
@@ -284,7 +283,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         }
         const studSave = await saveStudentDetails(studentDetail);
         const resEmpSave = await saveEmployeesForStudent(filteredJobsAndEmployees);
-
+        debugger;
         if (studSave === 'success' && resEmpSave === 'success') {
             addMessage('הנתונים נשמרו בהצלחה', 'success');
             setTimeout(() => {
@@ -301,6 +300,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     };
     // save employees for student
     const saveEmployeesForStudent = async (employeesForStudent: any[]) => {
+        debugger;
         const employeesStudentRes = await studentService.upsertEmployeesForStudent(employeesForStudent);
         return employeesStudentRes.every(empUpsert => empUpsert.status === "success") ? "success" : "error";
     };
@@ -518,14 +518,15 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                 <Col span={6}>
                                     <Form.Item label="שכבה" name="gradeId" rules={[{ required: true, message: 'חובה לבחור שכבה' }]}>
                                         <Select placeholder="בחר שכבה" onChange={handleGradeChange}>
-                                            {gradeList.map(grade => (
-                                                <Option key={grade.id} value={grade.gradeId}>
+                                            {[...new Map(gradeList.map(grade => [grade.gradeId, grade])).values()].map(grade => (
+                                                <Option key={grade.gradeId} value={grade.gradeId}>
                                                     {grade.gradeDesc}
                                                 </Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
                                 </Col>
+
                                 {selectedGradeClasses.length > 0 && (
                                     <Col span={6}>
                                         <Form.Item label="רשימת כיתות" name="classId" rules={[{ required: true, message: 'חובה לבחור כיתה' }]}>
