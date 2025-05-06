@@ -54,3 +54,21 @@
   padding: 20px;
   direction: rtl;
 }
+
+.ant-steps-item-process .ant-steps-item-icon {
+  background-color: #91caff !important;
+  border-color: #91caff !important;
+}
+
+.ant-steps-item-process .ant-steps-item-title {
+  color: #409eff !important;
+}
+
+.ant-steps-item-error .ant-steps-item-icon {
+  background-color: #ffa39e !important;
+  border-color: #ffa39e !important;
+}
+
+.ant-steps-item-error .ant-steps-item-title {
+  color: #ff7875 !important;
+}

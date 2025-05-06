@@ -43,6 +43,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
     const [isPopConfirmVisible, setIsPopConfirmVisible] = useState(false);
     const [tempStudentId, setTempStudentId] = useState<string | null>(null);
+    const [isGradeDisabled, setIsGradeDisabled] = useState(false);
 
     useEffect(() => {
         if (studentId) {
@@ -157,7 +158,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                 if (foundEmployee) {
                     setMandatoryMorningTeacher(foundEmployee.employee_id);
                     await getGradesList(foundEmployee);
-
                 }
             }
         } catch (error) {
@@ -187,7 +187,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                         classId: foundEmployee.class_id ?? undefined
                     });
 
-                    setIsItemDisabled(true);
+                    setIsGradeDisabled(true);
                 }
             }
         } catch (error) {
@@ -238,6 +238,20 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
     };
     // saving the datat
     const onSave = async (values: StudentForm) => {
+        console.log(jobsAndEmployees);
+        debugger
+
+        if (!studentId && employeeDet.permission === 2) {
+            const foundEmployee = jobForEmployee.find(
+                (emp: { employee_id: string }) => emp.employee_id === employeeDet.identityNumber
+            );
+            if (foundEmployee) {
+                jobsAndEmployees.push({
+                    job: foundEmployee.job_id,
+                    employee: foundEmployee.employee_id
+                })
+            }
+        }
         if (!hasMandatoryTeacherAssigned && !mandatoryMorningTeacher) {
             addMessage('יש לבחור מורה בוקר או רב כחובה', 'error');
             return;
@@ -539,7 +553,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                             <Row gutter={16}>
                                 <Col span={6}>
                                     <Form.Item label="שכבה" name="gradeId" rules={[{ required: true, message: 'חובה לבחור שכבה' }]}>
-                                        <Select placeholder="בחר שכבה" onChange={handleGradeChange} disabled={isItemDisabled}>
+                                        <Select placeholder="בחר שכבה" onChange={handleGradeChange} disabled={isGradeDisabled}>
                                             {[...new Map(gradeList.map(grade => [grade.gradeId, grade])).values()].map(grade => (
                                                 <Option key={grade.gradeId} value={grade.gradeId}>
                                                     {grade.gradeDesc}
@@ -552,7 +566,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                 {selectedGradeClasses.length > 0 && (
                                     <Col span={6}>
                                         <Form.Item label="רשימת כיתות" name="classId" rules={[{ required: true, message: 'חובה לבחור כיתה' }]}>
-                                            <Select placeholder="בחר כיתה" onChange={handleClassChange} disabled={isItemDisabled}>
+                                            <Select placeholder="בחר כיתה" onChange={handleClassChange} disabled={isGradeDisabled}>
                                                 {selectedGradeClasses.map(classId => (
                                                     <Option key={classId} value={classId}>
                                                         {classId}

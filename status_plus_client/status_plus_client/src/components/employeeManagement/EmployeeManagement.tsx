@@ -124,8 +124,8 @@ const EmployeeManagement = () => {
         },
         {
             title: 'כיתה',
-            dataIndex: 'class',
-            key: 'class',
+            dataIndex: 'classes',
+            key: 'classes',
         },
         {
             title: 'הרשאה',

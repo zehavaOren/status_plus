@@ -26,7 +26,7 @@ const StudentsForUpdate = () => {
 
     useEffect(() => {
         if (hasInitialized.current) return;
-        getStudentsForUpdate(identityNumber || '');
+        getStudentsForUpdate(identityNumber || '',);
         const conflictCheckDone = sessionStorage.getItem('hasCheckedConflicts');
         if (!conflictCheckDone && !hasCheckedConflicts) {
             getIsStudentsWithConflicts();
@@ -50,7 +50,8 @@ const StudentsForUpdate = () => {
     const getStudentsForUpdate = async (identityNumber: string) => {
         setLoading(true);
         try {
-            const responseFromDB = await studentService.getStudentsForUpdate(identityNumber);
+            const year = await getYearForSystem();
+            const responseFromDB = await studentService.getStudentsForUpdate(identityNumber, year);
             const studentsForUpdate = await responseFromDB.studentsForUpdate[0];
             setStudents(studentsForUpdate);
         } catch (error) {

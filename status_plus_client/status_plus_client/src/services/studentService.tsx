@@ -18,10 +18,10 @@ export const studentService = {
         }
     },
 
-    getStudentsForUpdate: async (userId: any) => {
+    getStudentsForUpdate: async (userId: any, year: string) => {
         const employeeId = userId;
         try {
-            const response = await fetch(`${BASE_URL}/getStudentsForUpdate/${employeeId}`);
+            const response = await fetch(`${BASE_URL}/getStudentsForUpdate/${employeeId}/${year}`);
             if (!response.ok) {
                 throw new Error('Error fetching employees');
             }
@@ -31,10 +31,10 @@ export const studentService = {
         }
     },
 
-    getStudentDeatils: async (studentId: string) => {
+    getStudentDeatils: async (studentId: string, year: string) => {
         const student_id = studentId;
         try {
-            const response = await fetch(`${BASE_URL}/getStudentDetails/${student_id}`);
+            const response = await fetch(`${BASE_URL}/getStudentDetails/${student_id}/${year}`);
             if (!response.ok) {
                 throw new Error('Error fetching employees');
             }

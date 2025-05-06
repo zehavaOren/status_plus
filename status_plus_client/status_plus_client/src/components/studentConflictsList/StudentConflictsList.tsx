@@ -93,7 +93,7 @@ const StudentConflictsList = () => {
         if ((numbersOfValues.totalExpectedValues === (numbersOfValues.totalFilledValues)
             || (numbersOfValues.totalExpectedValues === numbersOfValues.totalFilledValues + numbersOfValues.totalFinalChoiceValues))
             || numbersOfValues.totalDistinctExpectedValues === numbersOfValues.totalFinalChoiceValues
-            || numbersOfValues.totalDistinctExpectedValues == numbersOfValues.totalFinalChoiceValues + numbersOfValues.totalDistinctValuesFilled
+            || (numbersOfValues.totalDistinctExpectedValues == numbersOfValues.totalFinalChoiceValues + numbersOfValues.totalDistinctValuesFilled && numbersOfValues.totalFinalChoiceValues != 0)
         ) {
             navigate(`/menu/conflicts-list/${student.studentId}`, { state: { from: location.pathname } });
         }
