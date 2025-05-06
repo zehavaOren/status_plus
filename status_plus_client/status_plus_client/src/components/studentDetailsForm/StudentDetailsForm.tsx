@@ -51,7 +51,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         } else {
             setIsItemDisabled(false);
         }
-        getGradesList();
+        getGradesList({} as JobForEmployee);
         getCitiesList();
         getJobForEmployee();
         getJobsList();
@@ -149,11 +149,15 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         try {
             const responseFromDB = await commonService.getJobForEmployee();
             setJobForEmployee(responseFromDB.jobs[0]);
+
             if (!studentId && employeeDet.permission === 2) {
-                const foundEmployee = responseFromDB.jobs[0].find((emp: { employee_id: string; }) => emp.employee_id === employeeDet.identityNumber);
+                const foundEmployee = responseFromDB.jobs[0].find(
+                    (emp: { employee_id: string }) => emp.employee_id === employeeDet.identityNumber
+                );
                 if (foundEmployee) {
                     setMandatoryMorningTeacher(foundEmployee.employee_id);
-                    form.setFieldsValue({ mandatoryMorningTeacher: foundEmployee.employee_id });
+                    await getGradesList(foundEmployee);
+
                 }
             }
         } catch (error) {
@@ -161,11 +165,31 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
         }
     };
     // get classes
-    const getGradesList = async () => {
+    const getGradesList = async (foundEmployee: JobForEmployee) => {
         try {
             const responseFromDB = await commonService.getGradesAndClasses();
             const grades: Grade[] = responseFromDB.gradesAndClasses[0];
             setGradeList(grades.map((grade: Grade, index: number) => ({ ...grade, id: index + 1 })));
+            if (foundEmployee) {
+                const selectedGrade = responseFromDB.gradesAndClasses[0].find((g: Grade) => g.gradeId === foundEmployee.grade_id);
+
+                if (selectedGrade) {
+                    const classes = responseFromDB.gradesAndClasses[0]
+                        .filter((g: Grade) => g.gradeId === selectedGrade.gradeId && g.classId !== null)
+                        .map((g: Grade) => g.classId!);
+
+                    setGrade(selectedGrade.gradeId);
+                    setSelectedGradeClasses(classes);
+
+                    form.setFieldsValue({
+                        mandatoryMorningTeacher: foundEmployee.employee_id,
+                        gradeId: selectedGrade.gradeId,
+                        classId: foundEmployee.class_id ?? undefined
+                    });
+
+                    setIsItemDisabled(true);
+                }
+            }
         } catch (error) {
             addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
         }
@@ -515,7 +539,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                             <Row gutter={16}>
                                 <Col span={6}>
                                     <Form.Item label="שכבה" name="gradeId" rules={[{ required: true, message: 'חובה לבחור שכבה' }]}>
-                                        <Select placeholder="בחר שכבה" onChange={handleGradeChange}>
+                                        <Select placeholder="בחר שכבה" onChange={handleGradeChange} disabled={isItemDisabled}>
                                             {[...new Map(gradeList.map(grade => [grade.gradeId, grade])).values()].map(grade => (
                                                 <Option key={grade.gradeId} value={grade.gradeId}>
                                                     {grade.gradeDesc}
@@ -528,7 +552,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                                 {selectedGradeClasses.length > 0 && (
                                     <Col span={6}>
                                         <Form.Item label="רשימת כיתות" name="classId" rules={[{ required: true, message: 'חובה לבחור כיתה' }]}>
-                                            <Select placeholder="בחר כיתה" onChange={handleClassChange}>
+                                            <Select placeholder="בחר כיתה" onChange={handleClassChange} disabled={isItemDisabled}>
                                                 {selectedGradeClasses.map(classId => (
                                                     <Option key={classId} value={classId}>
                                                         {classId}
