@@ -17,7 +17,7 @@ const studentRoutes=require(student);
 // const studentRoutes = require('./routes/StudentRoutes');
 const studentStatus = './routes/StudentStatusRoutes';
 const studentStatusRoutes = require(studentStatus);
-const fileRoutes= require('./routes/FileRoutes');
+const fileRoutes = require('./routes/FileRoutes');
 const commonRoutes= require('./routes/CommonRoutes');
 
 const PORT = process.env.PORT || 4000;
