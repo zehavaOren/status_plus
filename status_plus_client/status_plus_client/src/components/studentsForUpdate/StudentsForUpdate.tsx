@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Table, Button, Input, Modal } from 'antd';
+import { Table, Button, Input, Modal, Progress } from 'antd';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ColumnType } from 'antd/es/table';
 
@@ -50,14 +50,53 @@ const StudentsForUpdate = () => {
     const getStudentsForUpdate = async (identityNumber: string) => {
         setLoading(true);
         try {
-            const year = await getYearForSystem();
+            const year = getYearForSystem();
             const responseFromDB = await studentService.getStudentsForUpdate(identityNumber, year);
-            const studentsForUpdate = await responseFromDB.studentsForUpdate[0];
-            setStudents(studentsForUpdate);
+            const studentsForUpdate = responseFromDB.studentsForUpdate[0];
+
+            const updatedStudents = await Promise.all(
+                studentsForUpdate.map(async (student: Student) => {
+                    const status = await getAmountValues(Number(student.studentId));
+                    if (status) {
+                        const {
+                            totalExpectedValues,
+                            totalFilledValues,
+                            totalDistinctExpectedValues,
+                            totalFinalChoiceValues,
+                        } = status;
+
+                        const statusPercentage1 = totalExpectedValues
+                            ? Math.round((totalFilledValues / totalExpectedValues) * 100)
+                            : 0;
+
+                        const statusPercentage2 = totalDistinctExpectedValues
+                            ? Math.round((totalFinalChoiceValues / totalDistinctExpectedValues) * 100)
+                            : 0;
+
+                        return {
+                            ...student,
+                            statusPercentage: Math.max(statusPercentage1, statusPercentage2),
+                        };
+                    }
+                    return student;
+                })
+            );
+
+            setStudents(updatedStudents);
         } catch (error) {
-            addMessage('אופס, שגיאה בקבלת הנתונים', 'error')
+            addMessage('אופס, שגיאה בקבלת הנתונים', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+    // clac the status progress
+    const getAmountValues = async (studentId: number) => {
+        try {
+            const year = getYearForSystem();
+            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, year);
+            return responseFromDB.numbersOfValues[0][0];
+        } catch (error) {
+            addMessage('שגיאה בשליפת נתוני סטטוס התלמיד', 'error');
         }
     };
     // update student details clicked
@@ -177,7 +216,7 @@ const StudentsForUpdate = () => {
             text: grade,
             value: grade,
         }));
-    }, [students]);      
+    }, [students]);
     // add new student
     const addNewStudent = () => {
         navigate(`/menu/student-details/`, { state: { from: location.pathname } });
@@ -230,10 +269,23 @@ const StudentsForUpdate = () => {
                 key: 'grade',
                 filters: gradeFilterOptions,
                 onFilter: (value: any, record: any) => {
-                    const grade = record.grade ? record.grade.trim().toLowerCase() : ''; 
+                    const grade = record.grade ? record.grade.trim().toLowerCase() : '';
                     const filterValue = (value as string).trim().toLowerCase();
                     return grade === filterValue;
-                },                
+                },
+            },
+            {
+                title: 'סטטוס מילוי נתונים',
+                key: 'statusPercentage',
+                render: (text: string, record: any) => (
+                    <Progress
+                        type="circle"
+                        percent={record.statusPercentage || 0}
+                        width={40}
+                        status={record.statusPercentage === 100 ? 'success' : 'active'}
+                    />
+                ),
+                width: 100,
             },
             {
                 title: 'עדכון סטטוס תלמיד',
