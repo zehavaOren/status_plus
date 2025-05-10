@@ -52,7 +52,7 @@ const StatusOptionsDashboard: React.FC = () => {
                 חזרה
             </Button>
             <Row gutter={[16, 16]} justify="center">
-                <Col xs={24} sm={12} md={8}>
+                <Col xs={36} sm={18} md={12}>
                     <Card
                         hoverable
                         cover={<img alt="Simple Status" src={images.simple} style={{ height: '200px', objectFit: 'cover' }} />}
@@ -61,7 +61,7 @@ const StatusOptionsDashboard: React.FC = () => {
                         <Card.Meta title="סטטוס תלמיד פשוט" description="הצגה פשוטה של סטטוס התלמיד" />
                     </Card>
                 </Col>
-                <Col xs={24} sm={12} md={8}>
+                <Col xs={36} sm={18} md={12}>
                     <Card
                         hoverable
                         cover={<img alt="Tableau Status" src={images.tableau} style={{ height: '200px', objectFit: 'cover' }} />}
@@ -70,7 +70,7 @@ const StatusOptionsDashboard: React.FC = () => {
                         <Card.Meta title="סטטוס תלמיד טבלאי + גרף" description="סטטוס תלמיד טבלאי עם גרף חולשות" />
                     </Card>
                 </Col>
-                <Col xs={24} sm={12} md={8}>
+                {/* <Col xs={24} sm={12} md={8}>
                     <Card
                         hoverable
                         cover={<img alt="List Status" src={images.list} style={{ height: '200px', objectFit: 'cover' }} />}
@@ -78,7 +78,7 @@ const StatusOptionsDashboard: React.FC = () => {
                     >
                         <Card.Meta title="סטטוס תלמיד ברשימה" description="הצגה ברשימה של סטטוס התלמיד" />
                     </Card>
-                </Col>
+                </Col> */}
             </Row>
         </div>
     );

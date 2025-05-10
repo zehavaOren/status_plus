@@ -10,6 +10,9 @@ import { EmployeeChoice } from "../../models/EmployeeChoice";
 import { ConflictChoice } from "../../models/ConflictChoice";
 import Message from "../Message";
 import { MySingletonService } from "../../services/MySingletonService";
+import { fileService } from "../../services/fileService";
+import { commonService } from "../../services/commonService";
+import { Job } from "../../models/Job";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -27,6 +30,8 @@ const ConflictHandling = () => {
     const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
     const [fullData, setFullData] = useState<ProcessedConflictData[]>([]);
     const [isDataValid, setIsDataValid] = useState(false);
+    const [jobs, setJobs] = useState<Job[]>([]);
+
 
     // Pagination State
     const [pagination, setPagination] = useState<TablePaginationConfig>({
@@ -40,6 +45,7 @@ const ConflictHandling = () => {
     useEffect(() => {
         getConflictsList();
         getYearForSystem();
+        getJobs();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
@@ -77,6 +83,15 @@ const ConflictHandling = () => {
         const year = currentMonth >= 12 ? currentYear + 1 : currentYear;
         return year.toString();
     };
+    // get jobs list
+    const getJobs = async () => {
+        try {
+            const responseFromDB = await commonService.getJobs();
+            setJobs(responseFromDB.jobsList[0]);
+        } catch (error) {
+            addMessage('Failed to fetch employee data.', 'error');
+        }
+    }
     // Fetch conflicts list and process data
     const getConflictsList = async () => {
         setLoading(true);
@@ -260,6 +275,7 @@ const ConflictHandling = () => {
                             if (statusReady) {
                                 const year = await getYearForSystem();
                                 await updateReadyStatus(Number(studentId), year);
+                                await savePDF(year);
                             }
                             navigate(`/menu/student-conflicts-list/${emp}`);
                         }
@@ -302,6 +318,44 @@ const ConflictHandling = () => {
         } catch (error) {
             console.error('Error fetching student status:', error);
         }
+    }
+    // generate pdf status file
+    const savePDF = async (year: string) => {
+        const response = await studentStatusService.getStudentStatus(Number(studentId));
+
+        const studentDet = {
+            studentId: studentId,
+            studentName: response.studentStatusData[1][0]?.studentName || '',
+            year: response.studentStatusData[1][0]?.year || ''
+        };
+
+        const employeeDetails = response.studentStatusData[0]
+            .map((emp: any) => ({
+                employeeName: emp.employeeName,
+                jobDesc: emp.jobDesc || "Description unknown"
+            }));
+
+        const values = response.studentStatusData[2];
+
+        const categoryDataList = values.reduce((acc: any[], item: any) => {
+            const existing = acc.find(c => c.category === item.categoryDesc);
+            const entry = { valueDesc: item.valueDesc };
+
+            if (existing) {
+                if (item.studentGrade === "Strength") existing.strengths.push(entry);
+                else if (item.studentGrade === "Weakness") existing.weaknesses.push(entry);
+            } else {
+                acc.push({
+                    category: item.categoryDesc,
+                    strengths: item.studentGrade === "Strength" ? [entry] : [],
+                    weaknesses: item.studentGrade === "Weakness" ? [entry] : [],
+                });
+            }
+
+            return acc;
+        }, []);
+
+        const resFromUploadFile = await fileService.generatePDFBlob(studentDet, employeeDetails, categoryDataList);
     }
     // Find the educator's employee id
     const findEmployeeIdByJobId = (conflictsList: any[]): number | undefined => {

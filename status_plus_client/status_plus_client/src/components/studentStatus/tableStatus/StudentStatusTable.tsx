@@ -4,12 +4,14 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import { DownloadOutlined } from '@ant-design/icons';
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 import Message from '../../Message';
 import { studentStatusService } from '../../../services/studentStatusService';
 import './StudentStatusTable.css';
 import { StudentStatusValue } from '../../../models/StudentStatusValue';
 import CategoryPieChart from './CategoryPieChart';
+import { font } from '../../../Tahoma-Regular-font-normal';
 
 const { Title } = Typography;
 interface CategoryData {
@@ -140,50 +142,118 @@ const StudentStatusTable = () => {
             />
         );
     };
-    // generate pdf
+    // adjust pdf text to hebrew
+    const reverseHebrewText = (text: string): string => {
+        return text
+            .split(/(\(.*?\)|[\u0590-\u05FF,★-]+|\d+|\S+)/g)
+            .map(segment => {
+                if (segment.startsWith('(') && segment.endsWith(')')) {
+                    const innerText = segment.slice(1, -1);
+                    const reversedInner = innerText
+                        .split(/(\s+|,|-)/g)
+                        .map(word => /^[\u0590-\u05FF]+$/.test(word) ? word.split('').reverse().join('') : word)
+                        .reverse()
+                        .join('');
+
+                    return `(${reversedInner})`;
+                } else if (/^\d+$/.test(segment)) {
+                    return `\u2067${segment}\u2066`;
+                } else if (/^[\u0590-\u05FF,-]+$/.test(segment)) {
+                    return segment
+                        .split(/(-)/g)
+                        .map(word => word === '-' ? word : word.split('').reverse().join(''))
+                        .join('');
+                }
+                return segment;
+            })
+            .reverse()
+            .join('');
+    };
+    // create pdf file
     const generatePDF = async () => {
-        if (!contentRef.current) {
-            addMessage("Error generating PDF", "error");
-            return;
-        }
         setLoading(true);
         try {
-            const input = contentRef.current;
-            const pdf = new jsPDF('p', 'pt', 'a4');
-            const margin = 20;
-            const pageHeight = 841.89;
-            const imgWidth = 595.28;
-            const scale = 2.5;
+            const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+            doc.addFileToVFS("Tahoma Regular font-normal.ttf", font);
+            doc.addFont(
+                "Tahoma Regular font-normal.ttf",
+                "Tahoma Regular",
+                "normal"
+            );
+            doc.setFont("Tahoma Regular", "normal");
 
-            // Capture the entire content
-            const canvas = await html2canvas(input, {
-                scale: scale,
-                useCORS: true,
-            });
+            const titleText = reverseHebrewText(`סטטוס התלמיד ${studentDet?.studentName}`);
+            const yearText = studentDet?.year.split('').reverse().join('') + reverseHebrewText(`שנת הלימודים: `);
 
-            const imgData = canvas.toDataURL('image/png');
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-            let heightLeft = imgHeight;
-            let position = margin;
+            doc.setFontSize(18);
+            doc.text(titleText, 300, 40, { align: 'center' });
 
-            // Add image to the PDF
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            doc.setFontSize(12);
+            doc.text(yearText, 300, 60, { align: 'center' });
 
-            heightLeft -= pageHeight - margin * 2;
-
-            while (heightLeft > 0) {
-                position = heightLeft - imgHeight;
-                pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, position + margin, imgWidth, imgHeight);
-                heightLeft -= pageHeight - margin * 2;
+            const canvasElement = document.querySelector('canvas');
+            if (canvasElement) {
+                const chartImage = canvasElement.toDataURL('image/png');
+                doc.addImage(chartImage, 'PNG', 170, 70, 300, 250);
             }
 
-            pdf.save(`סטטוס התלמיד ${studentDet?.studentName}-${studentDet?.year}.pdf`);
+            let yOffset = 350;
+            const pageWidth = doc.internal.pageSize.width;
+            Object.values(groupedData).forEach((categoryData) => {
+                const categoryTitle = reverseHebrewText(categoryData.category);
+                doc.setFontSize(14);
+
+                doc.text(categoryTitle, pageWidth - 40, yOffset, { align: 'right' });
+                const tableData = categoryData.strengths.map((item, index) => [
+                    {
+                        content: reverseHebrewText(categoryData.weaknesses[index]?.valueDesc || ''),
+                        styles: { fillColor: '#f8d7da' }
+                    },
+                    {
+                        content: reverseHebrewText(item?.valueDesc || ''),
+                        styles: { fillColor: '#d4edda' }
+                    }
+                ]);
+
+                tableData.forEach((row, index) => {
+                    if (categoryData.strengths[index]?.isHadConflict) {
+                        row[0].content += ' ★';
+                    }
+                    if (categoryData.weaknesses[index]?.isHadConflict) {
+                        row[1].content += ' ★';
+                    }
+                });
+
+                tableData.forEach((row) => {
+                    row.forEach((cell) => {
+                        if (cell.content.length > 60) {
+                            let wrappedLines = doc.splitTextToSize(cell.content, 300);
+                            wrappedLines = wrappedLines.reverse();
+                            cell.content = wrappedLines.join('\n');
+                        }
+                    });
+                });
+
+                autoTable(doc, {
+                    startY: yOffset + 20,
+                    head: [[reverseHebrewText('חוזקות'), reverseHebrewText('חולשות')]],
+                    body: tableData,
+                    theme: "grid",
+                    styles: { font: "Tahoma Regular", fontSize: 10, halign: "center" },
+                    headStyles: { fillColor: [54, 162, 235] },
+                    columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 'auto' } },
+                });
+
+                yOffset = (doc as any).lastAutoTable.finalY + 20;
+            });
+
+            doc.save(`סטטוס_${studentDet?.studentName}_${studentDet?.year}.pdf`);
         } catch (error) {
             addMessage('Error generating PDF', 'error');
         }
         setLoading(false);
     };
+
     // navigate back- to privious component
     const navigateBack = () => {
         navigate(location.state?.from || `/menu/status-options/${studentId}`);
