@@ -284,7 +284,7 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({ componentUrl })
                 else {
                     const result = await studentService.checkExistingJob(Number(studentId!), fullYear, job.job);
                     const checkResult = result.exitingEmployees[0][0];
-                    if (checkResult.resultJobId === -1) {
+                    if (checkResult.resultJobId && checkResult.resultJobId === -1) {
                         addMessage("הסטטוס מוכן, לא ניתן להוסיף אנשי צוות נוספים", "error");
                         setTimeout(() => {
                             navigate(from);
