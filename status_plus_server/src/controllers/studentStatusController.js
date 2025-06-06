@@ -161,6 +161,19 @@ const checkStudentStatus = async (req, res) => {
     }
 };
 
+const checkStudentStatusForEmployee = async (req, res) => {
+    const studentId = req.params.studentId;
+    const year = req.params.year;
+    const employeeId = req.params.employeeId;
+    try {
+        const numbersOfValues = await dbService.executeStoredProcedure('sp_stpl_check_student_status_by_employee', { studentId: studentId, year: year, employeeId: employeeId });
+        res.status(200).json({ numbersOfValues });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
+
 const upsertStudentStatusReady = async (req, res) => {
     const studentId = req.body.studentId;
     const year = req.body.year;
@@ -225,6 +238,7 @@ module.exports = {
     getConflictList,
     upsertConflictResolution,
     checkStudentStatus,
+    checkStudentStatusForEmployee,
     upsertStudentStatusReady,
     getHistoryStudentStatuses,
     removeDuplicateValuesForStudent,

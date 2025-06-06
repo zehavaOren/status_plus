@@ -19,6 +19,7 @@ router.get('/getAllStudetsConflicts/', studentStatusController.getAllStudetsConf
 router.get('/getConflictList/:studentId/', studentStatusController.getConflictList);
 router.post('/upsertConflictResolution', studentStatusController.upsertConflictResolution);
 router.get('/checkStudentStatus/:studentId/:year', studentStatusController.checkStudentStatus);
+router.get('/checkStudentStatusForEmployee/:studentId/:year/:employeeId', studentStatusController.checkStudentStatusForEmployee);
 router.post('/upsertStudentStatusReady/', studentStatusController.upsertStudentStatusReady);
 router.get('/getHistoryStudentStatuses/:studentId', studentStatusController.getHistoryStudentStatuses);
 router.post('/removeDuplicateValuesForStudent', studentStatusController.removeDuplicateValuesForStudent);
