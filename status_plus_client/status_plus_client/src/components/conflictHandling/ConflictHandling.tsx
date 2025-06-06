@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Button, Input, Select, Spin, Table, Tag, Typography } from 'antd';
+import { Button, Input, Modal, Select, Spin, Table, Tag, Typography } from 'antd';
 import { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 
 import { studentStatusService } from "../../services/studentStatusService";
@@ -31,7 +31,8 @@ const ConflictHandling = () => {
     const [fullData, setFullData] = useState<ProcessedConflictData[]>([]);
     const [isDataValid, setIsDataValid] = useState(false);
     const [jobs, setJobs] = useState<Job[]>([]);
-
+    const [isFormChanged, setIsFormChanged] = useState(false);
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     // Pagination State
     const [pagination, setPagination] = useState<TablePaginationConfig>({
@@ -231,6 +232,7 @@ const ConflictHandling = () => {
     };
     // Handle user choice changes
     const handleUserChoiceChange = (record: ProcessedConflictData, value: string) => {
+        setIsFormChanged(true);
         setFullData(prevData =>
             prevData.map(item => {
                 if (item.key === record.key) {
@@ -242,6 +244,7 @@ const ConflictHandling = () => {
     };
     // Handle user comment changes
     const handleUserCommentChange = (record: ProcessedConflictData, value: string) => {
+        setIsFormChanged(true);
         setFullData(prevData =>
             prevData.map(item => {
                 if (item.key === record.key) {
@@ -262,6 +265,7 @@ const ConflictHandling = () => {
                 const allSuccessful = saveRes.every(res => res.status === 'success');
                 if (allSuccessful) {
                     addMessage('השינויים נשמרו בהצלחה', 'success');
+                    setIsFormChanged(false);
                     const updatedResponse = await studentStatusService.getConflictsList(Number(studentId));
                     const updatedConflicts = updatedResponse.conflictsList[0];
                     setConflictsList(updatedConflicts);
@@ -414,6 +418,23 @@ const ConflictHandling = () => {
         prev_3: '3 עמודים אחורה',
         next_3: '3 עמודים קדימה',
     };
+    // confirm returned from the form
+    const showModal = () => {
+        if (isFormChanged) {
+            setIsModalVisible(true);
+        } else {
+            navigateBack();
+        }
+    };
+    // confirm return without saving
+    const handleOk = () => {
+        setIsModalVisible(false);
+        navigateBack();
+    };
+    // cancel form
+    const handleCancel = () => {
+        setIsModalVisible(false);
+    };
     return (
         <>
             <div style={{ direction: 'ltr' }}>
@@ -425,7 +446,7 @@ const ConflictHandling = () => {
                 )}
                 <div className='container'>
                     <Title level={2}>קונפליקטי התלמיד: {studentDetails?.studentName}</Title>
-                    <Button onClick={navigateBack} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
+                    <Button onClick={showModal} style={{ position: 'absolute', top: '120px', right: '50px', backgroundColor: '#d6e7f6' }}>
                         חזרה
                     </Button>
                 </div>
@@ -444,6 +465,16 @@ const ConflictHandling = () => {
                     {employeeDet.permission === 2 && (
                         <Button onClick={handleSave} >שמור</Button>)}
                 </div>
+                <Modal
+                    title="אזהרה"
+                    open={isModalVisible}
+                    onOk={handleOk}
+                    onCancel={handleCancel}
+                    okText="כן"
+                    cancelText="לא"
+                >
+                    <p>האם אתה בטוח שברצונך לעזוב את הטופס ללא שמירה?</p>
+                </Modal>
             </div>
         </>
     );
