@@ -178,6 +178,18 @@ export const studentStatusService = {
         }
     },
 
+    checkStudentStatusForEmployee: async (studentId: number, year: string, employeeId: number) => {
+        try {
+            const response = await fetch(`${BASE_URL}/checkStudentStatusForEmployee/${studentId}/${year}/${employeeId}`);
+            if (!response.ok) {
+                throw new Error('Error getting data');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    },
+
     upsertStudentStatusReady: async (studentId: string, year: string) => {
         try {
             const response = await fetch(`${BASE_URL}/upsertStudentStatusReady/`, {

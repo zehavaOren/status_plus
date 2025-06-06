@@ -73,5 +73,54 @@ export const commonService = {
         } catch (error: any) {
             throw new Error(`Error fetching employees: ${error.message}`);
         }
-    }
+    },
+
+    getCodeTableDetails: async () => {
+        try {
+            const response = await fetch(`${BASE_URL}/getCodeTableDetails`);
+            if (!response.ok) {
+                throw new Error('Error fetching employees');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    },
+
+    addDataCodeTable: async (selectedList: string, additionalValue: string) => {
+        try {
+            const response = await fetch(`${BASE_URL}/addDataCodeTable/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ selectedList, additionalValue })
+            });
+            if (!response.ok) {
+                throw new Error(`Error fetching value`);
+            }
+            return await response.json();
+
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    },
+
+    addCategoryValueConnection: async (valueId: string, categoryId: string) => {
+        try {
+            const response = await fetch(`${BASE_URL}/addCategoryValueConnection/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ valueId, categoryId })
+            });
+            if (!response.ok) {
+                throw new Error(`Error fetching value`);
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    },
 }
