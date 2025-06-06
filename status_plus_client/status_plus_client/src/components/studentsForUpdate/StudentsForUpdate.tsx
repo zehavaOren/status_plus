@@ -22,7 +22,7 @@ const StudentsForUpdate = () => {
     const [searchText, setSearchText] = useState('');
     const [hasCheckedConflicts, setHasCheckedConflicts] = useState(false);
     const hasInitialized = useRef(false);
-    const userPermission = useMemo(() => MySingletonService.getInstance().getBaseUser().permission, []);
+    const employeeDet = useMemo(() => MySingletonService.getInstance().getBaseUser(), []);
 
     useEffect(() => {
         if (hasInitialized.current) return;
@@ -72,10 +72,15 @@ const StudentsForUpdate = () => {
                         const statusPercentage2 = totalDistinctExpectedValues
                             ? Math.round((totalFinalChoiceValues / totalDistinctExpectedValues) * 100)
                             : 0;
+                        const isComplete =
+                            totalExpectedValues === totalFilledValues ||
+                            totalExpectedValues === totalFilledValues + totalFinalChoiceValues ||
+                            totalDistinctExpectedValues === totalFinalChoiceValues;
 
                         return {
                             ...student,
                             statusPercentage: Math.max(statusPercentage1, statusPercentage2),
+                            isComplete,
                         };
                     }
                     return student;
@@ -93,7 +98,7 @@ const StudentsForUpdate = () => {
     const getAmountValues = async (studentId: number) => {
         try {
             const year = getYearForSystem();
-            const responseFromDB = await studentStatusService.checkStudentStatus(studentId, year);
+            const responseFromDB = await studentStatusService.checkStudentStatusForEmployee(studentId, year, Number(employeeDet.identityNumber));
             return responseFromDB.numbersOfValues[0][0];
         } catch (error) {
             addMessage('שגיאה בשליפת נתוני סטטוס התלמיד', 'error');
@@ -101,7 +106,7 @@ const StudentsForUpdate = () => {
     };
     // update student details clicked
     const onUpdateStudentClick = (student: Student) => {
-        if (userPermission === 2) {
+        if (employeeDet.permission === 2) {
             navigate(`/menu/student-details/${student.studentId}`, { state: { from: location.pathname } });
         } else {
             addMessage('אין לך הרשאה לעדכן פרטי תלמיד', 'error');
@@ -126,7 +131,7 @@ const StudentsForUpdate = () => {
         }
 
         else {
-            if (userPermission === 1) {
+            if (employeeDet.permission === 1) {
                 addMessage("סטטוס התלמיד עדיין לא מוכן, אין אפשרות להציג", "error");
             }
             else {
@@ -180,7 +185,7 @@ const StudentsForUpdate = () => {
         try {
             const responseFromDB = await studentStatusService.getStdentsConflicts(Number(identityNumber));
             if (responseFromDB.studentConflicts[0].length > 0) {
-                if (userPermission === 2) {
+                if (employeeDet.permission === 2) {
                     showConflictModal();
                 }
             }
@@ -282,7 +287,7 @@ const StudentsForUpdate = () => {
                         type="circle"
                         percent={record.statusPercentage || 0}
                         width={40}
-                        status={record.statusPercentage === 100 ? 'success' : 'active'}
+                        status={record.isComplete === 100 ? 'success' : 'active'}
                     />
                 ),
                 width: 100,
@@ -314,7 +319,7 @@ const StudentsForUpdate = () => {
                 width: 100,
             },
         ];
-        if (userPermission !== 1) {
+        if (employeeDet.permission !== 1) {
             baseColumns.push({
 
                 title: 'עדכון פרטי תלמיד',
@@ -333,7 +338,7 @@ const StudentsForUpdate = () => {
 
         return baseColumns;
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userPermission]);
+    }, [employeeDet.permission]);
 
     return (
         <>
@@ -341,7 +346,7 @@ const StudentsForUpdate = () => {
             <div className="header">
                 <h1 className="title">תלמידים לעדכון סטטוס תלמיד</h1>
                 <div>
-                    {userPermission === 2 && (
+                    {employeeDet.permission === 2 && (
                         <Button type="primary" className="add-student-button" onClick={addNewStudent}>הוסף תלמיד חדש</Button>
                     )}
                 </div>
