@@ -153,14 +153,14 @@ const DataManagementComponent = () => {
             if (categoryAdded) {
               setAdditionalValue("");
               setSelectedCategoryDescription("");
-              addMessage(message, 'success');
+              addMessage("הערך נכנס בהצלחה", 'success');
 
             } else {
               addMessage('הייתה שגיאה בהוספת הנתונים', 'error');
             }
           } else {
             setAdditionalValue("");
-            addMessage(message, 'success');
+            addMessage("הערך הוכנס בהצלחה", 'success');
           }
           await getCodeTableDetails(true);
         } else {
