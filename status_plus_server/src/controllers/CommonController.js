@@ -60,11 +60,49 @@ const getGrade = async (req, res) => {
     }
 };
 
+const getCodeTableDetails = async (req, res) => {
+    try {
+        const codeTableDetails = await dbService.executeStoredProcedure('sp_stpl_get_code_table_data');
+        res.status(200).json({ codeTableDetails });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
+
+const addDataCodeTable = async (req, res) => {
+    const tableName = req.body.selectedList;
+    const additionalData = req.body.additionalValue;
+    try {
+        const dataAddedCodeTable = await dbService.executeStoredProcedure('sp_stpl_upsert_code_table', { tableName, additionalData });
+        res.status(200).json({ dataAddedCodeTable });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
+
+const addCategoryValueConnection = async (req, res) => {
+    const valueId = req.body.valueId;
+    const categoryId = req.body.categoryId;
+
+    try {
+        const dataAddedConnectionTable = await dbService.executeStoredProcedure('sp_stpl_upsert_value_for_category', { valueId, categoryId });
+        res.status(200).json({ dataAddedConnectionTable });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
+
 module.exports = {
     getCities,
     getJobForEmployee,
     getGradesAndClasses,
     getJobs,
     getPermission,
-    getGrade
+    getGrade,
+    getCodeTableDetails,
+    addDataCodeTable,
+    addCategoryValueConnection
 };
