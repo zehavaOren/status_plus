@@ -82,15 +82,16 @@ const StatusForm = () => {
 
                     const isStudentValuesFull = studentValuesRes.valuesList[0].length > 0;
                     const studentValueIds = new Set(studentValuesRes.valuesList[0].map((v: ValueSelected) => v.valueId));
-                    const unfilled = isStudentValuesFull
-                        ? valuesRes.valuesList[0].reduce((acc: Record<string, boolean>, value: ValueSelected) => {
-                            const isUnfilled = !studentValueIds.has(value.valueId);
-                            if (isUnfilled) {
-                                acc[`value_${value.valueId}`] = true;
-                            }
-                            return acc;
-                        }, {})
-                        : {};
+                    const unfilled = valuesRes.valuesList[0].reduce((acc: Record<string, boolean>, value: ValueSelected) => {
+                        const matchingValue = studentValuesRes.valuesList[0].find((v: ValueSelected) => v.valueId === value.valueId);
+
+                        const isUnfilled = !matchingValue || (!matchingValue.strength && !matchingValue.weakness && !matchingValue.isNotRelevant);
+
+                        if (isUnfilled) {
+                            acc[`value_${value.valueId}`] = true;
+                        }
+                        return acc;
+                    }, {});
 
                     setUnfilledFields(unfilled);
                     const unfilledCatIds = new Set<number>();
@@ -366,11 +367,17 @@ const StatusForm = () => {
 
             <div className="steps-container">
                 <Steps current={currentStep} onChange={handleStepChange}>
-                    {categories.map((category) => (
+                    {categories.map((category, index) => (
                         <Step
                             key={category.categoryId}
                             title={
-                                <span title={category.categoryDesc}>
+                                <span
+                                    title={category.categoryDesc}
+                                    style={{
+                                        fontWeight: index === currentStep ? 'bold' : 'normal',
+                                        color: unfilledCategories.has(category.categoryId) ? 'red' : 'inherit'
+                                    }}
+                                >
                                     {category.categoryDesc}
                                 </span>
                             }
