@@ -123,4 +123,86 @@ export const commonService = {
             throw new Error(`Error fetching employees: ${error.message}`);
         }
     },
+
+    updateStudents: async (currentYear: string, numberOfAClasses: number) => {
+        try {
+            const response = await fetch(`${BASE_URL}/updateStudents/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ currentYear, numberOfAClasses })
+            });
+            if (!response.ok) {
+                throw new Error(`Error fetching value`);
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    },
+
+    updateClasses: async (numClasses: number) => {
+        try {
+            const response = await fetch(`${BASE_URL}/updateClasses/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ numClasses })
+            });
+            if (!response.ok) {
+                throw new Error(`Error fetching value`);
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    },
+
+    getTeachers: async () => {
+        try {
+            const response = await fetch(`${BASE_URL}/getTeachers`);
+            if (!response.ok) {
+                throw new Error('Error fetching employees');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    },
+
+    getStudentsByGrade: async (data: any) => {
+        const gradeId = data.gradeId;
+        const classId = data.classId;
+        try {
+            const response = await fetch(`${BASE_URL}/getStudentsByGrade/${gradeId}/${classId}/`);
+            if (!response.ok) {
+                throw new Error('Error fetching students');
+            }
+            return await response.json();
+        } catch (error: any) {
+            throw new Error(`Error fetching students: ${error.message}`);
+        }
+    },
+
+    addEmployeesForStudents: async (teacherId: string | null, studentsIds: string, currrentYear: string) => {
+        try {
+            const response = await fetch(`${BASE_URL}/addEmployeesForStudents/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ teacherId, studentsIds, currrentYear })
+            });
+            if (!response.ok) {
+                throw new Error(`Error fetching value`);
+            }
+            return await response.json();
+
+        }
+        catch (error: any) {
+            throw new Error(`Error fetching employees: ${error.message}`);
+        }
+    },
 }
