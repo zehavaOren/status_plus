@@ -2,13 +2,13 @@ const sql = require('mssql/msnodesqlv8');
 
 const config = {
     server: 'localhost',
-    database: 'statusPlus',
+    database: 'statusPlus11-07',
     options: {
         trustedConnection: true,
         useUTC: true
     },
     driver: 'msnodesqlv8',
-    connectionString: 'Driver={ODBC Driver 17 for SQL Server};Server=localhost;Database=statusPlus;Trusted_Connection=Yes;'
+    connectionString: 'Driver={ODBC Driver 17 for SQL Server};Server=localhost;Database=statusPlus11-07;Trusted_Connection=Yes;'
 };
 
 const executeStoredProcedure = async (procedureName, params) => {

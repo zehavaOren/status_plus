@@ -95,6 +95,78 @@ const addCategoryValueConnection = async (req, res) => {
     }
 };
 
+const updateStudents = async (req, res) => {
+    const currentYear = req.body.currentYear;
+    const numberOfAClasses = req.body.numberOfAClasses;
+
+    try {
+        const studentsUpdated = await dbService.executeStoredProcedure('sp_stpl_upload_year_update_students', { currentYear, numberOfAClasses });
+        res.status(200).json({ studentsUpdated });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
+
+const updateClasses = async (req, res) => {
+    const numberOfAClasses = req.body.numClasses;
+
+    try {
+        const classesUpdated = await dbService.executeStoredProcedure('sp_stpl_upload_year_update_classes', { numberOfAClasses });
+        res.status(200).json({ classesUpdated });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
+
+const getTeachers = async (req, res) => {
+    try {
+        const teachersList = await dbService.executeStoredProcedure('sp_stpl_get_employees_data');
+        res.status(200).json({ teachersList });
+    }
+    catch {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
+
+const getStudentsByGrade = async (req, res) => {
+    const grade_id = parseInt(req.params.gradeId, 10);
+    let class_id = req.params.classId;
+
+    if (class_id === "null" || class_id === undefined) {
+        class_id = null;
+    } else {
+        class_id = parseInt(class_id, 10);
+    }
+
+    try {
+        const studentsByGradeList = await dbService.executeStoredProcedure('sp_stpl_get_students_by_grade', { grade_id, class_id })
+        res.status(200).json({ studentsByGradeList });
+    }
+    catch {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
+
+const addEmployeesForStudents = async (req, res) => {
+    const employeeId = req.body.teacherId;
+    const studentsIds = req.body.studentsIds;
+    const currentYear = req.body.currrentYear;
+    console.log(studentsIds);
+    
+    try {
+        const teacherForStudents = await dbService.executeStoredProcedure('sp_stpl_insert_employee_for_students', { employeeId, studentsIds, currentYear });
+        res.status(200).json({ teacherForStudents })
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while processing the request' });
+    }
+};
+
 module.exports = {
     getCities,
     getJobForEmployee,
@@ -104,5 +176,10 @@ module.exports = {
     getGrade,
     getCodeTableDetails,
     addDataCodeTable,
-    addCategoryValueConnection
+    addCategoryValueConnection,
+    updateStudents,
+    updateClasses,
+    getTeachers,
+    getStudentsByGrade,
+    addEmployeesForStudents
 };

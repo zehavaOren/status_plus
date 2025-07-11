@@ -11,6 +11,10 @@ router.get('/getGrade', CommonController.getGrade);
 router.get('/getCodeTableDetails', CommonController.getCodeTableDetails);
 router.post('/addDataCodeTable/', CommonController.addDataCodeTable);
 router.post('/addCategoryValueConnection/', CommonController.addCategoryValueConnection);
-
+router.post('/updateStudents/', CommonController.updateStudents);
+router.post('/updateClasses/', CommonController.updateClasses);
+router.get('/getTeachers', CommonController.getTeachers);
+router.get('/getStudentsByGrade/:gradeId/:classId?/', CommonController.getStudentsByGrade);
+router.post('/addEmployeesForStudents/', CommonController.addEmployeesForStudents);
 
 module.exports = router;
